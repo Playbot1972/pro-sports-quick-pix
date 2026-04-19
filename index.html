@@ -421,7 +421,7 @@ window.safeHeadshot = function(obj){
   <div class="trust-banner">
     <div class="trust-row">
       <div class="trust-badge">21+ ONLY</div>
-      <div class="trust-text">Tennessee only where legal. Results are not guaranteed. For entertainment only.</div>
+      <div class="trust-text" id="trustRegionText">Use only where legal in your state or region. Results are not guaranteed. For entertainment only.</div>
     </div>
     <div class="trust-links">
       <a href="#" onclick="return openAgeGate()">Age Check</a>
@@ -469,6 +469,55 @@ var _lhMem=(function(){
     clear:function(){try{if(_ls){_ls.clear();return;}}catch(e){}s={};}
   };
 })();
+
+var _LH_GEO_TRUST = 'lhGeoTrustLine';
+function _trustLineSuffix(){
+  return ' Results are not guaranteed. For entertainment only.';
+}
+function applyTrustRegionCopy(fullLine){
+  var el = document.getElementById('trustRegionText');
+  if(el) el.textContent = fullLine;
+}
+/** Sets trust-banner line from cached IP geolocation (approximate; VPNs show VPN area). */
+function refreshTrustRegionCopy(){
+  var suf = _trustLineSuffix();
+  var fallback = 'Use only where legal in your state or region.' + suf;
+  try{
+    var raw = _lhMem.getItem(_LH_GEO_TRUST);
+    if(raw){
+      var o = JSON.parse(raw);
+      if(o && o.regionLine && o.ts && (Date.now() - o.ts < 7 * 86400000)){
+        applyTrustRegionCopy(o.regionLine + suf);
+        return;
+      }
+    }
+  }catch(_e){}
+  applyTrustRegionCopy(fallback);
+  if(typeof fetch !== 'function') return;
+  fetch('https://ipapi.co/json/', { credentials: 'omit' })
+    .then(function(r){ if(!r.ok) throw new Error('geo'); return r.json(); })
+    .then(function(j){
+      if(!j || j.error || j.reason) throw new Error('geo');
+      var cc = String(j.country_code || '').toUpperCase();
+      var cname = String(j.country_name || '').trim();
+      var stName = String(j.region || '').trim();
+      var stCode = String(j.region_code || '').trim();
+      var label = stName || stCode;
+      var regionLine;
+      if(cc === 'US' && label){
+        regionLine = 'In ' + label + ', only where legal for you.';
+      }else if(label && (cname || cc)){
+        regionLine = 'In ' + label + ' (' + (cname || cc) + '), only where legal for you.';
+      }else if(cname || cc){
+        regionLine = 'In your area (' + (cname || cc) + '), only where legal for you.';
+      }else{
+        regionLine = 'Only where legal in your location.';
+      }
+      applyTrustRegionCopy(regionLine + suf);
+      try{ _lhMem.setItem(_LH_GEO_TRUST, JSON.stringify({ regionLine: regionLine, ts: Date.now() })); }catch(_e){}
+    })
+    .catch(function(){ applyTrustRegionCopy(fallback); });
+}
 
 // ── DEV MODE ──────────────────────────────────────────────────────────────────
 var _devMode = false;
@@ -2508,6 +2557,7 @@ function startCheckout(){
 
 // Run onboarding check on load
 obInit();
+refreshTrustRegionCopy();
 
 // ── RHYTHM (random each run: slot or buildup) ────────────────────────────────
 const _rhythmCurves = {
