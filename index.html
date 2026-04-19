@@ -259,7 +259,7 @@ body::after{right:0;border-left:1px solid rgba(52,211,153,.22);}
       <div class="title">Pro Sports Quick Pix</div>
       <div class="subtitle">Daily HR picks powered by live MLB lineups. <span id="devTrigger" onclick="_devTriggerClick()" style="cursor:default">Free</span>. Fast. Sharp.</div>
     </div>
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><button id="themeToggle" class="badge" onclick="toggleTheme()" style="cursor:pointer;border:0">🌙 Night</button><button id=logoutBtn class=badge onclick=logoutUser() style=display:none;cursor:pointer;border:0;margin-left:10px>Log Out</button><div class="badge" id="sportHintBadge">Choose a sport tab</div></div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><button id="themeToggle" class="badge" onclick="toggleTheme()" style="cursor:pointer;border:0">🌙 Night</button><div class="badge" id="sportHintBadge">Choose a sport tab</div></div>
   </div>
 
   <div class="trust-banner">
@@ -341,7 +341,7 @@ function _devTriggerClick(){
       if(picks && picks.querySelector('button[onclick="showUpgradeModal()"]')){
         picks.innerHTML = '<div class="muted">Dev mode on — unlimited picks unlocked.</div>';
       }
-      updateAuthUI();renderSport();
+      renderSport();
     } else {
       // Dev mode turned off — re-check real paywall state
       if(_freePickUsed) showUpgradeWall(); else renderSport();
@@ -1973,7 +1973,6 @@ function obVerifyCode(){
   obComplete();
 }
 
-function updateAuthUI(){const btn=document.getElementById('logoutBtn');if(!btn)return;btn.style.display=userEmail?'inline-flex':'none'}
 function obComplete(){
   const name = document.getElementById('ob-name').value.trim();
   const email = document.getElementById('ob-email').value.trim();
@@ -2016,7 +2015,6 @@ function obStartResendTimer(secs){
   }, 1000);
 }
 
-function logoutUser(){userName='';userEmail='';freePickUsed=false;pickCount=1;try{lhMem.removeItem('lhProfile')}catch(e){}updateAuthUI();showOverlay();const overlay=document.getElementById('onboardOverlay');if(overlay)overlay.style.display='flex'}
 function obDismiss(){
   document.getElementById('onboardOverlay').style.display='none';
   showFreeBadge();
@@ -2343,7 +2341,7 @@ function copyPicksFromOverlay(){
   trackEvent('picks_shared',{sport:current,option:currentOption});
   const sharer = _userName || 'Someone';
   const lines = mlbPicks.map((p,i)=>`${i+1}. ${p.player} (${p.teamAbbr||p.team}) — ${p.hr} HR`);
-  const text = `🔴 ${sharer} using Pro Sports Quick Pix for today's HR picks!\n\n${lines.join('\n')}\n\n🎯 Get your free picks: https://www.perplexity.ai/computer/a/multisportsqp-C.3phRMSQlW0imvW1u4uXw\n\nFor entertainment only. 21+ only.`;
+  const text = `🔴 ${sharer} using Pro Sports Quick Pix for today's HR picks!\n\n${lines.join('\n')}\n\n🎯 Get your free picks: ${location.origin + location.pathname}\n\nFor entertainment only. 21+ only.`;
   navigator.clipboard.writeText(text).catch(()=>{});
   const btn = document.getElementById('poShareBtn');
   if(btn){ const orig=btn.textContent; btn.textContent='✓ Copied!'; setTimeout(()=>btn.textContent=orig,2000); }
