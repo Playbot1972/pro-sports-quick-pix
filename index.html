@@ -255,6 +255,35 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
+
+<script>
+window.espnPlayerHeadshot = function(a){
+  const id = a && (a.id || a.athleteId || a.playerId || a.athlete && a.athlete.id);
+  return id ? `https://a.espncdn.com/i/headshots/nba/players/full/${id}.png` : '';
+};
+</script>
+
+
+<script>
+window.safePlayerName = function(obj){
+  const a = obj && (obj.athlete || obj.player || obj);
+  return (a && (a.displayName || a.fullName || a.shortName || a.name)) || '';
+};
+window.safePlayerPos = function(obj){
+  const a = obj && (obj.athlete || obj.player || obj);
+  const pos = a && a.position;
+  return (typeof pos === 'string' ? pos : (pos && (pos.abbreviation || pos.displayName || pos.name))) || '';
+};
+window.safePlayerId = function(obj){
+  const a = obj && (obj.athlete || obj.player || obj);
+  return (a && (a.id || a.athleteId || a.playerId)) || obj.id || obj.athleteId || obj.playerId || '';
+};
+window.safeHeadshot = function(obj){
+  const id = window.safePlayerId(obj);
+  return id ? `https://a.espncdn.com/i/headshots/nhl/players/full/${id}.png` : '';
+};
+</script>
+
 </head>
 <body>
 
