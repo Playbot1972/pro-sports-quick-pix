@@ -200,90 +200,6 @@ body::after{right:0;border-left:1px solid rgba(52,211,153,.22);}
 .wrap, .topbar, .card, .trust-banner, .po-card, .ob-step{position:relative;z-index:1;}
 
 </style>
-
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { getAuth, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyCF4PtHYIlGAnmM7_lIT58d_irYQRovgQc",
-    authDomain: "pro-sports-quick-pix.firebaseapp.com",
-    projectId: "pro-sports-quick-pix",
-    storageBucket: "pro-sports-quick-pix.firebasestorage.app",
-    messagingSenderId: "377494264538",
-    appId: "1:377494264538:web:8d9b83c39850e6d35c23e3",
-    measurementId: "G-0KYPK8RCVN"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  window.firebaseAuth = getAuth(app);
-  window.firebaseDb = getFirestore(app);
-  window.firebaseGoogleProvider = new GoogleAuthProvider();
-  window.firebaseSignInWithGoogle = () => signInWithPopup(window.firebaseAuth, window.firebaseGoogleProvider);
-  window.firebaseCreateEmailUser = (email, password) => createUserWithEmailAndPassword(window.firebaseAuth, email, password);
-  window.firebaseSignInEmailUser = (email, password) => signInWithEmailAndPassword(window.firebaseAuth, email, password);
-  window.firebaseOnAuthStateChanged = onAuthStateChanged;
-  window.firebaseSignOut = () => signOut(window.firebaseAuth);
-  window.firebaseSaveUserProfile = async (profile) => {
-    const u = window.firebaseAuth.currentUser; if (!u) return null;
-    await setDoc(doc(window.firebaseDb, 'users', u.uid), { uid: u.uid, email: u.email || '', name: profile?.name || '', provider: profile?.provider || '', updatedAt: Date.now() }, { merge: true });
-    return true;
-  };
-  window.firebaseLoadUserProfile = async () => {
-    const u = window.firebaseAuth.currentUser; if (!u) return null;
-    const snap = await getDoc(doc(window.firebaseDb, 'users', u.uid));
-    return snap.exists() ? snap.data() : null;
-  };
-</script>
-
-
-<script>
-window.addEventListener('DOMContentLoaded', () => {
-  const host = document.querySelector('.topbar') || document.body;
-  const btn = document.createElement('button');
-  btn.id = 'logoutBtn';
-  btn.textContent = 'Logout';
-  btn.style.cssText = 'margin-left:10px;padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:inherit;font-weight:700;cursor:pointer;';
-  btn.onclick = async () => { if (window.firebaseSignOut) await window.firebaseSignOut(); };
-  host.appendChild(btn);
-  if (window.firebaseOnAuthStateChanged && window.firebaseAuth) {
-    window.firebaseOnAuthStateChanged(window.firebaseAuth, (user) => {
-      btn.style.display = user ? 'inline-block' : 'none';
-    });
-  }
-});
-</script>
-
-
-<script>
-window.espnPlayerHeadshot = function(a){
-  const id = a && (a.id || a.athleteId || a.playerId || a.athlete && a.athlete.id);
-  return id ? `https://a.espncdn.com/i/headshots/nba/players/full/${id}.png` : '';
-};
-</script>
-
-
-<script>
-window.safePlayerName = function(obj){
-  const a = obj && (obj.athlete || obj.player || obj);
-  return (a && (a.displayName || a.fullName || a.shortName || a.name)) || '';
-};
-window.safePlayerPos = function(obj){
-  const a = obj && (obj.athlete || obj.player || obj);
-  const pos = a && a.position;
-  return (typeof pos === 'string' ? pos : (pos && (pos.abbreviation || pos.displayName || pos.name))) || '';
-};
-window.safePlayerId = function(obj){
-  const a = obj && (obj.athlete || obj.player || obj);
-  return (a && (a.id || a.athleteId || a.playerId)) || obj.id || obj.athleteId || obj.playerId || '';
-};
-window.safeHeadshot = function(obj){
-  const id = window.safePlayerId(obj);
-  return id ? `https://a.espncdn.com/i/headshots/nhl/players/full/${id}.png` : '';
-};
-</script>
-
 </head>
 <body>
 
@@ -343,7 +259,7 @@ window.safeHeadshot = function(obj){
       <div class="title">Pro Sports Quick Pix</div>
       <div class="subtitle">Daily HR picks powered by live MLB lineups. <span id="devTrigger" onclick="_devTriggerClick()" style="cursor:default">Free</span>. Fast. Sharp.</div>
     </div>
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><button id="themeToggle" class="badge" onclick="toggleTheme()" style="cursor:pointer;border:0">🌙 Night</button><div class="badge" id="sportHintBadge">Choose a sport tab</div></div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><button id="themeToggle" class="badge" onclick="toggleTheme()" style="cursor:pointer;border:0">🌙 Night</button><button id=logoutBtn class=badge onclick=logoutUser() style=display:none;cursor:pointer;border:0;margin-left:10px>Log Out</button><div class="badge" id="sportHintBadge">Choose a sport tab</div></div>
   </div>
 
   <div class="trust-banner">
@@ -425,7 +341,7 @@ function _devTriggerClick(){
       if(picks && picks.querySelector('button[onclick="showUpgradeModal()"]')){
         picks.innerHTML = '<div class="muted">Dev mode on — unlimited picks unlocked.</div>';
       }
-      renderSport();
+      updateAuthUI();renderSport();
     } else {
       // Dev mode turned off — re-check real paywall state
       if(_freePickUsed) showUpgradeWall(); else renderSport();
@@ -2057,6 +1973,7 @@ function obVerifyCode(){
   obComplete();
 }
 
+function updateAuthUI(){const btn=document.getElementById('logoutBtn');if(!btn)return;btn.style.display=userEmail?'inline-flex':'none'}
 function obComplete(){
   const name = document.getElementById('ob-name').value.trim();
   const email = document.getElementById('ob-email').value.trim();
@@ -2099,6 +2016,7 @@ function obStartResendTimer(secs){
   }, 1000);
 }
 
+function logoutUser(){userName='';userEmail='';freePickUsed=false;pickCount=1;try{lhMem.removeItem('lhProfile')}catch(e){}updateAuthUI();showOverlay();const overlay=document.getElementById('onboardOverlay');if(overlay)overlay.style.display='flex'}
 function obDismiss(){
   document.getElementById('onboardOverlay').style.display='none';
   showFreeBadge();
