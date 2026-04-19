@@ -106,31 +106,27 @@ body.light{--card:#ffffff;--card2:#eef2ff;--text:#14213d;--muted:#56627a;--line:
 #pickCountRow .btn.locked.pick-active::after{
   color:rgba(8,16,31,.78);
 }
-.po-free-used-host{position:absolute;left:0;right:0;bottom:0;z-index:4;pointer-events:none;}
-.po-free-used-host .po-free-used-sheet{pointer-events:auto;}
-.po-free-used-sheet{
-  border-radius:20px 20px 0 0;
-  padding:26px 20px 34px;
-  background:linear-gradient(180deg,rgba(27,42,83,.98),#070f1c);
-  border:1px solid rgba(110,231,255,.28);
-  border-bottom:0;
-  box-shadow:0 -20px 50px rgba(0,0,0,.45);
-  transform:translateY(105%);
-  transition:transform .42s cubic-bezier(.32,1,.36,1);
+/* Free-pick-used: full overlay body (same surface as HR pick run) */
+.po-paywall-panel{
+  max-width:380px;margin:8vh auto 48px;padding:28px 22px 32px;
+  text-align:center;border-radius:20px;
+  background:linear-gradient(180deg,rgba(27,42,83,.55),rgba(7,15,28,.92));
+  border:1px solid rgba(110,231,255,.22);
+  box-shadow:0 20px 50px rgba(0,0,0,.35);
 }
-.po-free-used-sheet.visible{transform:translateY(0);}
-.po-free-used-sheet .po-fu-title{font-weight:900;font-size:1.05rem;color:#eef3ff;margin-bottom:8px;text-align:center;}
-.po-free-used-sheet .po-fu-text{color:#9fb0d0;font-size:.88rem;line-height:1.55;margin-bottom:18px;text-align:center;}
-.po-free-used-sheet .po-fu-actions{display:flex;flex-direction:column;gap:10px;max-width:320px;margin:0 auto;}
-.po-free-used-sheet .po-fu-btn{
+.po-paywall-panel .po-pw-icon{font-size:2.4rem;line-height:1;margin-bottom:12px;}
+.po-paywall-panel .po-pw-title{font-weight:900;font-size:1.15rem;color:#eef3ff;margin-bottom:10px;}
+.po-paywall-panel .po-pw-text{color:#9fb0d0;font-size:.9rem;line-height:1.55;margin-bottom:22px;}
+.po-paywall-panel .po-pw-actions{display:flex;flex-direction:column;gap:10px;max-width:300px;margin:0 auto;}
+.po-paywall-panel .po-pw-btn{
   padding:13px 20px;border-radius:14px;border:0;
   background:linear-gradient(90deg,#6ee7ff,#8b5cf6);color:#07111f;
-  font-weight:900;font-size:.95rem;cursor:pointer;
+  font-weight:900;font-size:1rem;cursor:pointer;
 }
-.po-free-used-sheet .po-fu-close{
+.po-paywall-panel .po-pw-btn.po-pw-secondary{
   background:rgba(255,255,255,.08);color:var(--text);border:1px solid var(--line);
 }
-.po-free-used-sheet .po-fu-hint{margin-top:14px;font-size:.76rem;color:#56627a;text-align:center;line-height:1.4;}
+.po-paywall-panel .po-pw-hint{margin-top:16px;font-size:.76rem;color:#56627a;line-height:1.45;}
 .trust-banner{margin:14px 0 16px;padding:14px 16px;border:1px solid rgba(110,231,255,.25);border-radius:16px;background:linear-gradient(180deg,rgba(17,28,51,.95),rgba(24,39,71,.95));box-shadow:0 10px 28px rgba(0,0,0,.18)}
 .trust-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
 .trust-badge{padding:8px 12px;border-radius:999px;background:linear-gradient(90deg,#6ee7ff,#8b5cf6);color:#08101f;font-weight:900;letter-spacing:.5px;font-size:13px;}
@@ -767,7 +763,15 @@ function renderSport(){
   syncPickCountRowStyles();
 }
 function setOption(o){currentOption=o;renderTabs();renderSport();}
-function setCount(n){if(pickLocked) return; if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'HR',attempted_count:n});showUpgradeWall();return;} pickCount=n;renderSport();}
+function setCount(n){
+  if(pickLocked) return;
+  if(!_devMode&&(_freePickUsed||n>1)){
+    trackEvent('paywall_hit',{sport:'MLB',option:'HR',attempted_count:n});
+    showUpgradeWall({ attemptedPickCount: n });
+    return;
+  }
+  pickCount=n;renderSport();
+}
 function renderPicks(list){document.getElementById('picksTitle').textContent='Quick Picks';document.getElementById('picks').innerHTML=list.length?list.map(p=>`<div class='item'><span>${p}</span><span class='muted'>${currentOption}</span></div>`).join(''):'<div class="muted">No picks available yet.</div>';}
 function _publicAppUrl(){
   try{
@@ -2465,17 +2469,20 @@ function markFreePickUsed(){
   }
   // Brief beat after picks finish, then same full-screen surface: slide up paywall sheet in overlay + sync main panel
   setTimeout(function(){
-    showFreePickUsedInOverlay();
+    showFreePickUsedFullScreen();
     showUpgradeWall();
   }, 1100);
 }
 
-function showUpgradeWall(){
+function showUpgradeWall(opts){
+  opts = opts || {};
   // Lock batter buttons and Pick button, show upgrade message
   pickLocked = false; // allow renderSport to run
   pickCount = 0;
-  // Keep “1 pick” visibly selected on the row they just used (pickCount was cleared after the run)
-  if(_freePickUsed){
+  // HR: show whichever count they tapped (2 or 3 before paywall, or 1 after free run) — same for free-used taps
+  if(opts.attemptedPickCount >= 1 && opts.attemptedPickCount <= 3 && current === 'MLB' && currentOption === 'HR'){
+    pickCount = opts.attemptedPickCount;
+  }else if(_freePickUsed){
     if(current==='MLB'){
       if(currentOption==='Ks') ksPickCount = Math.max(ksPickCount, 1);
       else if(currentOption==='Hits') hitsPickCount = Math.max(hitsPickCount, 1);
@@ -2732,33 +2739,44 @@ function openPickOverlay(){
   document.getElementById('poTitle').textContent = _getOverlayTitle();
 }
 
-function showFreePickUsedInOverlay(){
+function _freePickUsedOverlayHtml(){
+  return (
+    '<div class="po-paywall-panel">'+
+      '<div class="po-pw-icon">🔒</div>'+
+      '<div class="po-pw-title">Free pick used</div>'+
+      '<div class="po-pw-text">You\u2019ve used your 1 free daily pick. Upgrade for unlimited picks, every count option, and more.</div>'+
+      '<div class="po-pw-actions">'+
+        '<button type="button" class="po-pw-btn" onclick="showUpgradeModal()">Upgrade \uD83D\uDE80</button>'+
+        '<button type="button" class="po-pw-btn po-pw-secondary" onclick="closePickOverlay()">Close</button>'+
+      '</div>'+
+      '<div class="po-pw-hint">Resets daily. Come back tomorrow for another free pick.</div>'+
+    '</div>'
+  );
+}
+
+/** Same full-screen slide as HR picks: if overlay is open, close then reopen with paywall content. */
+function openFreePickUsedOverlayFull(){
   const ov = document.getElementById('pickOverlay');
-  if(!ov || !ov.classList.contains('open')) return;
-  const body = ov.querySelector('.po-body');
-  if(!body) return;
+  if(!ov) return;
+  const oldHost = document.getElementById('poFreeUsedHost');
+  if(oldHost) oldHost.remove();
+  ov.classList.remove('closing');
+  ov.classList.add('open');
+  _poOpen = true;
   document.getElementById('poShareBtn').style.display = 'none';
   document.getElementById('poTitle').textContent = '🎁 Free pick used';
-  const existing = document.getElementById('poFreeUsedHost');
-  if(existing) existing.remove();
-  const host = document.createElement('div');
-  host.id = 'poFreeUsedHost';
-  host.className = 'po-free-used-host';
-  host.innerHTML =
-    '<div class="po-free-used-sheet" id="poFreeUsedSheet">'+
-      '<div class="po-fu-title">Free pick used</div>'+
-      '<div class="po-fu-text">You\u2019ve used your 1 free daily pick. Upgrade for unlimited picks, every count option, and more.</div>'+
-      '<div class="po-fu-actions">'+
-        '<button type="button" class="po-fu-btn" onclick="showUpgradeModal()">Upgrade \uD83D\uDE80</button>'+
-        '<button type="button" class="po-fu-btn po-fu-close" onclick="closePickOverlay()">Close</button>'+
-      '</div>'+
-      '<div class="po-fu-hint">Resets daily. Come back tomorrow for another free pick.</div>'+
-    '</div>';
-  body.appendChild(host);
-  const sheet = document.getElementById('poFreeUsedSheet');
-  requestAnimationFrame(function(){
-    requestAnimationFrame(function(){ sheet.classList.add('visible'); });
-  });
+  document.getElementById('poCards').innerHTML = _freePickUsedOverlayHtml();
+}
+
+function showFreePickUsedFullScreen(){
+  const ov = document.getElementById('pickOverlay');
+  if(!ov) return;
+  if(ov.classList.contains('open')){
+    closePickOverlay();
+    setTimeout(function(){ openFreePickUsedOverlayFull(); }, 420);
+  }else{
+    openFreePickUsedOverlayFull();
+  }
 }
 
 function closePickOverlay(){
