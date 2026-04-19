@@ -200,6 +200,43 @@ body::after{right:0;border-left:1px solid rgba(52,211,153,.22);}
 .wrap, .topbar, .card, .trust-banner, .po-card, .ob-step{position:relative;z-index:1;}
 
 </style>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCF4PtHYIlGAnmM7_lIT58d_irYQRovgQc",
+    authDomain: "pro-sports-quick-pix.firebaseapp.com",
+    projectId: "pro-sports-quick-pix",
+    storageBucket: "pro-sports-quick-pix.firebasestorage.app",
+    messagingSenderId: "377494264538",
+    appId: "1:377494264538:web:8d9b83c39850e6d35c23e3",
+    measurementId: "G-0KYPK8RCVN"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  window.firebaseAuth = getAuth(app);
+  window.firebaseDb = getFirestore(app);
+  window.firebaseGoogleProvider = new GoogleAuthProvider();
+  window.firebaseSignInWithGoogle = () => signInWithPopup(window.firebaseAuth, window.firebaseGoogleProvider);
+  window.firebaseCreateEmailUser = (email, password) => createUserWithEmailAndPassword(window.firebaseAuth, email, password);
+  window.firebaseSignInEmailUser = (email, password) => signInWithEmailAndPassword(window.firebaseAuth, email, password);
+  window.firebaseOnAuthStateChanged = onAuthStateChanged;
+  window.firebaseSignOut = () => signOut(window.firebaseAuth);
+  window.firebaseSaveUserProfile = async (profile) => {
+    const u = window.firebaseAuth.currentUser; if (!u) return null;
+    await setDoc(doc(window.firebaseDb, 'users', u.uid), { uid: u.uid, email: u.email || '', name: profile?.name || '', provider: profile?.provider || '', updatedAt: Date.now() }, { merge: true });
+    return true;
+  };
+  window.firebaseLoadUserProfile = async () => {
+    const u = window.firebaseAuth.currentUser; if (!u) return null;
+    const snap = await getDoc(doc(window.firebaseDb, 'users', u.uid));
+    return snap.exists() ? snap.data() : null;
+  };
+</script>
+
 </head>
 <body>
 
