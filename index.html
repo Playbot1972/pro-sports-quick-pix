@@ -200,6 +200,90 @@ body::after{right:0;border-left:1px solid rgba(52,211,153,.22);}
 .wrap, .topbar, .card, .trust-banner, .po-card, .ob-step{position:relative;z-index:1;}
 
 </style>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCF4PtHYIlGAnmM7_lIT58d_irYQRovgQc",
+    authDomain: "pro-sports-quick-pix.firebaseapp.com",
+    projectId: "pro-sports-quick-pix",
+    storageBucket: "pro-sports-quick-pix.firebasestorage.app",
+    messagingSenderId: "377494264538",
+    appId: "1:377494264538:web:8d9b83c39850e6d35c23e3",
+    measurementId: "G-0KYPK8RCVN"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  window.firebaseAuth = getAuth(app);
+  window.firebaseDb = getFirestore(app);
+  window.firebaseGoogleProvider = new GoogleAuthProvider();
+  window.firebaseSignInWithGoogle = () => signInWithPopup(window.firebaseAuth, window.firebaseGoogleProvider);
+  window.firebaseCreateEmailUser = (email, password) => createUserWithEmailAndPassword(window.firebaseAuth, email, password);
+  window.firebaseSignInEmailUser = (email, password) => signInWithEmailAndPassword(window.firebaseAuth, email, password);
+  window.firebaseOnAuthStateChanged = onAuthStateChanged;
+  window.firebaseSignOut = () => signOut(window.firebaseAuth);
+  window.firebaseSaveUserProfile = async (profile) => {
+    const u = window.firebaseAuth.currentUser; if (!u) return null;
+    await setDoc(doc(window.firebaseDb, 'users', u.uid), { uid: u.uid, email: u.email || '', name: profile?.name || '', provider: profile?.provider || '', updatedAt: Date.now() }, { merge: true });
+    return true;
+  };
+  window.firebaseLoadUserProfile = async () => {
+    const u = window.firebaseAuth.currentUser; if (!u) return null;
+    const snap = await getDoc(doc(window.firebaseDb, 'users', u.uid));
+    return snap.exists() ? snap.data() : null;
+  };
+</script>
+
+
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+  const host = document.querySelector('.topbar') || document.body;
+  const btn = document.createElement('button');
+  btn.id = 'logoutBtn';
+  btn.textContent = 'Logout';
+  btn.style.cssText = 'margin-left:10px;padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:inherit;font-weight:700;cursor:pointer;';
+  btn.onclick = async () => { if (window.firebaseSignOut) await window.firebaseSignOut(); };
+  host.appendChild(btn);
+  if (window.firebaseOnAuthStateChanged && window.firebaseAuth) {
+    window.firebaseOnAuthStateChanged(window.firebaseAuth, (user) => {
+      btn.style.display = user ? 'inline-block' : 'none';
+    });
+  }
+});
+</script>
+
+
+<script>
+window.espnPlayerHeadshot = function(a){
+  const id = a && (a.id || a.athleteId || a.playerId || a.athlete && a.athlete.id);
+  return id ? `https://a.espncdn.com/i/headshots/nba/players/full/${id}.png` : '';
+};
+</script>
+
+
+<script>
+window.safePlayerName = function(obj){
+  const a = obj && (obj.athlete || obj.player || obj);
+  return (a && (a.displayName || a.fullName || a.shortName || a.name)) || '';
+};
+window.safePlayerPos = function(obj){
+  const a = obj && (obj.athlete || obj.player || obj);
+  const pos = a && a.position;
+  return (typeof pos === 'string' ? pos : (pos && (pos.abbreviation || pos.displayName || pos.name))) || '';
+};
+window.safePlayerId = function(obj){
+  const a = obj && (obj.athlete || obj.player || obj);
+  return (a && (a.id || a.athleteId || a.playerId)) || obj.id || obj.athleteId || obj.playerId || '';
+};
+window.safeHeadshot = function(obj){
+  const id = window.safePlayerId(obj);
+  return id ? `https://a.espncdn.com/i/headshots/nhl/players/full/${id}.png` : '';
+};
+</script>
+
 </head>
 <body>
 
@@ -527,14 +611,25 @@ function renderSport(){
 function setOption(o){currentOption=o;renderTabs();renderSport();}
 function setCount(n){if(pickLocked) return; if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'HR',attempted_count:n});showUpgradeWall();return;} pickCount=n;renderSport();}
 function renderPicks(list){document.getElementById('picksTitle').textContent='Quick Picks';document.getElementById('picks').innerHTML=list.length?list.map(p=>`<div class='item'><span>${p}</span><span class='muted'>${currentOption}</span></div>`).join(''):'<div class="muted">No picks available yet.</div>';}
-function copyPicks(){if(!mlbPicks.length)return; const lines=mlbPicks.map((p,i)=>`${i+1}. ${p.player} (${p.teamAbbr||p.team}) - ${p.hr} HR`); const sharer=userName ? userName : 'Someone'; const shareUrl=window.location.href.split('#')[0].split('?')[0]; const shareText=`${sharer} is using Pro Sports Quick Pix for today's HR picks!
-
-${lines.join('
-')}
-
-Get your free picks: ${shareUrl}
-
-For entertainment only. 21+ only.`; const isMobile=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent); const doShare=async()=>{try{if(navigator.share&&isMobile){await navigator.share({title:'Pro Sports Quick Pix Picks',text:shareText,url:shareUrl})} else if(navigator.clipboard&&navigator.clipboard.writeText){await navigator.clipboard.writeText(shareText)} else {const ta=document.createElement('textarea');ta.value=shareText;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta)} const btn=document.getElementById('shareBtn');if(btn){const orig=btn.textContent;btn.textContent='✓ Copied!';btn.style.color='#34d399';btn.style.borderColor='rgba(52,211,153,.4)';setTimeout(()=>{btn.textContent=orig;btn.style.color='#6ee7ff';btn.style.borderColor='rgba(110,231,255,.3)'},2000)}}catch(e){const ta=document.createElement('textarea');ta.value=shareText;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);const btn=document.getElementById('shareBtn');if(btn){const orig=btn.textContent;btn.textContent='✓ Copied!';btn.style.color='#34d399';btn.style.borderColor='rgba(52,211,153,.4)';setTimeout(()=>{btn.textContent=orig;btn.style.color='#6ee7ff';btn.style.borderColor='rgba(110,231,255,.3)'},2000)}}}; if(poOpen) doShare(); else {openPickOverlay(); setTimeout(doShare,150)}}
+function copyPicks(){
+  if(!mlbPicks.length) return;
+  const today=todayStr;
+  const lines=mlbPicks.map((p,i)=>`${i+1}. ${p.player} (${p.teamAbbr||p.team}) \u2014 ${p.hr} HR`);
+  const sharer = _userName ? `${_userName} is` : 'Someone is';
+  const text=`\uD83D\uDD34 ${sharer} using Pro Sports Quick Pix for today's HR picks!\n\n${lines.join('\n')}\n\n\uD83C\uDFAF Get your free picks: https://www.perplexity.ai/computer/a/multisportsqp-C.3phRMSQlW0imvW1u4uXw\n\nFor entertainment only. 21+ only.`;
+  const isMobile=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  function flashCopied(){const btn=document.getElementById('shareBtn');if(btn){const orig=btn.textContent;btn.textContent='\u2713 Copied!';btn.style.color='#34d399';btn.style.borderColor='rgba(52,211,153,.4)';setTimeout(()=>{btn.textContent=orig;btn.style.color='#6ee7ff';btn.style.borderColor='rgba(110,231,255,.3)';},2000);}}
+  if(isMobile && navigator.share){
+    navigator.share({title:'Pro Sports Quick Pix Picks',text}).catch(()=>{});
+  } else if(navigator.clipboard){
+    navigator.clipboard.writeText(text).then(flashCopied).catch(()=>{
+      // fallback: execCommand
+      const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);flashCopied();
+    });
+  } else {
+    const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);flashCopied();
+  }
+}
 function clearMLB(){mlbToken++;mlbLoaded=false;mlbLoading=false;mlbPicks=[];mlbTeamsUsed=[];mlbHitterUsed=new Set();mlbLivePool=[];pickLocked=false;pickCount=0;currentOption='HR';renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Click Pick Lucky Hitter.</div>';}
 function setKsCount(n){if(pickLocked) return; if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'Ks',attempted_count:n});showUpgradeWall();return;} ksPickCount=n; renderSport();}
 function renderKsPicks(){
