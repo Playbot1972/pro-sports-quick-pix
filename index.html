@@ -237,6 +237,24 @@ body::after{right:0;border-left:1px solid rgba(52,211,153,.22);}
   };
 </script>
 
+
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+  const host = document.querySelector('.topbar') || document.body;
+  const btn = document.createElement('button');
+  btn.id = 'logoutBtn';
+  btn.textContent = 'Logout';
+  btn.style.cssText = 'margin-left:10px;padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:inherit;font-weight:700;cursor:pointer;';
+  btn.onclick = async () => { if (window.firebaseSignOut) await window.firebaseSignOut(); };
+  host.appendChild(btn);
+  if (window.firebaseOnAuthStateChanged && window.firebaseAuth) {
+    window.firebaseOnAuthStateChanged(window.firebaseAuth, (user) => {
+      btn.style.display = user ? 'inline-block' : 'none';
+    });
+  }
+});
+</script>
+
 </head>
 <body>
 
