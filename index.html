@@ -2341,7 +2341,7 @@ function copyPicksFromOverlay(){
   trackEvent('picks_shared',{sport:current,option:currentOption});
   const sharer = _userName || 'Someone';
   const lines = mlbPicks.map((p,i)=>`${i+1}. ${p.player} (${p.teamAbbr||p.team}) — ${p.hr} HR`);
-  const text = `🔴 ${sharer} using Pro Sports Quick Pix for today's HR picks!\n\n${lines.join('\n')}\n\n🎯 Get your free picks: ${location.origin + location.pathname}\n\nFor entertainment only. 21+ only.`;
+  const text = `🔴 ${sharer} using Pro Sports Quick Pix for today's HR picks!\n\n${lines.join('\n')}\n\n🎯 Get your free picks: https://www.perplexity.ai/computer/a/multisportsqp-C.3phRMSQlW0imvW1u4uXw\n\nFor entertainment only. 21+ only.`;
   navigator.clipboard.writeText(text).catch(()=>{});
   const btn = document.getElementById('poShareBtn');
   if(btn){ const orig=btn.textContent; btn.textContent='✓ Copied!'; setTimeout(()=>btn.textContent=orig,2000); }
