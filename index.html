@@ -73,13 +73,38 @@ body.light{--card:#ffffff;--card2:#eef2ff;--text:#14213d;--muted:#56627a;--line:
 @keyframes bar{0%{transform:translateX(-120%)}50%{transform:translateX(140%)}100%{transform:translateX(260%)} }
 .locked{opacity:.45;filter:grayscale(.15);background:rgba(255,255,255,.08)!important;color:var(--text)!important}
 .locked[disabled]{pointer-events:none}
-/* Count button that is the active pick — stay visibly “selected” while run is locked */
-#pickCountRow .btn.locked:not(.btn2){
+/* Count row: don’t use global .locked look — show clear selected vs not-selected even when disabled */
+#pickCountRow .btn{position:relative;}
+#pickCountRow .btn.locked.btn2{
+  opacity:.78 !important;
+  filter:none !important;
+  background:rgba(255,255,255,.07) !important;
+  color:#9fb0d0 !important;
+  border:1px solid rgba(255,255,255,.14) !important;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.12) !important;
+}
+/* Selected count: checkmark + extra padding so label never clashes */
+#pickCountRow .btn.pick-active{
+  padding-right:22px;
+}
+#pickCountRow .btn.pick-active::after{
+  content:'✓';
+  position:absolute;
+  top:6px;right:8px;
+  font-size:12px;font-weight:900;
+  color:rgba(8,16,31,.52);
+  line-height:1;
+  pointer-events:none;
+}
+#pickCountRow .btn.locked.pick-active{
   opacity:1 !important; filter:none !important;
   background:linear-gradient(90deg,#6ee7ff,#8b5cf6) !important;
   color:#08101f !important;
-  border-color:rgba(110,231,255,.45) !important;
-  box-shadow:0 0 0 2px rgba(110,231,255,.35),0 6px 20px rgba(110,231,255,.18);
+  border-color:rgba(110,231,255,.55) !important;
+  box-shadow:0 0 0 2px rgba(110,231,255,.45),0 6px 22px rgba(110,231,255,.22) !important;
+}
+#pickCountRow .btn.locked.pick-active::after{
+  color:rgba(8,16,31,.78);
 }
 .po-free-used-host{position:absolute;left:0;right:0;bottom:0;z-index:4;pointer-events:none;}
 .po-free-used-host .po-free-used-sheet{pointer-events:auto;}
@@ -571,6 +596,42 @@ const todayStr = (()=>{const d=new Date();return `${d.getFullYear()}-${String(d.
 function trackEvent(name, params){
   try{ if(typeof gtag==='function') gtag('event', name, params||{}); }catch(e){}
 }
+/** Keep #pickCountRow selection + locked state aligned with the active sport/option (not always MLB pickCount). */
+function syncPickCountRowStyles(){
+  const row=document.getElementById('pickCountRow');
+  if(!row)return;
+  const buttons=row.querySelectorAll('button');
+  if(!buttons.length)return;
+  const _paywalled=_freePickUsed&&!_devMode;
+  let c=0;
+  if(current==='MLB'){
+    if(currentOption==='Ks')c=ksPickCount;
+    else if(currentOption==='Hits')c=hitsPickCount;
+    else if(currentOption==='Total Bases')c=basesPickCount;
+    else if(currentOption==='RBI')c=rbiPickCount;
+    else c=pickCount;
+  }else if(current==='NBA')c=nbaPickCount;
+  else if(current==='NHL')c=nhlPickCount;
+  else if(current==='Soccer')c=soccerPickCount;
+  else if(current==='NFL')c=nflPickCount;
+  else return;
+  const rowLocked=!!pickLocked||!!_paywalled;
+  buttons.forEach(function(b){
+    const n=parseInt(b.textContent.trim(),10);
+    if(isNaN(n)||n<1||n>3)return;
+    const isSel=c>=1&&c<=3&&n===c;
+    b.classList.toggle('btn2',!isSel);
+    b.classList.toggle('pick-active',isSel);
+    b.classList.toggle('locked',rowLocked);
+    b.disabled=!!pickLocked;
+    b.setAttribute('aria-pressed',isSel?'true':'false');
+    if(isSel){
+      b.title=rowLocked?'Your pick (locked)':'Your pick';
+    }else{
+      b.title=rowLocked?'Not selected':('Choose '+n);
+    }
+  });
+}
 // Session time tracking
 var _sessionStart = Date.now();
 var _sectionTimes = {}; // sport -> ms spent
@@ -654,6 +715,7 @@ function renderSport(){
     document.getElementById('options').innerHTML='';
     renderPicks([]);
   }
+  syncPickCountRowStyles();
 }
 function setOption(o){currentOption=o;renderTabs();renderSport();}
 function setCount(n){if(pickLocked) return; if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'HR',attempted_count:n});showUpgradeWall();return;} pickCount=n;renderSport();}
@@ -801,6 +863,7 @@ function renderKsPicks(){
   }
   const loadBtn=document.getElementById('ksLoadBtn');
   if(loadBtn) loadBtn.disabled=!(!pickLocked);
+  syncPickCountRowStyles();
 }
 function clearKs(){ksToken++;ksLoaded=false;ksLoading=false;ksPicks=[];ksPitcherUsed=new Set();ksLivePool=[];pickLocked=false;ksPickCount=0;renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Choose a count and click Pick Lucky Pitcher.</div>';}
 
@@ -821,6 +884,7 @@ function renderHitsPicks(){
   }
   const btn=document.getElementById('hitsLoadBtn');
   if(btn) btn.disabled=!!pickLocked;
+  syncPickCountRowStyles();
 }
 function clearHits(){hitsToken++;hitsLoaded=false;hitsLoading=false;hitsPicks=[];hitsUsed=new Set();hitsLivePool=[];pickLocked=false;hitsPickCount=0;renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet.</div>';}
 function poRevealHitsCard(p,idx){
@@ -923,6 +987,7 @@ function renderBasesPicks(){
   }
   const btn=document.getElementById('basesLoadBtn');
   if(btn) btn.disabled=!!pickLocked;
+  syncPickCountRowStyles();
 }
 function clearBases(){basesToken++;basesLoaded=false;basesLoading=false;basesPicks=[];basesUsed=new Set();basesLivePool=[];pickLocked=false;basesPickCount=0;renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet.</div>';}
 function poRevealBasesCard(p,idx){
@@ -1025,6 +1090,7 @@ function renderRBIPicks(){
   }
   const btn=document.getElementById('rbiLoadBtn');
   if(btn) btn.disabled=!!pickLocked;
+  syncPickCountRowStyles();
 }
 function clearRBI(){rbiToken++;rbiLoaded=false;rbiLoading=false;rbiPicks=[];rbiUsed=new Set();rbiLivePool=[];pickLocked=false;rbiPickCount=0;renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet.</div>';}
 function poRevealRBICard(p,idx){
@@ -1131,6 +1197,7 @@ function renderNFLPicks(){
   }
   const btn=document.getElementById('nflLoadBtn');
   if(btn) btn.disabled=!!pickLocked;
+  syncPickCountRowStyles();
 }
 function clearNFL(){nflToken++;nflLoaded=false;nflLoading=false;nflPicks=[];nflUsed=new Set();nflLivePool=[];pickLocked=false;nflPickCount=1;renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Choose a count and click Pick Lucky Player.</div>';}
 async function getTodaysNFLPlayers(option){
@@ -1305,6 +1372,7 @@ function renderNBAPicks(){
   }
   const btn=document.getElementById('nbaLoadBtn');
   if(btn) btn.disabled=!!pickLocked;
+  syncPickCountRowStyles();
 }
 function clearNBA(){nbaToken++;nbaLoaded=false;nbaLoading=false;nbaPicks=[];nbaUsed=new Set();nbaLivePool=[];pickLocked=false;nbaPickCount=0;renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Choose a count and click Pick Lucky Player.</div>';}
 async function getTodaysNBAPlayers(option){
@@ -1459,6 +1527,7 @@ function renderNHLPicks(){
   }
   const btn=document.getElementById('nhlLoadBtn');
   if(btn) btn.disabled=!!pickLocked;
+  syncPickCountRowStyles();
 }
 function clearNHL(){nhlToken++;nhlLoaded=false;nhlLoading=false;nhlPicks=[];nhlUsed=new Set();nhlLivePool=[];pickLocked=false;nhlPickCount=0;renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Choose a count and click Pick Lucky Player.</div>';}
 async function getTodaysNHLPlayers(option){
@@ -1629,6 +1698,7 @@ function renderSoccerPicks(){
   }
   const btn=document.getElementById('soccerLoadBtn');
   if(btn) btn.disabled=!!pickLocked;
+  syncPickCountRowStyles();
 }
 function clearSoccer(){soccerToken++;soccerLoaded=false;soccerLoading=false;soccerPicks=[];soccerUsed=new Set();soccerLivePool=[];pickLocked=false;soccerPickCount=0;renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Choose a count and click Pick Lucky Player.</div>';}
 async function getTodaysSoccerPlayers(option){
@@ -1850,8 +1920,7 @@ function renderMLB(){
   }
   const shareBtn=document.getElementById('shareBtn');
   if(shareBtn) shareBtn.style.display=mlbPicks.length>0?'inline-block':'none';
-  const row=document.getElementById('pickCountRow');
-  if(row){row.querySelectorAll('button').forEach(b=>{const isSelected=pickCount>=1&&pickCount<=3&&b.textContent.trim().startsWith(String(pickCount)+' ');b.classList.toggle('btn2',!isSelected);b.classList.toggle('locked',pickLocked);b.disabled=pickLocked;});}
+  syncPickCountRowStyles();
   const loadBtn=document.getElementById('mlbLoadBtn');
   if(loadBtn) loadBtn.disabled=!(pickCount>=1&&pickCount<=3)||pickLocked;
 }
