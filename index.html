@@ -527,25 +527,14 @@ function renderSport(){
 function setOption(o){currentOption=o;renderTabs();renderSport();}
 function setCount(n){if(pickLocked) return; if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'HR',attempted_count:n});showUpgradeWall();return;} pickCount=n;renderSport();}
 function renderPicks(list){document.getElementById('picksTitle').textContent='Quick Picks';document.getElementById('picks').innerHTML=list.length?list.map(p=>`<div class='item'><span>${p}</span><span class='muted'>${currentOption}</span></div>`).join(''):'<div class="muted">No picks available yet.</div>';}
-function copyPicks(){
-  if(!mlbPicks.length) return;
-  const today=todayStr;
-  const lines=mlbPicks.map((p,i)=>`${i+1}. ${p.player} (${p.teamAbbr||p.team}) \u2014 ${p.hr} HR`);
-  const sharer = _userName ? `${_userName} is` : 'Someone is';
-  const text=`\uD83D\uDD34 ${sharer} using Pro Sports Quick Pix for today's HR picks!\n\n${lines.join('\n')}\n\n\uD83C\uDFAF Get your free picks: https://www.perplexity.ai/computer/a/multisportsqp-C.3phRMSQlW0imvW1u4uXw\n\nFor entertainment only. 21+ only.`;
-  const isMobile=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  function flashCopied(){const btn=document.getElementById('shareBtn');if(btn){const orig=btn.textContent;btn.textContent='\u2713 Copied!';btn.style.color='#34d399';btn.style.borderColor='rgba(52,211,153,.4)';setTimeout(()=>{btn.textContent=orig;btn.style.color='#6ee7ff';btn.style.borderColor='rgba(110,231,255,.3)';},2000);}}
-  if(isMobile && navigator.share){
-    navigator.share({title:'Pro Sports Quick Pix Picks',text}).catch(()=>{});
-  } else if(navigator.clipboard){
-    navigator.clipboard.writeText(text).then(flashCopied).catch(()=>{
-      // fallback: execCommand
-      const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);flashCopied();
-    });
-  } else {
-    const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);flashCopied();
-  }
-}
+function copyPicks(){if(!mlbPicks.length)return; const lines=mlbPicks.map((p,i)=>`${i+1}. ${p.player} (${p.teamAbbr||p.team}) - ${p.hr} HR`); const sharer=userName ? userName : 'Someone'; const shareUrl=window.location.href.split('#')[0].split('?')[0]; const shareText=`${sharer} is using Pro Sports Quick Pix for today's HR picks!
+
+${lines.join('
+')}
+
+Get your free picks: ${shareUrl}
+
+For entertainment only. 21+ only.`; const isMobile=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent); const doShare=async()=>{try{if(navigator.share&&isMobile){await navigator.share({title:'Pro Sports Quick Pix Picks',text:shareText,url:shareUrl})} else if(navigator.clipboard&&navigator.clipboard.writeText){await navigator.clipboard.writeText(shareText)} else {const ta=document.createElement('textarea');ta.value=shareText;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta)} const btn=document.getElementById('shareBtn');if(btn){const orig=btn.textContent;btn.textContent='✓ Copied!';btn.style.color='#34d399';btn.style.borderColor='rgba(52,211,153,.4)';setTimeout(()=>{btn.textContent=orig;btn.style.color='#6ee7ff';btn.style.borderColor='rgba(110,231,255,.3)'},2000)}}catch(e){const ta=document.createElement('textarea');ta.value=shareText;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);const btn=document.getElementById('shareBtn');if(btn){const orig=btn.textContent;btn.textContent='✓ Copied!';btn.style.color='#34d399';btn.style.borderColor='rgba(52,211,153,.4)';setTimeout(()=>{btn.textContent=orig;btn.style.color='#6ee7ff';btn.style.borderColor='rgba(110,231,255,.3)'},2000)}}}; if(poOpen) doShare(); else {openPickOverlay(); setTimeout(doShare,150)}}
 function clearMLB(){mlbToken++;mlbLoaded=false;mlbLoading=false;mlbPicks=[];mlbTeamsUsed=[];mlbHitterUsed=new Set();mlbLivePool=[];pickLocked=false;pickCount=0;currentOption='HR';renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Click Pick Lucky Hitter.</div>';}
 function setKsCount(n){if(pickLocked) return; if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'Ks',attempted_count:n});showUpgradeWall();return;} ksPickCount=n; renderSport();}
 function renderKsPicks(){
