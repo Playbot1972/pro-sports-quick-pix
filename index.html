@@ -14,12 +14,10 @@
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script>
-  // Initialize EmailJS ONCE here — do NOT call emailjs.init() inside obSendCode()
   document.addEventListener('DOMContentLoaded', function() {
     if (typeof emailjs !== 'undefined') emailjs.init('YcyxPL19ITeg2I5ed');
   });
 </script>
-
 <!-- ───────────────────────────────────────────────
      WIN SFX — all preloaded, swap via sfxSelect
      Royalty-free under the Mixkit License.
@@ -203,7 +201,7 @@ body::after{right:0;border-left:1px solid rgba(52,211,153,.22);}
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { getAuth, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, updateProfile, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -217,17 +215,36 @@ body::after{right:0;border-left:1px solid rgba(52,211,153,.22);}
   };
 
   const app = initializeApp(firebaseConfig);
-  window.firebaseAuth = getAuth(app);
+  const auth = getAuth(app);
+  // Session-only auth: closing the browser ends the login (age gate still uses device storage).
+  await setPersistence(auth, browserSessionPersistence);
+  window.firebaseAuth = auth;
   window.firebaseDb = getFirestore(app);
   window.firebaseGoogleProvider = new GoogleAuthProvider();
-  window.firebaseSignInWithGoogle = () => signInWithPopup(window.firebaseAuth, window.firebaseGoogleProvider);
+  window.firebaseSignInWithGooglePopup = () => signInWithPopup(window.firebaseAuth, window.firebaseGoogleProvider);
+  window.firebaseSignInWithGoogleRedirect = () => signInWithRedirect(window.firebaseAuth, window.firebaseGoogleProvider);
+  window.firebaseGetRedirectResult = () => getRedirectResult(window.firebaseAuth);
   window.firebaseCreateEmailUser = (email, password) => createUserWithEmailAndPassword(window.firebaseAuth, email, password);
   window.firebaseSignInEmailUser = (email, password) => signInWithEmailAndPassword(window.firebaseAuth, email, password);
   window.firebaseOnAuthStateChanged = onAuthStateChanged;
   window.firebaseSignOut = () => signOut(window.firebaseAuth);
+  window.firebaseSendPasswordReset = (email) => sendPasswordResetEmail(window.firebaseAuth, email);
+  window.firebaseUpdateDisplayName = (name) => {
+    const u = window.firebaseAuth.currentUser;
+    if (!u || !name) return Promise.resolve();
+    return updateProfile(u, { displayName: name });
+  };
   window.firebaseSaveUserProfile = async (profile) => {
     const u = window.firebaseAuth.currentUser; if (!u) return null;
-    await setDoc(doc(window.firebaseDb, 'users', u.uid), { uid: u.uid, email: u.email || '', name: profile?.name || '', provider: profile?.provider || '', updatedAt: Date.now() }, { merge: true });
+    const data = { uid: u.uid, email: u.email || '', updatedAt: Date.now() };
+    if (profile) {
+      if (profile.name !== undefined) data.name = profile.name;
+      if (profile.provider !== undefined) data.provider = profile.provider;
+      if (profile.freePickUsed !== undefined) data.freePickUsed = profile.freePickUsed;
+      if (profile.freePickDate !== undefined) data.freePickDate = profile.freePickDate;
+      if (profile.isPro !== undefined) data.isPro = profile.isPro;
+    }
+    await setDoc(doc(window.firebaseDb, 'users', u.uid), data, { merge: true });
     return true;
   };
   window.firebaseLoadUserProfile = async () => {
@@ -243,15 +260,21 @@ window.addEventListener('DOMContentLoaded', () => {
   const host = document.querySelector('.topbar') || document.body;
   const btn = document.createElement('button');
   btn.id = 'logoutBtn';
-  btn.textContent = 'Logout';
-  btn.style.cssText = 'margin-left:10px;padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:inherit;font-weight:700;cursor:pointer;';
+  btn.textContent = 'Log out';
+  btn.style.cssText = 'display:none;padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:inherit;font-weight:700;cursor:pointer;';
   btn.onclick = async () => { if (window.firebaseSignOut) await window.firebaseSignOut(); };
   host.appendChild(btn);
-  if (window.firebaseOnAuthStateChanged && window.firebaseAuth) {
-    window.firebaseOnAuthStateChanged(window.firebaseAuth, (user) => {
-      btn.style.display = user ? 'inline-block' : 'none';
-    });
+  function bindWhenReady(attempts){
+    if (window.firebaseOnAuthStateChanged && window.firebaseAuth) {
+      var p = window.firebaseGetRedirectResult ? window.firebaseGetRedirectResult() : Promise.resolve(null);
+      p.catch(function(){}).finally(function(){
+        window.firebaseOnAuthStateChanged(window.firebaseAuth, window._onFirebaseAuthChanged || function(){});
+      });
+      return;
+    }
+    if (attempts < 80) setTimeout(function(){ bindWhenReady(attempts + 1); }, 50);
   }
+  bindWhenReady(0);
 });
 </script>
 
@@ -294,45 +317,32 @@ window.safeHeadshot = function(obj){
     <div class="ob-title">Pro Sports Quick Pix</div>
 
     <!-- STEP 1: Age Gate -->
-    <div class="ob-step active" id="ob-step1">
+    <div class="ob-step" id="ob-step1">
       <div class="ob-sub">Free daily HR picks powered by live MLB lineups.<br>You must be 21+ to continue.</div>
       <div class="ob-age-check">
         <input type="checkbox" id="ageCheck" onchange="document.getElementById('ageBtn').disabled=!this.checked">
         <label for="ageCheck">I confirm I am <strong>21 years of age or older</strong> and located in a jurisdiction where sports betting is legal.</label>
       </div>
-      <button class="ob-btn" id="ageBtn" disabled onclick="obStep(2)">I Am 21+ &mdash; Continue</button>
+      <button class="ob-btn" id="ageBtn" disabled onclick="obAgeContinue()">I Am 21+ &mdash; Continue</button>
       <div class="ob-legal">For entertainment purposes only. Not affiliated with MLB. Results are not guaranteed. Please gamble responsibly.</div>
     </div>
 
-    <!-- STEP 2: Profile -->
+    <!-- STEP 2: Sign in / Create account (Firebase) -->
     <div class="ob-step" id="ob-step2">
-      <div class="ob-sub">Create your free profile to unlock your first pick.</div>
-      <div class="ob-unlock-badge">🎁 1 Free HR Pick Unlocked After Sign-Up</div>
-      <input class="ob-input" type="text" id="ob-name" placeholder="First Name" maxlength="32" oninput="obValidate()">
-      <input class="ob-input" type="email" id="ob-email" placeholder="Email Address" oninput="obValidate()">
-      <button class="ob-btn" id="profileBtn" disabled onclick="obSendCode()">Send Verification Code 📧</button>
-      <div class="ob-legal">Your email is used for account access only. We never share or sell your data.</div>
-    </div>
-
-    <!-- STEP 2b: Email Verification -->
-    <div class="ob-step" id="ob-step2b">
-      <div class="ob-sub">We sent a 6-digit code to<br><strong id="ob-email-display" style="color:#6ee7ff"></strong></div>
-      <input class="ob-input" type="text" id="ob-code" placeholder="Enter 6-digit code" maxlength="6" inputmode="numeric" oninput="obCodeValidate()" autocomplete="one-time-code">
-      <div id="ob-code-error" style="color:#f87171;font-size:.82rem;min-height:18px;margin-bottom:4px"></div>
-      <button class="ob-btn" id="verifyBtn" disabled onclick="obVerifyCode()">Verify & Unlock Pick 🔓</button>
-      <button onclick="obComplete()" style="margin-top:10px;background:none;border:none;color:#56627a;font-size:.78rem;cursor:pointer;text-decoration:underline">Skip verification (preview only)</button>
-      <div style="margin-top:14px;font-size:.83rem;color:#9fb0d0">
-        Didn't get it? <button id="resendBtn" onclick="obResendCode()" style="background:none;border:none;color:#6ee7ff;cursor:pointer;font-size:.83rem;text-decoration:underline">Resend code</button>
-        <span id="resendTimer" style="color:#56627a;display:none"></span>
+      <div class="ob-sub">Sign in to sync picks across devices and unlock your free daily pick.</div>
+      <div class="ob-unlock-badge">🎁 1 Free HR Pick after sign-in</div>
+      <div id="authError" style="color:#f87171;font-size:.82rem;min-height:20px;margin-bottom:6px;text-align:left"></div>
+      <button type="button" class="ob-btn" id="authGoogleBtn" onclick="authGoogle()">Continue with Google</button>
+      <div style="margin:14px 0;color:var(--muted);font-size:.85rem">or email</div>
+      <input class="ob-input" type="text" id="ob-name" placeholder="Display name (for new accounts)" maxlength="32" oninput="authFormValidate()" autocomplete="name">
+      <input class="ob-input" type="email" id="ob-email" placeholder="Email" oninput="authFormValidate()" autocomplete="username">
+      <input class="ob-input" type="password" id="ob-password" placeholder="Password (6+ characters)" oninput="authFormValidate()" autocomplete="current-password">
+      <div class="btnrow" style="margin-top:10px">
+        <button type="button" class="ob-btn" style="flex:1;min-width:120px" id="authSignInBtn" disabled onclick="authEmailSignIn()">Sign in</button>
+        <button type="button" class="ob-btn btn2" style="flex:1;min-width:120px;border:1px solid var(--line);background:rgba(255,255,255,.08);color:var(--text)" id="authSignUpBtn" disabled onclick="authEmailSignUp()">Create account</button>
       </div>
-      <div class="ob-legal">Check your spam folder if you don't see it within 30 seconds.</div>
-    </div>
-
-    <!-- STEP 3: Welcome -->
-    <div class="ob-step" id="ob-step3">
-      <div class="ob-sub" id="ob-welcome"></div>
-      <div class="ob-unlock-badge">🏆 1 Free HR Pick is ready &mdash; select "1 Batter" and hit Pick Lucky Hitter!</div>
-      <button class="ob-btn" onclick="obDismiss()">Let's Go! ⚾</button>
+      <button type="button" onclick="authForgotPassword()" style="margin-top:12px;background:none;border:none;color:#6ee7ff;font-size:.8rem;cursor:pointer;text-decoration:underline">Forgot password?</button>
+      <div class="ob-legal" style="margin-top:14px">By continuing you agree to our terms and confirm you meet the age requirement above.<br><br>Your 21+ confirmation is remembered on this device. For now, sign-in lasts until you close the browser; dedicated apps will add longer sessions later.</div>
     </div>
   </div>
 </div>
@@ -343,7 +353,11 @@ window.safeHeadshot = function(obj){
       <div class="title">Pro Sports Quick Pix</div>
       <div class="subtitle">Daily HR picks powered by live MLB lineups. <span id="devTrigger" onclick="_devTriggerClick()" style="cursor:default">Free</span>. Fast. Sharp.</div>
     </div>
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><button id="themeToggle" class="badge" onclick="toggleTheme()" style="cursor:pointer;border:0">🌙 Night</button><div class="badge" id="sportHintBadge">Choose a sport tab</div></div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span id="userEmailChip" class="muted" style="display:none;font-size:12px;font-weight:700;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+      <button id="themeToggle" class="badge" onclick="toggleTheme()" style="cursor:pointer;border:0">🌙 Night</button>
+      <div class="badge" id="sportHintBadge">Choose a sport tab</div>
+    </div>
   </div>
 
   <div class="trust-banner">
@@ -352,7 +366,7 @@ window.safeHeadshot = function(obj){
       <div class="trust-text">Tennessee only where legal. Results are not guaranteed. For entertainment only.</div>
     </div>
     <div class="trust-links">
-      <a href="#" onclick="openAgeGate()">Age Check</a>
+      <a href="#" onclick="return openAgeGate()">Age Check</a>
       <a href="#" onclick="document.getElementById('rgModal').style.display='block';return false;">Responsible Gaming</a>
       <a href="#" onclick="document.getElementById('termsModal').style.display='block';return false;">Terms</a>
       <a href="#" onclick="document.getElementById('privacyModal').style.display='block';return false;">Privacy</a>
@@ -1864,7 +1878,13 @@ function toggleTheme(){
   if(btn) btn.textContent = isLight ? '☀️ Day' : '🌙 Night';
 }
 
-function openAgeGate(){alert('You must be 21+ to continue.');}
+function openAgeGate(){
+  try{ _lhMem.removeItem(_LH_AGE_KEY); }catch(e){}
+  if(window.firebaseSignOut) window.firebaseSignOut().catch(function(){});
+  showOverlay();
+  obStep(1);
+  return false;
+}
 function shuffleArray(arr){return arr.slice().sort(()=>Math.random()-0.5)}
 function startNameShuffle(pool, token, getActiveToken){
   // getActiveToken: fn that returns the current token for this sport
@@ -1957,30 +1977,190 @@ function stopMoneyTransformButton(){
 let _userName = '';
 let _userEmail = '';
 let _freePickUsed = false;
+var _LH_AGE_KEY = 'lhAgeVerified';
 
 renderTabs();renderSport();
 
+function obAgeContinue(){
+  try{ _lhMem.setItem(_LH_AGE_KEY, '1'); }catch(e){}
+  obStep(2);
+  var u = window.firebaseAuth && window.firebaseAuth.currentUser;
+  if(u && window._onFirebaseAuthChanged) window._onFirebaseAuthChanged(u);
+}
+
 function obInit(){
-  const profile = _lhMem.getItem('lhProfile');
-  if(profile){
-    try{
-      const d = JSON.parse(profile);
-      _userName = d.name || '';
-      _userEmail = d.email || '';
-      const _todayStr = new Date().toISOString().slice(0,10);
-      _freePickUsed = (d.freePickUsed && d.freePickDate === _todayStr) ? true : false;
-      if(!_freePickUsed && d.freePickUsed && d.freePickDate !== _todayStr){
-        d.freePickUsed = false; d.freePickDate = null;
-        try{ _lhMem.setItem('lhProfile', JSON.stringify(d)); }catch(e){}
-      }
-      document.getElementById('onboardOverlay').style.display='none';
-      const _isPro = d.isPro || false;
-      if(_isPro){ renderSport(); } else if(!_freePickUsed){ showFreeBadge(); } else { setTimeout(showUpgradeWall, 300); }
-    }catch(e){ showOverlay(); }
-  } else {
-    showOverlay();
+  const ageOk = _lhMem.getItem(_LH_AGE_KEY) === '1';
+  showOverlay();
+  obStep(ageOk ? 2 : 1);
+}
+
+function _authPreferGoogleRedirect(){
+  const ua = navigator.userAgent || '';
+  return /iPhone|iPad|iPod|Android/i.test(ua);
+}
+
+function clearAuthError(){
+  const el = document.getElementById('authError');
+  if(el) el.textContent = '';
+}
+
+function setAuthError(msg){
+  const el = document.getElementById('authError');
+  if(el) el.textContent = msg || '';
+}
+
+function authFormValidate(){
+  const name = document.getElementById('ob-name').value.trim();
+  const email = document.getElementById('ob-email').value.trim();
+  const pass = document.getElementById('ob-password').value;
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const nameEl = document.getElementById('ob-name');
+  const emailEl = document.getElementById('ob-email');
+  const passEl = document.getElementById('ob-password');
+  if(nameEl) nameEl.classList.toggle('error', name.length>0 && name.length<2);
+  if(emailEl) emailEl.classList.toggle('error', email.length>0 && !emailOk);
+  if(passEl) passEl.classList.toggle('error', pass.length>0 && pass.length<6);
+  const passOk = pass.length >= 6;
+  const signInOk = emailOk && passOk;
+  const signUpOk = name.length >= 2 && signInOk;
+  const si = document.getElementById('authSignInBtn');
+  const su = document.getElementById('authSignUpBtn');
+  if(si) si.disabled = !signInOk;
+  if(su) su.disabled = !signUpOk;
+}
+
+async function authGoogle(){
+  clearAuthError();
+  const g = document.getElementById('authGoogleBtn');
+  if(g){ g.disabled = true; g.textContent = 'Connecting…'; }
+  try{
+    if(_authPreferGoogleRedirect() && window.firebaseSignInWithGoogleRedirect){
+      await window.firebaseSignInWithGoogleRedirect();
+      return;
+    }
+    if(!window.firebaseSignInWithGooglePopup) throw new Error('Google sign-in unavailable');
+    await window.firebaseSignInWithGooglePopup();
+  }catch(e){
+    setAuthError((e && e.message) || 'Google sign-in failed.');
+  }
+  if(g){ g.disabled = false; g.textContent = 'Continue with Google'; }
+}
+
+async function authEmailSignIn(){
+  clearAuthError();
+  const email = document.getElementById('ob-email').value.trim();
+  const pass = document.getElementById('ob-password').value;
+  try{
+    await window.firebaseSignInEmailUser(email, pass);
+  }catch(e){
+    setAuthError((e && e.message) || 'Sign-in failed.');
   }
 }
+
+async function authEmailSignUp(){
+  clearAuthError();
+  const name = document.getElementById('ob-name').value.trim();
+  const email = document.getElementById('ob-email').value.trim();
+  const pass = document.getElementById('ob-password').value;
+  if(name.length < 2){ setAuthError('Enter a display name (2+ characters).'); return; }
+  try{
+    const cred = await window.firebaseCreateEmailUser(email, pass);
+    if(window.firebaseUpdateDisplayName) await window.firebaseUpdateDisplayName(name);
+    if(cred && cred.user && window.firebaseSaveUserProfile){
+      await window.firebaseSaveUserProfile({ name: name, provider: 'password' });
+    }
+  }catch(e){
+    setAuthError((e && e.message) || 'Could not create account.');
+  }
+}
+
+function authForgotPassword(){
+  clearAuthError();
+  if(!window.firebaseSendPasswordReset){
+    setAuthError('Password reset is not available right now.');
+    return;
+  }
+  const email = document.getElementById('ob-email').value.trim();
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    setAuthError('Enter your email above, then tap Forgot password again.');
+    return;
+  }
+  window.firebaseSendPasswordReset(email).then(function(){
+    alert('If an account exists for that email, a reset link is on the way. Check your inbox.');
+  }).catch(function(e){
+    setAuthError((e && e.message) || 'Reset request failed.');
+  });
+}
+
+async function applyFirestoreSession(user){
+  let fd = {};
+  try{
+    const loaded = await window.firebaseLoadUserProfile();
+    if(loaded) fd = loaded;
+  }catch(e){}
+  const _todayStr = new Date().toISOString().slice(0,10);
+  let freePickUsed = !!(fd.freePickUsed && fd.freePickDate === _todayStr);
+  if(fd.freePickUsed && fd.freePickDate && fd.freePickDate !== _todayStr){
+    fd.freePickUsed = false;
+    fd.freePickDate = null;
+    await window.firebaseSaveUserProfile({ freePickUsed: false, freePickDate: null, name: fd.name || user.displayName || '', provider: fd.provider || '' });
+  }
+  _userName = fd.name || user.displayName || (user.email && user.email.split('@')[0]) || '';
+  _userEmail = user.email || '';
+  _freePickUsed = freePickUsed;
+  const isPro = !!fd.isPro;
+  const provider = (user.providerData && user.providerData[0] && user.providerData[0].providerId) || fd.provider || '';
+  try{
+    _lhMem.setItem('lhProfile', JSON.stringify({
+      name: _userName, email: _userEmail, freePickUsed: _freePickUsed,
+      freePickDate: _freePickUsed ? _todayStr : (fd.freePickDate || null), isPro: isPro, provider: provider
+    }));
+  }catch(e){}
+  if(!fd.name && user.displayName){
+    await window.firebaseSaveUserProfile({ name: user.displayName, provider: provider || 'google.com' });
+  } else if(Object.keys(fd).length === 0){
+    await window.firebaseSaveUserProfile({ name: _userName, provider: provider || 'password' });
+  }
+  document.getElementById('onboardOverlay').style.display = 'none';
+  const logoutBtn = document.getElementById('logoutBtn');
+  if(logoutBtn) logoutBtn.style.display = 'inline-block';
+  const chip = document.getElementById('userEmailChip');
+  if(chip){
+    chip.style.display = _userEmail ? 'inline-block' : 'none';
+    chip.textContent = _userEmail && _userEmail.length > 24 ? _userEmail.slice(0,22) + '…' : (_userEmail || '');
+  }
+  if(isPro){ renderSport(); }
+  else if(!_freePickUsed){ showFreeBadge(); }
+  else { setTimeout(showUpgradeWall, 300); }
+}
+
+window._onFirebaseAuthChanged = async function(user){
+  const ageOk = _lhMem.getItem(_LH_AGE_KEY) === '1';
+  if(!ageOk) return;
+  const logoutBtn = document.getElementById('logoutBtn');
+  const chip = document.getElementById('userEmailChip');
+  if(user){
+    try{ await applyFirestoreSession(user); }
+    catch(e){
+      setAuthError('Could not load your profile. Check your connection.');
+      showOverlay();
+      obStep(2);
+    }
+    return;
+  }
+  _userName = '';
+  _userEmail = '';
+  _freePickUsed = false;
+  try{ _lhMem.removeItem('lhProfile'); }catch(e){}
+  if(logoutBtn) logoutBtn.style.display = 'none';
+  if(chip){ chip.style.display = 'none'; chip.textContent = ''; }
+  showOverlay();
+  obStep(2);
+  clearAuthError();
+  authFormValidate();
+  pickCount = 1;
+  renderSport();
+};
 
 function showOverlay(){
   document.getElementById('onboardOverlay').style.display='flex';
@@ -1991,117 +2171,6 @@ function obStep(n){
   const s = document.getElementById('ob-step'+n);
   if(s) s.classList.add('active');
   else console.warn('obStep: no element ob-step'+n);
-}
-
-function obValidate(){
-  const name = document.getElementById('ob-name').value.trim();
-  const email = document.getElementById('ob-email').value.trim();
-  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const nameEl = document.getElementById('ob-name');
-  const emailEl = document.getElementById('ob-email');
-  nameEl.classList.toggle('error', name.length>0 && name.length<2);
-  emailEl.classList.toggle('error', email.length>0 && !emailOk);
-  document.getElementById('profileBtn').disabled = !(name.length>=2 && emailOk);
-}
-
-// ── Email verification state ──
-let _verifyCode = '';
-let _verifyExpiry = 0;
-let _resendTimeout = null;
-
-function obSendCode(){
-  const name = document.getElementById('ob-name').value.trim();
-  const email = document.getElementById('ob-email').value.trim();
-  // Generate 6-digit code
-  _verifyCode = String(Math.floor(100000 + Math.random() * 900000));
-  _verifyExpiry = Date.now() + 10 * 60 * 1000; // 10 min
-  // Show verify step
-  document.getElementById('ob-email-display').textContent = email;
-  document.getElementById('ob-code').value = '';
-  document.getElementById('ob-code-error').textContent = '';
-  document.getElementById('verifyBtn').disabled = true;
-  obStep('2b');
-  // Send via EmailJS
-  emailjs.send('service_ymxyo11', 'template_rncb4ek', {
-    to_name: name,
-    to_email: email,
-    code: _verifyCode
-  }).then(()=>{
-    obStartResendTimer(30);
-  }).catch(err=>{
-    document.getElementById('ob-code-error').textContent = 'Email delivery failed — use the skip link below to continue.';
-  });
-}
-
-function obCodeValidate(){
-  const val = document.getElementById('ob-code').value.replace(/\D/g,'');
-  document.getElementById('ob-code').value = val;
-  document.getElementById('verifyBtn').disabled = val.length !== 6;
-  document.getElementById('ob-code-error').textContent = '';
-}
-
-function obVerifyCode(){
-  const entered = document.getElementById('ob-code').value.trim();
-  if(Date.now() > _verifyExpiry){
-    document.getElementById('ob-code-error').textContent = 'Code expired. Please request a new one.';
-    document.getElementById('verifyBtn').disabled = true;
-    return;
-  }
-  if(entered !== _verifyCode){
-    document.getElementById('ob-code-error').textContent = 'Incorrect code. Please try again.';
-    document.getElementById('ob-code').value = '';
-    document.getElementById('verifyBtn').disabled = true;
-    return;
-  }
-  // Verified!
-  obComplete();
-}
-
-function obComplete(){
-  const name = document.getElementById('ob-name').value.trim();
-  const email = document.getElementById('ob-email').value.trim();
-  _userName = name;
-  _userEmail = email;
-  _freePickUsed = false;
-  _lhMem.setItem('lhProfile', JSON.stringify({name, email, freePickUsed:false}));
-  document.getElementById('ob-welcome').innerHTML =
-    `Welcome, <strong style="color:#6ee7ff">${name}</strong>! 🎉<br><span style="color:#9fb0d0;font-size:.88rem">Your free HR pick is unlocked.</span>`;
-  // Auto-select 1 Batter so Pick Lucky Hitter is enabled on first arrival
-  pickCount = 1;
-  obStep(3);
-  renderSport();
-}
-
-function obResendCode(){
-  if(_resendTimeout) return;
-  document.getElementById('ob-code-error').textContent = '';
-  obSendCode();
-}
-
-function obStartResendTimer(secs){
-  const btn = document.getElementById('resendBtn');
-  const timer = document.getElementById('resendTimer');
-  if(!btn || !timer) return;
-  btn.style.display = 'none';
-  timer.style.display = 'inline';
-  let remaining = secs;
-  timer.textContent = `Resend in ${remaining}s`;
-  _resendTimeout = setInterval(()=>{
-    remaining--;
-    if(remaining <= 0){
-      clearInterval(_resendTimeout);
-      _resendTimeout = null;
-      timer.style.display = 'none';
-      btn.style.display = 'inline';
-    } else {
-      timer.textContent = `Resend in ${remaining}s`;
-    }
-  }, 1000);
-}
-
-function obDismiss(){
-  document.getElementById('onboardOverlay').style.display='none';
-  showFreeBadge();
 }
 
 function showFreeBadge(){
@@ -2118,12 +2187,22 @@ function markFreePickUsed(){
   _freePickUsed = true;
   const badge = document.getElementById('freeBadge');
   if(badge) badge.style.display='none';
+  const today = new Date().toISOString().slice(0,10);
+  var d = {};
   try{
-    const d = JSON.parse(_lhMem.getItem('lhProfile')||'{}');
+    d = JSON.parse(_lhMem.getItem('lhProfile')||'{}');
     d.freePickUsed = true;
-    d.freePickDate = new Date().toISOString().slice(0,10);
+    d.freePickDate = today;
     _lhMem.setItem('lhProfile', JSON.stringify(d));
   }catch(e){}
+  if(window.firebaseAuth && window.firebaseAuth.currentUser && window.firebaseSaveUserProfile){
+    window.firebaseSaveUserProfile({
+      freePickUsed: true,
+      freePickDate: today,
+      name: d.name || _userName || '',
+      provider: d.provider || ''
+    }).catch(function(){});
+  }
   setTimeout(showUpgradeWall, 4000);
 }
 
@@ -2182,6 +2261,9 @@ function startCheckout(){
       d.isPro = true;
       d.freePickUsed = false;
       _lhMem.setItem('lhProfile', JSON.stringify(d));
+      if(window.firebaseAuth && window.firebaseAuth.currentUser && window.firebaseSaveUserProfile){
+        window.firebaseSaveUserProfile({ isPro: true, freePickUsed: false, name: d.name || _userName || '', provider: d.provider || '' }).catch(function(){});
+      }
     } catch(e){}
     // Clean URL
     history.replaceState({}, '', window.location.pathname);
