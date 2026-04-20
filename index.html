@@ -17,7 +17,7 @@
 <!-- Google Analytics 4 — replace G-XXXXXXXXXX with your real Measurement ID -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
 <script>
-  const APP_VERSION = 'v1.15';
+  const APP_VERSION = 'v1.16';
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
@@ -466,8 +466,10 @@ body.light .slip-btn.primary{
 #freeBadge{display:none;padding:4px 10px;border-radius:999px;background:linear-gradient(90deg,rgba(110,231,255,.15),rgba(139,92,246,.15));border:1px solid rgba(110,231,255,.25);font-size:11px;font-weight:800;color:#6ee7ff;margin-left:8px;vertical-align:middle}
 
 /* ── FULL-SCREEN PICK OVERLAY ── */
+/* Above .app-version (8999) + feedback tab/panel (9000–9001); below toasts (9500) + modals (9999+). */
 #pickOverlay{
-  position:fixed;inset:0;z-index:8000;
+  position:fixed;inset:0;z-index:9200;
+  isolation:isolate;
   background:radial-gradient(circle at top,#1b2a53 0,#07111f 58%);
   transform:translateY(100%);
   transition:transform .42s cubic-bezier(.32,1,.36,1);
@@ -4633,7 +4635,7 @@ updateLegalStateLine();
 initLegalModalStyling();
 scheduleSyncAppVersionBadge();
 </script>
-<div class="app-version" id="appVersion">v1.15</div>
+<div class="app-version" id="appVersion">v1.16</div>
 <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 <div class="toast-stack center" id="toastStackCenter" aria-live="polite" aria-atomic="true"></div>
 </body>
