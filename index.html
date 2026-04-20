@@ -3218,7 +3218,19 @@ function copyPicksFromOverlay(){
 #fbSendBtn{width:100%;padding:10px;border-radius:10px;border:none;
   background:var(--accent);color:#07111f;font-weight:700;font-size:14px;cursor:pointer;transition:opacity .2s;}
 #fbSendBtn:disabled{opacity:.5;cursor:default;}
-#fbThanks{display:none;text-align:center;padding:18px 0;font-size:15px;color:var(--accent);font-weight:600;}
+#fbThanks{
+  display:none;
+  text-align:center;
+  padding:14px 12px;
+  margin-top:6px;
+  font-size:16px;
+  color:#6ee7ff;
+  font-weight:800;
+  line-height:1.4;
+  border:1px solid rgba(110,231,255,.35);
+  border-radius:12px;
+  background:rgba(110,231,255,.1);
+}
 #fbClose{position:absolute;top:12px;right:14px;background:none;border:none;color:var(--muted);
   font-size:18px;cursor:pointer;line-height:1;}
 
@@ -3270,7 +3282,7 @@ function fbSubmit(){
   if(!stars){ fbSetStar(1); return; }
   const btn=document.getElementById('fbSendBtn');
   const thanks=document.getElementById('fbThanks');
-  const closeDelayMs = 1400;
+  const closeDelayMs = 3200;
   btn.disabled=true;
   btn.style.display='none';
   thanks.style.display='block';
