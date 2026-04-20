@@ -17,7 +17,7 @@
 <!-- Google Analytics 4 — replace G-XXXXXXXXXX with your real Measurement ID -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
 <script>
-  const APP_VERSION = 'v1.17';
+  const APP_VERSION = 'v1.20';
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
@@ -143,6 +143,26 @@ body.light .tabs{
   margin-left:7px;
   animation:livePulse 1.9s ease-out infinite;
 }
+.random-spin{
+  position:relative;
+  border-style:solid!important;
+  border-color:transparent!important;
+}
+.random-spin::before{
+  content:'';
+  position:absolute;
+  inset:-1px;
+  border-radius:inherit;
+  padding:1.5px;
+  background:repeating-conic-gradient(from 0deg, rgba(37,201,255,.75) 0 10deg, transparent 10deg 22deg);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;
+  mask-composite:exclude;
+  pointer-events:none;
+  animation:spinDashedRing 14s linear infinite;
+}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .panel{padding:14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
 .btnrow{display:flex;flex-wrap:wrap;gap:10px}
@@ -206,6 +226,39 @@ body.light .tabs{
   border-radius:22px;padding:28px 24px;max-width:400px;width:100%;
   color:#eef3ff;box-shadow:0 24px 80px rgba(0,0,0,.55);text-align:center;
 }
+.stripe-modal-card{
+  background:linear-gradient(160deg,#111c33,#0e1a30);
+  border:1px solid #26355f;border-radius:22px;padding:32px 28px;
+  max-width:400px;width:100%;color:#eef3ff;position:relative;
+  box-shadow:0 24px 80px rgba(0,0,0,.7);
+}
+.stripe-modal-close{
+  position:absolute;top:16px;right:16px;background:none;border:none;
+  color:#56627a;font-size:1.3rem;cursor:pointer;line-height:1;
+}
+.stripe-modal-head{text-align:center;margin-bottom:8px}
+.stripe-modal-trophy{font-size:2rem;margin-bottom:6px}
+.stripe-modal-title{font-size:1.3rem;font-weight:900;color:#eef3ff;margin-bottom:4px}
+.stripe-modal-sub{font-size:.88rem;color:#9fb0d0;margin-bottom:22px}
+.stripe-modal-list{
+  background:rgba(110,231,255,.06);border:1px solid rgba(110,231,255,.15);
+  border-radius:14px;padding:16px 18px;margin-bottom:22px;
+}
+.stripe-modal-list-head{
+  font-size:.82rem;color:#9fb0d0;text-transform:uppercase;
+  letter-spacing:.06em;margin-bottom:12px;font-weight:700;
+}
+.stripe-modal-list-items{display:flex;flex-direction:column;gap:9px;font-size:.9rem}
+.stripe-modal-list-item{display:flex;align-items:center;gap:10px}
+.stripe-modal-check{color:#6ee7ff;font-size:1rem}
+.stripe-modal-price-wrap{text-align:center;margin-bottom:6px}
+.stripe-modal-price{font-size:2rem;font-weight:900;color:#eef3ff}
+.stripe-modal-price-sub{color:#9fb0d0;font-size:.9rem}
+.stripe-modal-note{text-align:center;font-size:.78rem;color:#56627a;margin-bottom:18px}
+.stripe-modal-secure{text-align:center;margin-top:14px;font-size:.75rem;color:#56627a}
+.stripe-modal-secure strong{color:#9fb0d0}
+.age-modal-icon{font-size:2rem;margin-bottom:10px}
+.age-modal-title{font-size:1.15rem;font-weight:900;color:#eef3ff;margin-bottom:10px}
 .paywall-overlay-card{
   text-align:center;padding:28px 18px 40px;max-width:420px;margin:0 auto;
 }
@@ -243,6 +296,7 @@ body.light .age-modal-card{
 }
 body.light .age-modal-card .ob-age-q{color:#32466c}
 body.light .age-modal-card .ob-age-q strong{color:#1d2b46}
+body.light .age-modal-title{color:#1d2b46!important}
 body.light .paywall-overlay-card{
   background:linear-gradient(160deg,#ffffff,#eef3ff);
   border:1px solid #cfd8ea;
@@ -272,6 +326,7 @@ body.light .paywall-overlay-note{color:#5a6f93}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes bar{0%{transform:translateX(-120%)}50%{transform:translateX(140%)}100%{transform:translateX(260%)} }
 @keyframes livePulse{0%{box-shadow:0 0 0 0 rgba(38,217,255,.65)}70%{box-shadow:0 0 0 7px rgba(38,217,255,0)}100%{box-shadow:0 0 0 0 rgba(38,217,255,0)}}
+@keyframes spinDashedRing{to{transform:rotate(360deg)}}
 .locked{opacity:.45;filter:grayscale(.15);background:rgba(255,255,255,.08)!important;color:var(--text)!important}
 .locked[disabled]{pointer-events:none}
 .trust-banner{margin:14px 0 16px;padding:14px 16px;border:1px solid rgba(110,231,255,.25);border-radius:16px;background:linear-gradient(180deg,rgba(17,28,51,.95),rgba(24,39,71,.95));box-shadow:0 10px 28px rgba(0,0,0,.18);color:#e8eeff}
@@ -1065,9 +1120,9 @@ function renderTabs(){
   const outOfSeason = getOutOfSeasonSports();
   const goldLockSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f59e0b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' style='width:13px;height:13px;margin-left:5px;vertical-align:middle;flex-shrink:0'><rect x='3' y='11' width='18' height='11' rx='2' ry='2'/><path d='M7 11V7a5 5 0 0 1 10 0v4'/></svg>`;
   // Bottom nav: always the main sport selector
-  document.getElementById('bottomnav').innerHTML=Object.keys(sports).map(s=>`<div class='navitem live-dot ${s===current?'active':''}${outOfSeason.includes(s)?' oos':''}' onclick="setSport('${s}')" style='display:inline-flex;align-items:center;justify-content:center${outOfSeason.includes(s)?';opacity:0.6':''}'><img src='${sports[s].icon}' alt='${s} logo' style='width:18px;height:18px;object-fit:contain;margin-right:6px;flex-shrink:0'>${s}${outOfSeason.includes(s)?goldLockSvg:''}</div>`).join('')+`<div class='navitem' onclick="randomSport()" title="Jump to a random sport" style='display:inline-flex;align-items:center;justify-content:center;border-style:dashed;opacity:.92'>🎲 Random</div>`;
+  document.getElementById('bottomnav').innerHTML=Object.keys(sports).map(s=>`<div class='navitem live-dot ${s===current?'active':''}${outOfSeason.includes(s)?' oos':''}' onclick="setSport('${s}')" style='display:inline-flex;align-items:center;justify-content:center${outOfSeason.includes(s)?';opacity:0.6':''}'><img src='${sports[s].icon}' alt='${s} logo' style='width:18px;height:18px;object-fit:contain;margin-right:6px;flex-shrink:0'>${s}${outOfSeason.includes(s)?goldLockSvg:''}</div>`).join('')+`<div class='navitem random-spin' onclick="randomSport()" title="Jump to a random sport" style='display:inline-flex;align-items:center;justify-content:center;opacity:.92'>🎲 Random</div>`;
   // Top tabs: always show active sport's sub-options
-  document.getElementById('tabs').innerHTML=sports[current].options.map(o=>`<button type="button" class='tab live-dot ${o===currentOption?'active':''}' style='border-color:${sports[current].color}55' onclick="setOption('${o}')"><span class='market-icon'>${getOptionCompactIcon(current,o)}</span>${o}</button>`).join('')+`<button type="button" class="tab" style="border-color:${sports[current].color}55;border-style:dashed" onclick="randomSubOption()" title="Random stat for this sport">🎲 Random</button>`;
+  document.getElementById('tabs').innerHTML=sports[current].options.map(o=>`<button type="button" class='tab live-dot ${o===currentOption?'active':''}' style='border-color:${sports[current].color}55' onclick="setOption('${o}')"><span class='market-icon'>${getOptionCompactIcon(current,o)}</span>${o}</button>`).join('')+`<button type="button" class="tab random-spin" style="border-color:${sports[current].color}55" onclick="randomSubOption()" title="Random stat for this sport">🎲 Random</button>`;
 }
 function randomSport(){
   const all = Object.keys(sports);
@@ -3074,12 +3129,12 @@ function markFreePickUsed(){
 }
 
 function _buildPaywallOverlayHTML(){
-  return `<div id="poPaywallRoot" class="po-paywall-panel" style="text-align:center;padding:28px 18px 40px;max-width:420px;margin:0 auto">
+  return `<div id="poPaywallRoot" class="po-paywall-panel paywall-overlay-card">
       <div style="font-size:2.2rem;margin-bottom:12px">🔒</div>
-      <div style="font-weight:900;font-size:1.1rem;color:#eef3ff;margin-bottom:10px">Unlock unlimited picks</div>
-      <div style="color:#9fb0d0;font-size:.92rem;line-height:1.55;margin-bottom:22px">You’ve used your free daily pick or this count needs Pro.<br>Upgrade for unlimited picks, every count option, and more.</div>
+      <div class="paywall-overlay-title">Unlock unlimited picks</div>
+      <div class="paywall-overlay-sub">You’ve used your free daily pick or this count needs Pro.<br>Upgrade for unlimited picks, every count option, and more.</div>
       <button class="btn-cta btn-cta-md" onclick="showUpgradeModal()">Upgrade 🚀</button>
-      <div style="margin-top:14px;font-size:.8rem;color:#56627a">Free pick resets daily. Swipe down or tap ✕ to close.</div>
+      <div class="paywall-overlay-note">Free pick resets daily. Swipe down or tap ✕ to close.</div>
     </div>`;
 }
 function isPaywallOverlayOpen(){
@@ -3249,30 +3304,30 @@ function getRhythmSuspense(i){
 
 <!-- PRO UPGRADE MODAL -->
 <div id="stripeModal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(7,17,31,.96);align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(8px)">
-  <div class="stripe-modal-card" style="background:linear-gradient(160deg,#111c33,#0e1a30);border:1px solid #26355f;border-radius:22px;padding:32px 28px;max-width:400px;width:100%;color:#eef3ff;position:relative;box-shadow:0 24px 80px rgba(0,0,0,.7)">
-    <button class="stripe-modal-close" onclick="closeStripeModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:#56627a;font-size:1.3rem;cursor:pointer;line-height:1">✕</button>
-    <div style="text-align:center;margin-bottom:8px">
-      <div style="font-size:2rem;margin-bottom:6px">🏆</div>
-      <div class="stripe-modal-title" style="font-size:1.3rem;font-weight:900;color:#eef3ff;margin-bottom:4px">Go Pro</div>
-      <div class="stripe-modal-sub" style="font-size:.88rem;color:#9fb0d0;margin-bottom:22px">Unlock everything in Pro Sports Quick Pix</div>
+  <div class="stripe-modal-card">
+    <button class="stripe-modal-close" onclick="closeStripeModal()">✕</button>
+    <div class="stripe-modal-head">
+      <div class="stripe-modal-trophy">🏆</div>
+      <div class="stripe-modal-title">Go Pro</div>
+      <div class="stripe-modal-sub">Unlock everything in Pro Sports Quick Pix</div>
     </div>
-    <div class="stripe-modal-list" style="background:rgba(110,231,255,.06);border:1px solid rgba(110,231,255,.15);border-radius:14px;padding:16px 18px;margin-bottom:22px">
-      <div class="stripe-modal-list-head" style="font-size:.82rem;color:#9fb0d0;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;font-weight:700">What you get</div>
-      <div style="display:flex;flex-direction:column;gap:9px;font-size:.9rem">
-        <div style="display:flex;align-items:center;gap:10px"><span style="color:#6ee7ff;font-size:1rem">✓</span> Unlimited daily HR picks</div>
-        <div style="display:flex;align-items:center;gap:10px"><span style="color:#6ee7ff;font-size:1rem">✓</span> All pick counts (1–3) across all sports</div>
-        <div style="display:flex;align-items:center;gap:10px"><span style="color:#6ee7ff;font-size:1rem">✓</span> NBA, NHL, Soccer &amp; NFL picks (when in season)</div>
-        <div style="display:flex;align-items:center;gap:10px"><span style="color:#6ee7ff;font-size:1rem">✓</span> No daily reset limits</div>
-        <div style="display:flex;align-items:center;gap:10px"><span style="color:#6ee7ff;font-size:1rem">✓</span> Priority access to new sports</div>
+    <div class="stripe-modal-list">
+      <div class="stripe-modal-list-head">What you get</div>
+      <div class="stripe-modal-list-items">
+        <div class="stripe-modal-list-item"><span class="stripe-modal-check">✓</span> Unlimited daily HR picks</div>
+        <div class="stripe-modal-list-item"><span class="stripe-modal-check">✓</span> All pick counts (1–3) across all sports</div>
+        <div class="stripe-modal-list-item"><span class="stripe-modal-check">✓</span> NBA, NHL, Soccer &amp; NFL picks (when in season)</div>
+        <div class="stripe-modal-list-item"><span class="stripe-modal-check">✓</span> No daily reset limits</div>
+        <div class="stripe-modal-list-item"><span class="stripe-modal-check">✓</span> Priority access to new sports</div>
       </div>
     </div>
-    <div style="text-align:center;margin-bottom:6px">
-      <span class="stripe-modal-price" style="font-size:2rem;font-weight:900;color:#eef3ff">$4.99</span><span class="stripe-modal-price-sub" style="color:#9fb0d0;font-size:.9rem"> / month</span>
+    <div class="stripe-modal-price-wrap">
+      <span class="stripe-modal-price">$4.99</span><span class="stripe-modal-price-sub"> / month</span>
     </div>
-    <div class="stripe-modal-note" style="text-align:center;font-size:.78rem;color:#56627a;margin-bottom:18px">Cancel anytime. Billed monthly.</div>
+    <div class="stripe-modal-note">Cancel anytime. Billed monthly.</div>
     <button id="checkoutBtn" class="btn-cta btn-cta-lg" onclick="startCheckout()" style="width:100%;transition:opacity .2s">Subscribe for $4.99/mo 🚀</button>
     <div id="checkoutError" style="color:#f87171;font-size:.82rem;text-align:center;margin-top:8px;min-height:18px"></div>
-    <div class="stripe-modal-secure" style="text-align:center;margin-top:14px;font-size:.75rem;color:#56627a">Secured by <strong style="color:#9fb0d0">Stripe</strong> · 256-bit SSL encryption</div>
+    <div class="stripe-modal-secure">Secured by <strong>Stripe</strong> · 256-bit SSL encryption</div>
   </div>
 </div>
 
@@ -3283,9 +3338,9 @@ function getRhythmSuspense(i){
 
 <!-- AGE CHECK (trust banner link) -->
 <div id="ageGateModal" style="display:none;position:fixed;inset:0;z-index:10002;background:rgba(7,17,31,.96);align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(8px)">
-  <div style="background:linear-gradient(160deg,#111c33,#0e1a30);border:1px solid rgba(110,231,255,.22);border-radius:22px;padding:28px 24px;max-width:400px;width:100%;color:#eef3ff;box-shadow:0 24px 80px rgba(0,0,0,.55);text-align:center">
-    <div style="font-size:2rem;margin-bottom:10px">🔞</div>
-    <div style="font-size:1.15rem;font-weight:900;color:#eef3ff;margin-bottom:10px">Age check</div>
+  <div class="age-modal-card">
+    <div class="age-modal-icon">🔞</div>
+    <div class="age-modal-title">Age check</div>
     <p class="ob-age-q">Are you <strong>21 or older</strong> and using this app only where it is legal for you?</p>
     <div class="ob-age-actions">
       <button type="button" class="ob-btn ob-age-yes-split" onclick="closeAgeGateModal()">Yes — continue</button>
@@ -3857,7 +3912,7 @@ document.addEventListener('click',function(e){const item=e.target.closest('.item
 initLegalModalStyling();
 syncAppVersionBadge();
 </script>
-<div class="app-version" id="appVersion">v1.17</div>
+<div class="app-version" id="appVersion">v1.20</div>
 <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 <div class="toast-stack center" id="toastStackCenter" aria-live="polite" aria-atomic="true"></div>
 </body>
