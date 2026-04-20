@@ -282,14 +282,14 @@ window.safeHeadshot = function(obj){
     <div class="ob-logo">⚾</div>
     <div class="ob-title">Pro Sports Quick Pix</div>
 
-    <!-- STEP 1: Age Gate -->
+    <!-- STEP 1: Age Gate (same Yes / No as trust-banner Age Check) -->
     <div class="ob-step active" id="ob-step1">
       <div class="ob-sub">Free daily HR picks powered by live MLB lineups.<br>You must be 21+ to continue.</div>
-      <div class="ob-age-check">
-        <input type="checkbox" id="ageCheck" onchange="document.getElementById('ageBtn').disabled=!this.checked">
-        <label for="ageCheck">I confirm I am <strong>21 years of age or older</strong> and located in a jurisdiction where sports betting is legal.</label>
+      <p style="color:#9fb0d0;font-size:.9rem;line-height:1.5;margin:0 0 20px;text-align:center">Are you <strong style="color:#eef3ff">21 or older</strong> and using this app only where it is legal for you?</p>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px">
+        <button type="button" class="ob-btn" onclick="obStep(2)" style="flex:1;min-width:120px;margin-top:0">Yes — continue</button>
+        <button type="button" onclick="ageGateNo()" style="flex:1;min-width:120px;margin-top:0;padding:13px;border-radius:14px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#eef3ff;font-weight:800;font-size:1rem;cursor:pointer;font-family:inherit">No</button>
       </div>
-      <button class="ob-btn" id="ageBtn" disabled onclick="obStep(2)">I Am 21+ &mdash; Continue</button>
       <div class="ob-legal">For entertainment purposes only. Not affiliated with MLB. Results are not guaranteed. Please gamble responsibly.</div>
     </div>
 
@@ -345,7 +345,7 @@ window.safeHeadshot = function(obj){
       <div class="trust-text">Tennessee only where legal. Results are not guaranteed. For entertainment only.</div>
     </div>
     <div class="trust-links">
-      <a href="#" onclick="openAgeGate()">Age Check</a>
+      <a href="#" onclick="openAgeGate();return false;">Age Check</a>
       <a href="#" onclick="document.getElementById('rgModal').style.display='block';return false;">Responsible Gaming</a>
       <a href="#" onclick="document.getElementById('termsModal').style.display='block';return false;">Terms</a>
       <a href="#" onclick="document.getElementById('privacyModal').style.display='block';return false;">Privacy</a>
@@ -1872,7 +1872,20 @@ function toggleTheme(){
   if(btn) btn.textContent = isLight ? '☀️ Day' : '🌙 Night';
 }
 
-function openAgeGate(){alert('You must be 21+ to continue.');}
+function openAgeGate(){
+  const m = document.getElementById('ageGateModal');
+  if(m) m.style.display = 'flex';
+}
+function closeAgeGateModal(){
+  const m = document.getElementById('ageGateModal');
+  if(m) m.style.display = 'none';
+}
+function ageGateYes(){
+  closeAgeGateModal();
+}
+function ageGateNo(){
+  window.location.href = 'https://www.sesamestreet.org/games';
+}
 function shuffleArray(arr){return arr.slice().sort(()=>Math.random()-0.5)}
 function startNameShuffle(pool, token, getActiveToken){
   // getActiveToken: fn that returns the current token for this sport
@@ -2364,6 +2377,20 @@ function getRhythmSuspense(i){
 <!-- PRO SUCCESS BANNER -->
 <div id="proBanner" style="display:none;position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:10001;background:linear-gradient(90deg,#6ee7ff,#8b5cf6);color:#07111f;font-weight:900;font-size:.95rem;padding:12px 24px;border-radius:40px;box-shadow:0 8px 32px rgba(0,0,0,.4);align-items:center;gap:10px;white-space:nowrap">
   🏆 Pro unlocked! Welcome to Pro Sports Quick Pix.
+</div>
+
+<!-- AGE CHECK (trust banner link) -->
+<div id="ageGateModal" style="display:none;position:fixed;inset:0;z-index:10002;background:rgba(7,17,31,.96);align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(8px)">
+  <div style="background:linear-gradient(160deg,#111c33,#0e1a30);border:1px solid rgba(110,231,255,.22);border-radius:22px;padding:28px 24px;max-width:400px;width:100%;color:#eef3ff;position:relative;box-shadow:0 24px 80px rgba(0,0,0,.55);text-align:center">
+    <button type="button" onclick="closeAgeGateModal()" style="position:absolute;top:14px;right:14px;background:none;border:none;color:#56627a;font-size:1.25rem;cursor:pointer;line-height:1" title="Close">✕</button>
+    <div style="font-size:2rem;margin-bottom:10px">🔞</div>
+    <div style="font-size:1.15rem;font-weight:900;color:#eef3ff;margin-bottom:10px">Age check</div>
+    <p style="color:#9fb0d0;font-size:.92rem;line-height:1.5;margin:0 0 22px">Are you <strong style="color:#eef3ff">21 or older</strong> and using this app only where it is legal for you?</p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
+      <button type="button" onclick="ageGateYes()" style="flex:1;min-width:120px;padding:12px 16px;border-radius:14px;border:0;background:linear-gradient(90deg,#6ee7ff,#8b5cf6);color:#07111f;font-weight:900;font-size:.95rem;cursor:pointer">Yes — continue</button>
+      <button type="button" onclick="ageGateNo()" style="flex:1;min-width:120px;padding:12px 16px;border-radius:14px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#eef3ff;font-weight:800;font-size:.95rem;cursor:pointer">No</button>
+    </div>
+  </div>
 </div>
 
 <div id="rgModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:9999;overflow:auto;padding:24px"><div style="max-width:900px;margin:40px auto;background:linear-gradient(180deg,#111c33,#182747);border:1px solid #26355f;border-radius:18px;padding:18px;color:#eef3ff"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center"><h2 style="margin:0">Responsible Gaming</h2><button onclick="document.getElementById('rgModal').style.display='none'" style="border:0;border-radius:10px;padding:10px 14px;font-weight:800;background:#6ee7ff;color:#08101f">OK</button></div><p style="color:#9fb0d0;line-height:1.55">This app is for entertainment only. If you choose to participate, set a budget before you start and never chase losses.</p><ul style="color:#9fb0d0;line-height:1.55"><li>Only play if you are 21 or older and it is legal where you are.</li><li>Set time and money limits before you begin.</li><li>Do not wager money needed for bills, rent, or essentials.</li><li>Take breaks if betting stops feeling fun.</li><li>If gambling is causing stress or harm, seek help immediately.</li></ul><p style="color:#9fb0d0;line-height:1.55">If you or someone you know needs help, contact a licensed counseling or support service in your area.</p></div></div>
