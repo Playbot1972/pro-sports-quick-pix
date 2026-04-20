@@ -3,10 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Pro Sports Quick Pix: daily sportsbook-style quick picks with live player pools, readable market tabs, and responsible gaming controls.">
+<meta name="theme-color" content="#060b16">
+<meta name="robots" content="index,follow">
+<link rel="dns-prefetch" href="https://www.gstatic.com">
+<link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+<link rel="dns-prefetch" href="https://assets.mixkit.co">
+<link rel="dns-prefetch" href="https://site.api.espn.com">
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preconnect" href="https://assets.mixkit.co" crossorigin>
 <title>Pro Sports Quick Pix</title>
 <!-- Google Analytics 4 — replace G-XXXXXXXXXX with your real Measurement ID -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
 <script>
+  const APP_VERSION = 'v1.21';
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
@@ -16,7 +27,13 @@
 <script>
   // Initialize EmailJS ONCE here — do NOT call emailjs.init() inside obSendCode()
   document.addEventListener('DOMContentLoaded', function() {
-    if (typeof emailjs !== 'undefined') emailjs.init('YcyxPL19ITeg2I5ed');
+    if (typeof emailjs !== 'undefined'){
+      try{
+        emailjs.init({ publicKey: 'YcyxPL19ITeg2I5ed' });
+      }catch(e){
+        try{ emailjs.init('YcyxPL19ITeg2I5ed'); }catch(_){}
+      }
+    }
   });
 </script>
 
@@ -29,40 +46,297 @@
 <audio id="chingSfx_2021" src="https://assets.mixkit.co/active_storage/sfx/2021/2021-preview.mp3" preload="auto" crossorigin="anonymous"></audio>
 <audio id="chingSfx_1935" src="https://assets.mixkit.co/active_storage/sfx/1935/1935-preview.mp3" preload="auto" crossorigin="anonymous"></audio>
 <audio id="pickTickSfx"     src="https://assets.mixkit.co/active_storage/sfx/1114/1114-preview.mp3" preload="auto" crossorigin="anonymous"></audio>
-<!-- Loot-style last-reveal stinger: Mixkit "Video game treasure" #2066 (royalty-free; not ARC Raiders IP). -->
-<audio id="pickJackpotSfx" src="https://assets.mixkit.co/active_storage/sfx/2066/2066-preview.mp3" preload="auto" crossorigin="anonymous"></audio>
 
 <style>
-:root{--bg:#07111f;--card:#111c33;--card2:#182747;--text:#eef3ff;--muted:#9fb0d0;--line:#26355f;--accent:#6ee7ff}
+:root{--bg:#060b16;--card:#0f1728;--card2:#121d33;--text:#eef3ff;--muted:#9aa6c2;--line:#24314f;--accent:#25c9ff}
 *{box-sizing:border-box}
-body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;background:radial-gradient(circle at top,#1b2a53 0,#07111f 58%);color:var(--text)}
-body.light{--card:#ffffff;--card2:#eef2ff;--text:#14213d;--muted:#56627a;--line:#cfd8ea;--accent:#8b5cf6;background:linear-gradient(180deg,#ffffff,#e9eef9)}
+body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;background:radial-gradient(circle at top,#152646 0,#060b16 58%);color:var(--text)}
+body.light{--card:#ffffff;--card2:#f3f6ff;--text:#14213d;--muted:#56627a;--line:#cfd8ea;--accent:#5b7cff;background:linear-gradient(180deg,#ffffff,#e9eef9)}
 .wrap{max-width:1240px;margin:0 auto;padding:16px}
-.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 16px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(180deg,var(--card),var(--card2));box-shadow:0 16px 40px rgba(0,0,0,.18)}
-.navbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;padding:10px 12px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.05)}
-.navitem{padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);font-weight:800;cursor:pointer;color:var(--text)}
-.navitem.active{background:linear-gradient(90deg,#6ee7ff,#8b5cf6);color:#08101f}
-.title{font-size:30px;font-weight:900}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:linear-gradient(180deg,var(--card),var(--card2));box-shadow:0 10px 28px rgba(0,0,0,.32)}
+.topbar-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.topbar-btn{
+  padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.18);
+  background:rgba(255,255,255,.08);color:inherit;font-weight:700;font-size:12px;cursor:pointer;
+}
+.topbar-btn:hover{border-color:rgba(255,255,255,.28);background:rgba(255,255,255,.12)}
+.btn-cta{
+  border:0;border-radius:14px;cursor:pointer;font-weight:900;color:#07111f;
+  background:linear-gradient(90deg,#6ee7ff,#8b5cf6);
+}
+.btn-cta:hover{opacity:.92}
+.btn-cta-lg{padding:14px;font-size:1rem}
+.btn-cta-md{padding:13px 26px;font-size:.98rem}
+.btn-cta-sm{padding:12px 24px;font-size:.95rem}
+.btn-pill{
+  display:none;padding:5px 12px;font-size:12px;border-radius:999px;
+  border:1px solid rgba(110,231,255,.3);background:rgba(110,231,255,.08);
+  color:#6ee7ff;cursor:pointer;font-weight:600;transition:all .2s;
+}
+.link-btn{
+  background:none;border:none;color:#6ee7ff;cursor:pointer;
+  font-size:.83rem;text-decoration:underline;padding:0;
+}
+.link-btn-muted{
+  margin-top:10px;background:none;border:none;color:#56627a;
+  font-size:.78rem;cursor:pointer;text-decoration:underline;padding:0;
+}
+.inline-note{margin-top:14px;font-size:.83rem;color:#9fb0d0}
+.inline-note-muted{color:#56627a;display:none}
+.account-strip{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.04)}
+.account-copy{font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.01em}
+.account-copy strong{color:var(--text);font-weight:800}
+.navbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;padding:9px 10px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.04)}
+.navitem{padding:9px 11px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);font-weight:800;cursor:pointer;color:var(--text);font-size:13px;letter-spacing:.01em;transition:background .18s ease,border-color .18s ease,transform .12s ease}
+.navitem:hover{transform:translateY(-1px);border-color:rgba(255,255,255,.16)}
+.navitem.active{background:linear-gradient(180deg,rgba(37,201,255,.26),rgba(37,201,255,.12));border-color:rgba(37,201,255,.62);color:#dff8ff}
+.btn:focus-visible,.btn2:focus-visible,.tab:focus-visible,.navitem:focus-visible,.slip-btn:focus-visible,.badge:focus-visible,button:focus-visible,a:focus-visible{
+  outline:2px solid rgba(37,201,255,.95);
+  outline-offset:2px;
+}
+.navitem.live-dot{position:relative}
+.navitem.live-dot::after{
+  content:'';
+  display:inline-block;
+  width:6px;height:6px;min-width:6px;min-height:6px;
+  border-radius:50%;
+  background:#26d9ff;
+  box-shadow:0 0 0 0 rgba(38,217,255,.7);
+  margin-left:7px;
+  flex-shrink:0;
+  vertical-align:middle;
+  animation:livePulse 1.9s ease-out infinite;
+}
+.market-rail{position:sticky;top:8px;z-index:24;backdrop-filter:blur(8px)}
+.market-rail{
+  flex-wrap:nowrap;
+  overflow-x:auto;
+  overflow-y:hidden;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+}
+.market-rail::-webkit-scrollbar{display:none}
+.market-rail .navitem{flex:0 0 auto}
+.title{font-size:26px;font-weight:900;letter-spacing:.01em}
 .subtitle{color:var(--muted);margin-top:6px}
-.badge{padding:8px 12px;border-radius:999px;background:rgba(110,231,255,.12);border:1px solid rgba(110,231,255,.2);color:var(--text);font-weight:700}
+.badge{padding:8px 12px;border-radius:999px;background:rgba(37,201,255,.12);border:1px solid rgba(37,201,255,.28);color:var(--text);font-weight:700;font-size:12px}
 .icon{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;margin-right:8px;border-radius:8px;background:rgba(255,255,255,.08)}
-.card{margin-top:16px;background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 16px 40px rgba(0,0,0,.18)}
-.tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
-.tab{border:1px solid var(--line);border-radius:999px;padding:10px 14px;background:rgba(255,255,255,.08);color:var(--text);font-weight:800;cursor:pointer;transition:transform .15s ease, background .2s ease}
+.card{margin-top:14px;background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 14px 36px rgba(0,0,0,.25)}
+.tabs{
+  display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;
+  position:sticky;top:66px;z-index:20;
+  padding:8px 4px 10px;
+  background:linear-gradient(180deg,rgba(15,23,40,.96),rgba(15,23,40,.82));
+  border-bottom:1px solid rgba(255,255,255,.08);
+  box-shadow:0 6px 16px rgba(0,0,0,.2);
+}
+/* Keep pick controls from visually tucking under sticky market tabs */
+.card .tabs + .grid{padding-top:6px}
+body.light .tabs{
+  background:linear-gradient(180deg,#ffffff,#eef3ff);
+  border-bottom:1px solid #d7dfef;
+}
+.tab{display:inline-flex;align-items:center;gap:0;border:1px solid var(--line);border-radius:999px;padding:9px 12px;background:rgba(255,255,255,.06);color:var(--text);font-weight:800;cursor:pointer;font-size:12px;transition:transform .15s ease, background .2s ease, border-color .2s ease}
 .tab:hover{transform:translateY(-1px)}
-.tab.active{background:linear-gradient(90deg,#6ee7ff,#8b5cf6);color:#08101f}
+.tab.active{background:linear-gradient(180deg,rgba(37,201,255,.26),rgba(37,201,255,.12));border-color:rgba(37,201,255,.62);color:#dff8ff}
+.tab.live-dot{position:relative}
+.tab.live-dot::after{
+  content:'';
+  display:inline-block;
+  width:6px;height:6px;min-width:6px;min-height:6px;
+  border-radius:50%;
+  background:#26d9ff;
+  box-shadow:0 0 0 0 rgba(38,217,255,.7);
+  margin-left:7px;
+  flex-shrink:0;
+  vertical-align:middle;
+  animation:livePulse 1.9s ease-out infinite;
+}
+.random-orbit{
+  position:relative;
+  overflow:visible;
+}
+.random-orbit::after{
+  content:'';
+  position:absolute;
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:#25c9ff;
+  box-shadow:0 0 0 1px rgba(37,201,255,.25),0 0 7px rgba(37,201,255,.65);
+  pointer-events:none;
+  offset-path:inset(2px round 12px);
+  offset-distance:0%;
+  offset-rotate:0deg;
+  animation:randomDotOrbit 6.4s linear infinite;
+}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.panel{padding:14px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
+.panel{padding:14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
 .btnrow{display:flex;flex-wrap:wrap;gap:10px}
-.btn{border-radius:14px;border:1px solid var(--line);padding:12px 14px;font-size:15px;background:linear-gradient(90deg,#6ee7ff,#8b5cf6);color:#08101f;font-weight:900;cursor:pointer}
-.btn2{background:rgba(255,255,255,.08);color:var(--text)}
+.btn{border-radius:10px;border:1px solid rgba(37,201,255,.45);padding:10px 12px;font-size:13px;background:linear-gradient(180deg,#2bd1ff,#13b9ec);color:#06111c;font-weight:900;cursor:pointer}
+.btn2{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:var(--text)}
+#pickCountRow .btn{min-width:108px;min-height:58px;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.2;padding:10px 10px;border-radius:12px}
+#pickCountRow .btn2{background:rgba(255,255,255,.04)}
 .list{display:grid;gap:10px;margin-top:10px;max-height:380px;overflow:auto}
-.item{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.06)}
-.details{display:none;margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08)}
+.item{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px;border-radius:11px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);box-shadow:0 6px 16px rgba(0,0,0,.16)}
+.details{display:none;margin-top:10px;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12)}
+.pick-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.08)}
+.pick-title-chip{display:inline-flex;align-items:center;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:900;background:rgba(37,201,255,.12);border:1px solid rgba(37,201,255,.35);color:#dff8ff;letter-spacing:.02em}
+#picksTitle{font-size:16px;letter-spacing:.01em}
+#freeBadge{margin-left:8px}
+.slip-actions{position:sticky;bottom:10px;z-index:16;margin-top:12px;padding:10px;border-radius:12px;border:1px solid var(--line);background:linear-gradient(180deg,rgba(15,23,40,.95),rgba(18,29,51,.95));display:flex;gap:8px;justify-content:flex-end;backdrop-filter:blur(8px)}
+.slip-btn{border-radius:10px;border:1px solid rgba(255,255,255,.14);padding:10px 12px;font-size:12px;font-weight:800;cursor:pointer;background:rgba(255,255,255,.05);color:var(--text);touch-action:manipulation}
+.slip-btn.primary{border-color:rgba(37,201,255,.5);background:linear-gradient(180deg,rgba(37,201,255,.28),rgba(37,201,255,.14));color:#dff8ff}
+.slip-btn:disabled{opacity:.45;cursor:not-allowed}
+.slip-btn.slip-btn-dim{opacity:.42}
+.slip-btn.slip-btn-dev-active{
+  border-color:rgba(110,231,255,.72)!important;
+  box-shadow:0 0 0 1px rgba(110,231,255,.35),0 0 16px rgba(110,231,255,.22);
+  color:#dff8ff!important;
+  opacity:1!important;
+}
+.app-version{
+  position:fixed;
+  right:10px;
+  bottom:10px;
+  z-index:8999;
+  padding:4px 8px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(6,11,22,.78);
+  color:var(--muted);
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.03em;
+  user-select:none;
+}
+.toast-stack{position:fixed;right:12px;bottom:38px;z-index:9500;display:grid;gap:8px;pointer-events:none}
+.toast-stack.center{
+  right:auto;
+  left:50%;
+  top:50%;
+  bottom:auto;
+  transform:translate(-50%,-50%);
+  justify-items:center;
+}
+.toast{
+  min-width:220px;max-width:340px;padding:10px 12px;border-radius:10px;
+  border:1px solid rgba(255,255,255,.16);background:rgba(10,18,32,.95);
+  color:#dff8ff;font-size:12px;font-weight:700;box-shadow:0 8px 26px rgba(0,0,0,.35);
+  opacity:0;transform:translateY(6px);animation:toastIn .2s ease forwards;
+}
+.toast.error{border-color:rgba(248,113,113,.5);color:#ffd5d5}
+@keyframes toastIn{to{opacity:1;transform:translateY(0)}}
+.legal-modal-card h2{font-size:1.25rem;letter-spacing:.01em}
+.legal-modal-card p,.legal-modal-card li{font-size:14px;line-height:1.65;color:#b8c5df}
+.legal-modal-card ul{padding-left:20px;margin-top:8px}
+.legal-modal-close{
+  border:0;border-radius:10px;padding:10px 14px;font-weight:800;
+  background:#6ee7ff;color:#08101f;cursor:pointer;
+}
+.age-modal-card{
+  background:linear-gradient(160deg,#111c33,#0e1a30);
+  border:1px solid rgba(110,231,255,.22);
+  border-radius:22px;padding:28px 24px;max-width:400px;width:100%;
+  color:#eef3ff;box-shadow:0 24px 80px rgba(0,0,0,.55);text-align:center;
+}
+.stripe-modal-card{
+  background:linear-gradient(160deg,#111c33,#0e1a30);
+  border:1px solid #26355f;border-radius:22px;padding:32px 28px;
+  max-width:400px;width:100%;color:#eef3ff;position:relative;
+  box-shadow:0 24px 80px rgba(0,0,0,.7);
+}
+.stripe-modal-close{
+  position:absolute;top:16px;right:16px;background:none;border:none;
+  color:#56627a;font-size:1.3rem;cursor:pointer;line-height:1;
+}
+.stripe-modal-head{text-align:center;margin-bottom:8px}
+.stripe-modal-trophy{font-size:2rem;margin-bottom:6px}
+.stripe-modal-title{font-size:1.3rem;font-weight:900;color:#eef3ff;margin-bottom:4px}
+.stripe-modal-sub{font-size:.88rem;color:#9fb0d0;margin-bottom:22px}
+.stripe-modal-list{
+  background:rgba(110,231,255,.06);border:1px solid rgba(110,231,255,.15);
+  border-radius:14px;padding:16px 18px;margin-bottom:22px;
+}
+.stripe-modal-list-head{
+  font-size:.82rem;color:#9fb0d0;text-transform:uppercase;
+  letter-spacing:.06em;margin-bottom:12px;font-weight:700;
+}
+.stripe-modal-list-items{display:flex;flex-direction:column;gap:9px;font-size:.9rem}
+.stripe-modal-list-item{display:flex;align-items:center;gap:10px}
+.stripe-modal-check{color:#6ee7ff;font-size:1rem}
+.stripe-modal-price-wrap{text-align:center;margin-bottom:6px}
+.stripe-modal-price{font-size:2rem;font-weight:900;color:#eef3ff}
+.stripe-modal-price-sub{color:#9fb0d0;font-size:.9rem}
+.stripe-modal-note{text-align:center;font-size:.78rem;color:#56627a;margin-bottom:18px}
+.stripe-modal-secure{text-align:center;margin-top:14px;font-size:.75rem;color:#56627a}
+.stripe-modal-secure strong{color:#9fb0d0}
+.age-modal-icon{font-size:2rem;margin-bottom:10px}
+.age-modal-title{font-size:1.15rem;font-weight:900;color:#eef3ff;margin-bottom:10px}
+.paywall-overlay-card{
+  text-align:center;padding:28px 18px 40px;max-width:420px;margin:0 auto;
+}
+.paywall-overlay-title{font-weight:900;font-size:1.1rem;color:#eef3ff;margin-bottom:10px}
+.paywall-overlay-sub{color:#9fb0d0;font-size:.92rem;line-height:1.55;margin-bottom:22px}
+.paywall-overlay-note{margin-top:14px;font-size:.8rem;color:#56627a}
+body.light #stripeModal{
+  background:rgba(234,240,251,.92)!important;
+}
+body.light .stripe-modal-card{
+  background:linear-gradient(160deg,#ffffff,#eef3ff)!important;
+  border-color:#cfd8ea!important;
+  color:#1d2b46!important;
+  box-shadow:0 24px 60px rgba(20,33,61,.14)!important;
+}
+body.light .stripe-modal-title{color:#1d2b46!important}
+body.light .stripe-modal-sub{color:#4b5f84!important}
+body.light .stripe-modal-close{color:#5a6f93!important}
+body.light .stripe-modal-list{
+  background:#f5f8ff!important;
+  border-color:#d6def0!important;
+}
+body.light .stripe-modal-list-head{color:#5a6f93!important}
+body.light .stripe-modal-price{color:#1d2b46!important}
+body.light .stripe-modal-price-sub{color:#5a6f93!important}
+body.light .stripe-modal-note{color:#5a6f93!important}
+body.light .stripe-modal-secure{color:#5a6f93!important}
+body.light .stripe-modal-secure strong{color:#3156c6!important}
+body.light #ageGateModal{background:rgba(234,240,251,.92)!important}
+body.light .age-modal-card{
+  background:linear-gradient(160deg,#ffffff,#eef3ff)!important;
+  border-color:#cfd8ea!important;
+  color:#1d2b46!important;
+  box-shadow:0 24px 60px rgba(20,33,61,.14)!important;
+}
+body.light .age-modal-card .ob-age-q{color:#32466c}
+body.light .age-modal-card .ob-age-q strong{color:#1d2b46}
+body.light .age-modal-title{color:#1d2b46!important}
+body.light .age-modal-card .ob-age-no-btn{
+  background:#f3f7ff;
+  color:#1f3358;
+  border-color:#c2cfe7;
+  font-size:1rem;
+  font-weight:900;
+}
+body.light .age-modal-card .ob-age-no-btn:hover{
+  background:#e8f0ff;
+  border-color:#aabce0;
+}
+body.light .paywall-overlay-card{
+  background:linear-gradient(160deg,#ffffff,#eef3ff);
+  border:1px solid #cfd8ea;
+  border-radius:20px;
+}
+body.light .paywall-overlay-title{color:#1d2b46}
+body.light .paywall-overlay-sub{color:#4f6287}
+body.light .paywall-overlay-note{color:#5a6f93}
 .reel{display:inline-block;min-width:180px;letter-spacing:.08em;font-weight:900;opacity:.9;animation:reelSpin .4s linear infinite}
 @keyframes reelSpin{0%{transform:translateY(0) skewY(0deg)}50%{transform:translateY(-1px) skewY(-2deg)}100%{transform:translateY(0) skewY(0deg)}}
 .item.expandable{cursor:pointer;align-items:flex-start;flex-direction:column}
 .item .rowtop{display:flex;justify-content:space-between;gap:10px;align-items:center;width:100%}
+.rowtop-left{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
+.rowtop-name{min-width:0;font-weight:700}
+.mlb-headshot,.nba-headshot,.nhl-headshot,.nfl-headshot,.soccer-headshot{width:38px;height:38px;border-radius:10px;object-fit:cover;flex-shrink:0;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.22)}
 .chev{font-size:14px;color:var(--muted)}
 .muted{font-size:13px;color:var(--muted)}
 .team-pill{display:inline-flex;align-items:center;justify-content:center;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:900;margin-left:8px;line-height:1;color:#fff;vertical-align:middle;white-space:nowrap}
@@ -76,6 +350,8 @@ body.light{--card:#ffffff;--card2:#eef2ff;--text:#14213d;--muted:#56627a;--line:
 @keyframes jackpotFlash{0%{transform:scale(1);filter:brightness(1)}20%{transform:scale(1.03);filter:brightness(1.35)}50%{transform:scale(1.01);filter:brightness(1.15)}100%{transform:scale(1);filter:brightness(1)}}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes bar{0%{transform:translateX(-120%)}50%{transform:translateX(140%)}100%{transform:translateX(260%)} }
+@keyframes livePulse{0%{box-shadow:0 0 0 0 rgba(38,217,255,.65)}70%{box-shadow:0 0 0 7px rgba(38,217,255,0)}100%{box-shadow:0 0 0 0 rgba(38,217,255,0)}}
+@keyframes randomDotOrbit{to{offset-distance:100%}}
 .locked{opacity:.45;filter:grayscale(.15);background:rgba(255,255,255,.08)!important;color:var(--text)!important}
 .locked[disabled]{pointer-events:none}
 .trust-banner{margin:14px 0 16px;padding:14px 16px;border:1px solid rgba(110,231,255,.25);border-radius:16px;background:linear-gradient(180deg,rgba(17,28,51,.95),rgba(24,39,71,.95));box-shadow:0 10px 28px rgba(0,0,0,.18);color:#e8eeff}
@@ -86,7 +362,81 @@ body.light{--card:#ffffff;--card2:#eef2ff;--text:#14213d;--muted:#56627a;--line:
 .trust-links{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;}
 .trust-links a{color:#b8ddff;text-decoration:none;font-size:13px;font-weight:700;opacity:.95;}
 .trust-links a:hover{text-decoration:underline;opacity:1;}
-@media (max-width:900px){.grid{grid-template-columns:1fr}}
+body.light .trust-banner{
+  background:linear-gradient(180deg,#ffffff,#f4f7ff);
+  border-color:#d5def0;
+  box-shadow:0 8px 20px rgba(20,33,61,.08);
+  color:#14213d;
+}
+body.light .trust-text{color:#24324f}
+body.light .trust-links a{color:#3156c6}
+body.light .trust-badge{
+  background:linear-gradient(90deg,#5b7cff,#7d5bff);
+  color:#ffffff;
+}
+body.light .navitem{
+  background:rgba(20,33,61,.04);
+  border-color:#cfd8ea;
+  color:#1c2b45;
+}
+body.light .navitem.active{
+  background:linear-gradient(180deg,#5b7cff,#7d5bff);
+  border-color:#5b7cff;
+  color:#ffffff;
+}
+body.light .tab{
+  background:#f4f7ff;
+  border-color:#cfd8ea;
+  color:#1c2b45;
+}
+body.light .tab.active{
+  background:linear-gradient(180deg,#5b7cff,#7d5bff);
+  border-color:#5b7cff;
+  color:#ffffff;
+}
+body.light .btn{
+  background:linear-gradient(180deg,#5b7cff,#4a67d8);
+  border-color:#4a67d8;
+  color:#ffffff;
+}
+body.light .btn2{
+  background:#eef2ff;
+  border-color:#cfd8ea;
+  color:#24324f;
+}
+body.light .slip-actions{
+  background:linear-gradient(180deg,#ffffff,#eef3ff);
+  border-color:#cfd8ea;
+}
+body.light .slip-btn{
+  background:#f2f6ff;
+  border-color:#cfd8ea;
+  color:#1c2b45;
+}
+body.light .slip-btn.primary{
+  background:linear-gradient(180deg,#5b7cff,#4a67d8);
+  border-color:#4a67d8;
+  color:#ffffff;
+}
+body.light .slip-btn.slip-btn-dev-active{
+  border-color:#4a67d8!important;
+  box-shadow:0 0 0 1px rgba(74,103,216,.45),0 0 14px rgba(74,103,216,.2);
+  color:#0f1a33!important;
+}
+@media (max-width:900px){
+  .grid{grid-template-columns:1fr}
+  .title{font-size:22px}
+  .topbar{padding:11px 12px}
+  .tabs{top:72px}
+  .tab{font-size:13px}
+  .btn{font-size:14px}
+  #pickCountRow .btn{font-size:14px}
+  .slip-btn{font-size:13px}
+  .navitem{font-size:14px}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+}
 
 .money-spin{display:inline-flex;gap:1px;justify-content:center;align-items:center}
 .money-spin span{display:inline-block;transition:transform .35s ease, opacity .35s ease, color .35s ease, text-shadow .35s ease}
@@ -134,8 +484,10 @@ body.light{--card:#ffffff;--card2:#eef2ff;--text:#14213d;--muted:#56627a;--line:
 #freeBadge{display:none;padding:4px 10px;border-radius:999px;background:linear-gradient(90deg,rgba(110,231,255,.15),rgba(139,92,246,.15));border:1px solid rgba(110,231,255,.25);font-size:11px;font-weight:800;color:#6ee7ff;margin-left:8px;vertical-align:middle}
 
 /* ── FULL-SCREEN PICK OVERLAY ── */
+/* Above .app-version (8999) + feedback tab/panel (9000–9001); below toasts (9500) + modals (9999+). */
 #pickOverlay{
-  position:fixed;inset:0;z-index:8000;
+  position:fixed;inset:0;z-index:9200;
+  isolation:isolate;
   background:radial-gradient(circle at top,#1b2a53 0,#07111f 58%);
   transform:translateY(100%);
   transition:transform .42s cubic-bezier(.32,1,.36,1);
@@ -150,6 +502,11 @@ body.light{--card:#ffffff;--card2:#eef2ff;--text:#14213d;--muted:#56627a;--line:
   border:1px solid rgba(110,231,255,.2);
   background:linear-gradient(165deg,rgba(17,28,51,.92),rgba(24,39,71,.88));
   box-shadow:0 18px 48px rgba(0,0,0,.35);
+}
+body.light .po-paywall-panel{
+  border-color:#cfd8ea;
+  background:linear-gradient(165deg,#ffffff,#eef3ff);
+  box-shadow:0 12px 28px rgba(20,33,61,.12);
 }
 .po-header{
   display:flex;align-items:center;justify-content:space-between;
@@ -205,10 +562,35 @@ body.light{--card:#ffffff;--card2:#eef2ff;--text:#14213d;--muted:#56627a;--line:
 
 
 
-/* Side pillar graphics */
-body::before,body::after{content:'';position:fixed;top:0;bottom:0;width:18px;pointer-events:none;z-index:0;opacity:.9;filter:drop-shadow(0 0 18px rgba(52,211,153,.15));background:linear-gradient(180deg,rgba(34,197,94,.05),rgba(52,211,153,.18),rgba(34,197,94,.05));}
-body::before{left:0;border-right:1px solid rgba(52,211,153,.22);}
-body::after{right:0;border-left:1px solid rgba(52,211,153,.22);} 
+/* Marble pillar artwork — both edges; right side mirrored so the green-glow pillar frames each side */
+body::before,
+body::after{
+  content:'';
+  position:fixed;
+  top:0;bottom:0;
+  width:clamp(52px,10vw,118px);
+  pointer-events:none;
+  z-index:0;
+  background-image:url('assets/pillars.png');
+  background-repeat:no-repeat;
+  background-size:auto min(108vh,920px);
+  background-position:left center;
+  opacity:0.94;
+}
+body::before{
+  left:0;
+  border-right:1px solid rgba(7,17,31,.25);
+}
+body::after{
+  right:0;
+  transform:scaleX(-1);
+  border-left:1px solid rgba(7,17,31,.25);
+}
+body.light::before,
+body.light::after{
+  opacity:0.72;
+  border-color:rgba(20,33,61,.08);
+}
 .wrap, .topbar, .card, .trust-banner, .po-card, .ob-step{position:relative;z-index:1;}
 
 </style>
@@ -292,7 +674,7 @@ window.safeHeadshot = function(obj){
       <div class="ob-sub">Free daily HR picks powered by live MLB lineups.<br>You must be 21+ to continue.</div>
       <p class="ob-age-q">Are you <strong>21 or older</strong> and using this app only where it is legal for you?</p>
       <div class="ob-age-actions">
-        <button type="button" class="ob-btn ob-age-yes-split" onclick="obStep(2)">Yes — continue</button>
+        <button type="button" class="ob-btn ob-age-yes-split" onclick="_ageYesTripleOrProceed(false)">Yes</button>
         <button type="button" class="ob-age-no-btn" onclick="ageGateNo()">No</button>
       </div>
       <div class="ob-legal">For entertainment purposes only. Not affiliated with MLB. Results are not guaranteed. Please gamble responsibly.</div>
@@ -314,10 +696,9 @@ window.safeHeadshot = function(obj){
       <input class="ob-input" type="text" id="ob-code" placeholder="Enter 6-digit code" maxlength="6" inputmode="numeric" oninput="obCodeValidate()" autocomplete="one-time-code">
       <div id="ob-code-error" style="color:#f87171;font-size:.82rem;min-height:18px;margin-bottom:4px"></div>
       <button class="ob-btn" id="verifyBtn" disabled onclick="obVerifyCode()">Verify & Unlock Pick 🔓</button>
-      <button onclick="obComplete()" style="margin-top:10px;background:none;border:none;color:#56627a;font-size:.78rem;cursor:pointer;text-decoration:underline">Skip verification (preview only)</button>
-      <div style="margin-top:14px;font-size:.83rem;color:#9fb0d0">
-        Didn't get it? <button id="resendBtn" onclick="obResendCode()" style="background:none;border:none;color:#6ee7ff;cursor:pointer;font-size:.83rem;text-decoration:underline">Resend code</button>
-        <span id="resendTimer" style="color:#56627a;display:none"></span>
+      <div class="inline-note">
+        Didn't get it? <button id="resendBtn" class="link-btn" onclick="obResendCode()">Resend code</button>
+        <span id="resendTimer" class="inline-note-muted"></span>
       </div>
       <div class="ob-legal">Check your spam folder if you don't see it within 30 seconds.</div>
     </div>
@@ -333,21 +714,27 @@ window.safeHeadshot = function(obj){
 
 <div class="wrap">
   <div class="topbar">
-    <div>
+    <div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap">
+      <button type="button" id="themeToggle" class="badge topbar-btn" onclick="toggleTheme()" aria-label="Switch to light mode">☀️ Light mode</button>
+      <div>
       <div class="title">Pro Sports Quick Pix</div>
-      <div class="subtitle">Daily Sports picks powered by professional sports line ups. <span id="devTrigger" onclick="_devTriggerClick()" style="cursor:default">Free</span> Fast <span id="devSharpTrigger" onclick="_devSharpTriggerClick()" style="cursor:default">Sharp</span>.</div>
+      <div class="subtitle">Daily sports picks powered by professional sports lineups. Free Fast. Sharp.</div>
+      </div>
     </div>
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <button type="button" id="logoutBtn" onclick="logoutSession()" style="display:none;padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:inherit;font-weight:700;font-size:12px;cursor:pointer">Log out</button>
-      <button id="themeToggle" class="badge" onclick="toggleTheme()" style="cursor:pointer;border:0">🌙 Night</button>
+    <div class="topbar-right">
+      <button type="button" id="logoutBtn" class="topbar-btn">Log in</button>
       <div class="badge" id="sportHintBadge">Choose a sport tab</div>
     </div>
+  </div>
+  <div class="account-strip">
+    <div class="account-copy"><strong>Quick Pix</strong> sportsbook-style board: pick your market, lock your selection, then share your slip.</div>
+    <div class="badge">Live Board</div>
   </div>
 
   <div class="trust-banner">
     <div class="trust-row">
       <div class="trust-badge">21+ ONLY</div>
-      <div class="trust-text">Tennessee only where legal. Results are not guaranteed. For entertainment only.</div>
+      <div class="trust-text" id="legalStateLine">Your state only where legal. Results are not guaranteed. For entertainment only.</div>
     </div>
     <div class="trust-links">
       <a href="#" onclick="openAgeGate();return false;">Age Check</a>
@@ -358,7 +745,7 @@ window.safeHeadshot = function(obj){
     </div>
   </div>
 
-  <div class="navbar" id="bottomnav"></div>
+  <div class="navbar market-rail" id="bottomnav"></div>
 
   <div class="card">
     <div class="tabs" id="tabs"></div>
@@ -373,12 +760,21 @@ window.safeHeadshot = function(obj){
 
       </div>
       <div class="panel">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-          <strong id="picksTitle">Quick Picks</strong><span id="freeBadge">🎁 1 Free Pick</span>
-          <button id="shareBtn" onclick="copyPicks()" style="display:none;padding:5px 12px;font-size:12px;border-radius:999px;border:1px solid rgba(110,231,255,.3);background:rgba(110,231,255,.08);color:#6ee7ff;cursor:pointer;font-weight:600;transition:all .2s">⎘ Copy Picks</button>
+        <div class="pick-head">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><strong id="picksTitle">Quick Picks</strong><span class="pick-title-chip">Bet Slip</span><span id="freeBadge">🎁 1 Free Pick</span><span id="updatedAt" class="muted" style="font-weight:700">Updated: --</span></div>
+          <button id="shareBtn" class="btn-pill" onclick="copyPicks()">⎘ Copy Picks</button>
         </div>
         <div class="list" id="picks"><div class="muted">Choose a sport and option to see starter picks.</div></div>
       </div>
+    </div>
+    <div class="slip-actions">
+      <button type="button" id="slipClearBtn" class="slip-btn"
+        onpointerdown="_slipClearPointerDown(event)"
+        onpointerup="_slipClearPointerEnd(event)"
+        onpointerleave="_slipClearPointerEnd(event)"
+        onpointercancel="_slipClearPointerEnd(event)"
+        onclick="_slipClearClick(event)">Clear Current</button>
+      <button type="button" id="slipCopyBtn" class="slip-btn primary" onclick="copyCurrentSportPicks()">Copy Slip</button>
     </div>
   </div>
 </div>
@@ -396,65 +792,24 @@ var _lhMem=(function(){
   };
 })();
 
-// ── DEV MODE: triple "Sharp" arms/disarms; triple "Free" toggles dev only when armed ──
+// ── DEV MODE: (1) ~600ms hold "Clear Current"  (2) triple-click Age "Yes" ───
 var _devMode = false;
-var _freeDevArmed = false;
-var _devFreeCount = 0;
-var _devFreeTimer = null;
-var _devSharpCount = 0;
-var _devSharpTimer = null;
-function _syncSubtitleDevHighlights(){
-  var elF = document.getElementById('devTrigger');
-  var elS = document.getElementById('devSharpTrigger');
-  if(_devMode){
-    if(elF) elF.style.color = '#6ee7ff';
-    if(elS){
-      elS.style.color = '#6ee7ff';
-      elS.style.textDecoration = '';
-      elS.style.textDecorationColor = '';
-    }
-  }else{
-    if(elF) elF.style.color = '';
-    if(elS){
-      if(_freeDevArmed){
-        elS.style.color = 'rgba(167,139,250,.95)';
-        elS.style.textDecoration = 'underline';
-        elS.style.textDecorationColor = 'rgba(167,139,250,.45)';
-      }else{
-        elS.style.color = '';
-        elS.style.textDecoration = '';
-        elS.style.textDecorationColor = '';
-      }
-    }
-  }
+var _slipClearDevHoldMs = 600;
+var _slipClearDevLongTimer = null;
+var _slipClearDevSuppressNextClick = false;
+function _syncDevClearBtnStyle(){
+  const clearBtn = document.getElementById('slipClearBtn');
+  if(!clearBtn) return;
+  clearBtn.classList.toggle('slip-btn-dev-active', !!_devMode);
 }
-/** Triple-click Sharp: enable or disable the Free triple-click dev unlock gesture. */
-function _devSharpTriggerClick(){
-  _devSharpCount++;
-  clearTimeout(_devSharpTimer);
-  _devSharpTimer = setTimeout(function(){ _devSharpCount = 0; }, 800);
-  if(_devSharpCount < 3) return;
-  _devSharpCount = 0;
-  clearTimeout(_devSharpTimer);
-  _freeDevArmed = !_freeDevArmed;
-  _syncSubtitleDevHighlights();
-}
-/** Triple-click Free: toggle dev paywall bypass only if Sharp has armed this path. */
-function _devTriggerClick(){
-  if(!_freeDevArmed) return;
-  _devFreeCount++;
-  clearTimeout(_devFreeTimer);
-  _devFreeTimer = setTimeout(function(){ _devFreeCount = 0; }, 800);
-  if(_devFreeCount < 3) return;
-  _devFreeCount = 0;
-  clearTimeout(_devFreeTimer);
+function _devToggleMode(){
   _devMode = !_devMode;
-  _syncSubtitleDevHighlights();
+  _syncDevClearBtnStyle();
   if(_devMode){
     _freePickUsed = false;
     pickLocked = false;
     const row = document.getElementById('pickCountRow');
-    if(row) row.querySelectorAll('button').forEach(function(b){ b.disabled = false; b.classList.remove('locked'); });
+    if(row) row.querySelectorAll('button').forEach(b=>{ b.disabled=false; b.classList.remove('locked'); });
     const loadBtn = document.getElementById('mlbLoadBtn');
     if(loadBtn) loadBtn.disabled = false;
     const picks = document.getElementById('picks');
@@ -462,9 +817,59 @@ function _devTriggerClick(){
       picks.innerHTML = '<div class="muted">Dev mode on — unlimited picks unlocked.</div>';
     }
     renderSport();
-  }else{
-    if(_freePickUsed) showUpgradeWall(); else renderSport();
+  } else {
+    try{
+      const raw = _lhMem.getItem('lhProfile');
+      if(raw) _refreshFreePickConsumedState(JSON.parse(raw));
+      else { _isPro = false; _freePickUsed = false; }
+    }catch(_){ _isPro = false; _freePickUsed = false; }
+    if(_freePickUsed && !_isPro) showUpgradeWall(); else renderSport();
   }
+}
+function _slipClearPointerDown(e){
+  if(e && e.button != null && e.button !== 0) return;
+  clearTimeout(_slipClearDevLongTimer);
+  _slipClearDevLongTimer = setTimeout(function(){
+    _slipClearDevLongTimer = null;
+    _slipClearDevSuppressNextClick = true;
+    try{ if(navigator.vibrate) navigator.vibrate(20); }catch(_){}
+    _devToggleMode();
+  }, _slipClearDevHoldMs);
+}
+function _slipClearPointerEnd(){
+  clearTimeout(_slipClearDevLongTimer);
+  _slipClearDevLongTimer = null;
+}
+function _slipClearClick(){
+  if(_slipClearDevSuppressNextClick){
+    _slipClearDevSuppressNextClick = false;
+    return;
+  }
+  clearCurrentSportPicks();
+}
+var _ageYesDevSeq = 0;
+var _ageYesDevTimer = null;
+var _ageYesDevDebounceMs = 220;
+/** Triple-click within window toggles dev; otherwise after short debounce runs normal Yes (onboarding or age modal). */
+function _ageYesTripleOrProceed(fromModal){
+  _ageYesDevSeq++;
+  clearTimeout(_ageYesDevTimer);
+  if(_ageYesDevSeq >= 3){
+    _ageYesDevSeq = 0;
+    clearTimeout(_ageYesDevTimer);
+    _ageYesDevTimer = null;
+    _devToggleMode();
+    return;
+  }
+  _ageYesDevTimer = setTimeout(function(){
+    var n = _ageYesDevSeq;
+    _ageYesDevSeq = 0;
+    _ageYesDevTimer = null;
+    if(n >= 1 && n < 3){
+      if(fromModal) closeAgeGateModal();
+      else obStep(2);
+    }
+  }, _ageYesDevDebounceMs);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -511,6 +916,79 @@ function _pickRandomSfxIdx(excludeIdx) {
 // firstSfxIdx: pass the index used for pick #0 so the last pick avoids it
 let _firstSfxIdx = -1;
 
+// Last-pick “epic loot” layer: original Web Audio (timpani-ish + brassy + bells)—not a copy of any game asset.
+let _lootCtx = null;
+function _ensureLootAudioCtx(){
+  try{
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return null;
+    if(!_lootCtx) _lootCtx = new AC();
+    if(_lootCtx.state === 'suspended') _lootCtx.resume();
+    return _lootCtx;
+  }catch(_){ return null; }
+}
+function playOrchestralLootStinger(){
+  const ctx = _ensureLootAudioCtx();
+  if(!ctx) return;
+  const t0 = ctx.currentTime + 0.02;
+  const master = ctx.createGain();
+  master.gain.value = 0.26;
+  master.connect(ctx.destination);
+  function linFade(g, tA, peak, tEnd){
+    g.gain.setValueAtTime(0, tA);
+    g.gain.linearRampToValueAtTime(peak, tA + 0.02);
+    g.gain.linearRampToValueAtTime(0.0001, tEnd);
+  }
+  function lowHit(freq, t, peak, endT){
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(freq, t);
+    linFade(g, t, peak, endT);
+    o.connect(g); g.connect(master);
+    o.start(t); o.stop(endT + 0.04);
+  }
+  lowHit(73.42, t0, 0.9, t0 + 0.34);
+  lowHit(98, t0 + 0.09, 0.55, t0 + 0.3);
+  function brassHit(freq, t, len){
+    for(let k = 0; k < 3; k++){
+      const o = ctx.createOscillator();
+      o.type = 'sawtooth';
+      const det = 1 + (k - 1) * 0.0045;
+      o.frequency.setValueAtTime(freq * det, t);
+      const lp = ctx.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.Q.value = 0.7;
+      lp.frequency.setValueAtTime(2800, t);
+      lp.frequency.linearRampToValueAtTime(380, t + len * 0.7);
+      const g = ctx.createGain();
+      const pk = 0.045 / (k + 1);
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(pk, t + 0.035);
+      g.gain.linearRampToValueAtTime(0.0001, t + len);
+      o.connect(lp); lp.connect(g); g.connect(master);
+      o.start(t); o.stop(t + len + 0.05);
+    }
+  }
+  brassHit(174.61, t0 + 0.04, 0.4);
+  brassHit(220, t0 + 0.15, 0.44);
+  brassHit(293.66, t0 + 0.26, 0.36);
+  function bell(f, t, dur, peak){
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(f, t);
+    linFade(g, t, peak, t + dur);
+    o.connect(g); g.connect(master);
+    o.start(t); o.stop(t + dur + 0.05);
+  }
+  bell(1318.51, t0 + 0.22, 0.52, 0.07);
+  bell(1760, t0 + 0.28, 0.48, 0.055);
+  bell(2093, t0 + 0.33, 0.42, 0.045);
+  bell(2793.83, t0 + 0.38, 0.55, 0.04);
+  setTimeout(() => { try { master.disconnect(); } catch (_) {} }, 1300);
+}
+
 function playChingSfx(isFirst, isLast) {
   try {
     let idx;
@@ -533,6 +1011,7 @@ function playChingSfx(isFirst, isLast) {
     _lastSfxIdx = idx;
     const [id, cutMs] = _sfxPool[idx];
     const el = document.getElementById(id);
+    if(!el) return;
     el.pause(); el.currentTime = 0;
     if (isLast) {
       el.volume = 1;
@@ -544,18 +1023,9 @@ function playChingSfx(isFirst, isLast) {
     const p = el.play();
     if (p && typeof p.catch === 'function') p.catch(() => {});
     setTimeout(() => { try { el.pause(); el.volume = 0.88; } catch(_){} }, cutMs);
-    if (isLast) {
-      setTimeout(() => {
-        try {
-          const j = document.getElementById('pickJackpotSfx');
-          if (!j) return;
-          j.pause(); j.currentTime = 0; j.volume = 0.4; j.playbackRate = 1;
-          const pj = j.play();
-          if (pj && typeof pj.catch === 'function') pj.catch(() => {});
-          setTimeout(() => { try { j.pause(); } catch(_){} }, 900);
-        } catch (_) {}
-      }, 55);
-    }
+    // Epic orchestral layer: only on final reveal, ~40% so it stays special (not every run).
+    if (isLast && Math.random() < 0.4)
+      setTimeout(() => { try { playOrchestralLootStinger(); } catch (_) {} }, 55 + Math.floor(Math.random() * 45));
   } catch (_) {}
 }
 
@@ -566,20 +1036,33 @@ function playChingSfx(isFirst, isLast) {
 let _pickSfxAudioPrimed = false;
 function unlockPickSfxFromGesture(){
   if(_pickSfxAudioPrimed) return;
-  _pickSfxAudioPrimed = true;
-  const ids = ['chingSfx','chingSfx_1982','chingSfx_2021','chingSfx_1935','pickTickSfx','pickJackpotSfx'];
+  const ids = ['chingSfx','chingSfx_1982','chingSfx_2021','chingSfx_1935','pickTickSfx'];
   for(let i = 0; i < ids.length; i++){
-    const el = document.getElementById(ids[i]);
-    if(!el) continue;
-    const wasMuted = el.muted;
-    el.muted = true;
-    const p = el.play();
-    const restore = () => { try { el.pause(); el.currentTime = 0; el.muted = wasMuted; } catch(_) { el.muted = wasMuted; } };
-    if(p && typeof p.then === 'function') p.then(restore).catch(() => { el.muted = wasMuted; });
-    else restore();
+    try{
+      const el = document.getElementById(ids[i]);
+      if(!el) continue;
+      const wasMuted = el.muted;
+      el.muted = true;
+      const p = el.play();
+      const restore = () => { try { el.pause(); el.currentTime = 0; el.muted = wasMuted; } catch(_) { el.muted = wasMuted; } };
+      if(p && typeof p.then === 'function') p.then(restore).catch(() => { try{ el.pause(); el.currentTime = 0; }catch(_){ } el.muted = wasMuted; });
+      else restore();
+    }catch(_){}
+  }
+  try{ _ensureLootAudioCtx(); }catch(_){}
+  _pickSfxAudioPrimed = true;
+}
+function stopPickSfxNow(){
+  const ids = ['chingSfx','chingSfx_1982','chingSfx_2021','chingSfx_1935','pickTickSfx'];
+  for(let i=0;i<ids.length;i++){
+    try{
+      const el = document.getElementById(ids[i]);
+      if(!el) continue;
+      el.pause();
+      el.currentTime = 0;
+    }catch(_){}
   }
 }
-
 // ─────────────────────────────────────────────────────────────────────────────
 
 const sports={MLB:{icon:'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Major_League_Baseball_logo.svg/1280px-Major_League_Baseball_logo.svg.png',desc:'Load live lineup hitters for today, then picks appear one at a time.',options:['HR','Hits','Total Bases','RBI','Ks'],color:'#6ee7ff'},NFL:{icon:'https://upload.wikimedia.org/wikipedia/en/a/a2/National_Football_League_logo.svg',desc:'Starter options: passing yards, rushing yards, receiving yards, receptions, TDs.',options:['TDs','Rush Yds','Rec Yds','Receptions','Pass Yds'],color:'#34d399'},NBA:{icon:'https://upload.wikimedia.org/wikipedia/en/0/03/National_Basketball_Association_logo.svg',desc:'Starter options: points, rebounds, assists, threes, PRA.',options:['Points','Assists','Rebounds','3PM','PRA'],color:'#f59e0b'},NHL:{icon:'https://media.nhl.com/site/asset/public/images/2022/01/NewShield-02023704-10094134.jpg',desc:'Starter options: shots on goal, goals, assists, goalie saves, points.',options:['Goals','Shots','Assists','Points','Goalie Saves'],color:'#60a5fa'},Soccer:{icon:'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Soccerball.svg/3840px-Soccerball.svg.png',desc:'Starter options: shots, shots on target, goals, assists, goalkeeper saves.',options:['Goals','Assists','Shots','SOT','GK Saves'],color:'#f472b6'}};
@@ -594,10 +1077,86 @@ let nhlLoaded=false, nhlPicks=[], nhlToken=0, nhlLoading=false, nhlPickCount=0, 
 let soccerLoaded=false, soccerPicks=[], soccerToken=0, soccerLoading=false, soccerPickCount=0, soccerUsed=new Set(), soccerLivePool=[];
 const todayStr = (()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;})();
 
+/** Approximate US pro calendar windows (local date). Tune yearly if needed. */
+function sportInSeason(sport){
+  const t = new Date();
+  const m = t.getMonth() + 1;
+  const d = t.getDate();
+  switch(sport){
+    case 'NFL':
+      if(m >= 10) return true;
+      if(m === 9 && d >= 4) return true;
+      if(m <= 2) return m === 1 || (m === 2 && d <= 15);
+      return false;
+    case 'MLB':
+      if(m === 3) return d >= 20;
+      if(m >= 4 && m <= 10) return true;
+      if(m === 11) return d <= 12;
+      return false;
+    case 'NBA':
+      if(m >= 11 || (m === 10 && d >= 15)) return true;
+      if(m <= 5) return true;
+      return m === 6 && d <= 25;
+    case 'NHL':
+      if(m >= 11 || (m === 10 && d >= 7)) return true;
+      if(m <= 5) return true;
+      return m === 6 && d <= 28;
+    case 'Soccer':
+      if(m >= 3 && m <= 11) return true;
+      if(m === 2) return d >= 22;
+      return m === 12 && d <= 8;
+    default:
+      return true;
+  }
+}
+function getOutOfSeasonSports(){
+  return Object.keys(sports).filter(function(s){ return !sportInSeason(s); });
+}
+const _seasonReturnHint = {
+  NFL: 'Regular-season picks return in early September.',
+  MLB: 'Spring Training and the regular season return in March.',
+  NBA: 'The league returns in mid-October.',
+  NHL: 'The league returns in early October.',
+  Soccer: 'MLS returns in late February.'
+};
+function _oosPanelHtml(sportKey){
+  const meta = sports[sportKey];
+  if(!meta) return '';
+  const hint = _seasonReturnHint[sportKey] || 'This sport is off-season. Check back when the schedule resumes.';
+  const esc = String(sportKey).replace(/'/g, '&#39;');
+  return `<div class="oos-panel" style="text-align:center;padding:32px 20px">
+    <img src="${meta.icon}" alt="${esc} logo" style="width:76px;height:76px;object-fit:contain;margin-bottom:14px;display:inline-block;filter:drop-shadow(0 6px 18px rgba(0,0,0,.35))">
+    <div style="font-size:1.12rem;font-weight:900;color:${meta.color};letter-spacing:.02em;margin-bottom:8px">Off Season</div>
+    <div class="muted" style="font-size:13px;max-width:360px;margin:0 auto;line-height:1.5">${hint}</div>
+  </div>`;
+}
+function _oosPicksLine(sportKey){
+  const meta = sports[sportKey];
+  const label = meta ? sportKey : 'This sport';
+  return `<div class="muted" style="text-align:center;padding:14px 12px">${label} is off-season. Try another tab or come back when the schedule resumes.</div>`;
+}
+
 // ── ANALYTICS HELPER ────────────────────────────────────────────────────
 function trackEvent(name, params){
   try{ if(typeof gtag==='function') gtag('event', name, params||{}); }catch(e){}
 }
+window.addEventListener('error', function(e){
+  try{
+    trackEvent('client_error', {
+      message: String(e && e.message || 'unknown_error'),
+      source: String(e && e.filename || ''),
+      line: Number(e && e.lineno || 0)
+    });
+  }catch(_){}
+});
+window.addEventListener('unhandledrejection', function(e){
+  try{
+    const reason = e && e.reason;
+    trackEvent('client_rejection', {
+      reason: String((reason && reason.message) || reason || 'unknown_rejection')
+    });
+  }catch(_){}
+});
 // Session time tracking
 var _sessionStart = Date.now();
 var _sectionTimes = {}; // sport -> ms spent
@@ -619,17 +1178,26 @@ window.addEventListener('beforeunload', function(){
 });
 const teamColors={ARI:'#A71930',ATL:'#CE1141',BAL:'#DF4601',BOS:'#BD3039',CHC:'#0E3386',CIN:'#C6011F',CLE:'#00385D',COL:'#33006F',CWS:'#27251F',DET:'#0C2C56',HOU:'#002D62',KC:'#004687',LAA:'#BA0021',LAD:'#005A9C',MIA:'#00A3E0',MIL:'#12284B',MIN:'#002B5C',NYM:'#002D72',NYY:'#0C2340',OAK:'#003831',PHI:'#E81828',PIT:'#FDB827',SD:'#2F241D',SEA:'#0C2C56',SF:'#FD5A1E',STL:'#C41E3A',TB:'#092C5C',TEX:'#003278',TOR:'#134A8E',WSH:'#AB0003'};
 function teamPill(abbr){const c=teamColors[String(abbr||'').toUpperCase()]||'#5b6475'; return `<span class="team-pill" style="background:${c}">${abbr||''}</span>`;}
-
+function setUpdatedTimestamp(){
+  const el = document.getElementById('updatedAt');
+  if(!el) return;
+  const t = new Date();
+  const hh = String(t.getHours()).padStart(2,'0');
+  const mm = String(t.getMinutes()).padStart(2,'0');
+  el.textContent = `Updated: ${hh}:${mm}`;
+}
 function renderTabs(){
-  const outOfSeason = ['NFL'];
+  const outOfSeason = getOutOfSeasonSports();
   const goldLockSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f59e0b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' style='width:13px;height:13px;margin-left:5px;vertical-align:middle;flex-shrink:0'><rect x='3' y='11' width='18' height='11' rx='2' ry='2'/><path d='M7 11V7a5 5 0 0 1 10 0v4'/></svg>`;
   // Bottom nav: always the main sport selector
-  document.getElementById('bottomnav').innerHTML=Object.keys(sports).map(s=>`<div class='navitem ${s===current?'active':''}${outOfSeason.includes(s)?' oos':''}' onclick="setSport('${s}')" style='display:inline-flex;align-items:center;justify-content:center${outOfSeason.includes(s)?';opacity:0.6':''}'><img src='${sports[s].icon}' alt='${s} logo' style='width:18px;height:18px;object-fit:contain;margin-right:6px;flex-shrink:0'>${s}${outOfSeason.includes(s)?goldLockSvg:''}</div>`).join('')+`<div class='navitem' onclick="randomSport()" title="Jump to a random sport" style='display:inline-flex;align-items:center;justify-content:center;border-style:dashed;opacity:.92'>🎲 Random</div>`;
+  document.getElementById('bottomnav').innerHTML=Object.keys(sports).map(s=>`<div class='navitem live-dot ${s===current?'active':''}${outOfSeason.includes(s)?' oos':''}' onclick="setSport('${s}')" style='display:inline-flex;align-items:center;justify-content:center${outOfSeason.includes(s)?';opacity:0.6':''}'><img src='${sports[s].icon}' alt='${s} logo' style='width:18px;height:18px;object-fit:contain;margin-right:6px;flex-shrink:0'>${s}${outOfSeason.includes(s)?goldLockSvg:''}</div>`).join('')+`<div class='navitem random-orbit' onclick="randomSport()" title="Jump to a random sport" style='display:inline-flex;align-items:center;justify-content:center;opacity:.92'>🎲 Random</div>`;
   // Top tabs: always show active sport's sub-options
-  document.getElementById('tabs').innerHTML=sports[current].options.map(o=>`<button type="button" class='tab ${o===currentOption?'active':''}' style='border-color:${sports[current].color}55' onclick="setOption('${o}')">${o}</button>`).join('')+`<button type="button" class="tab" style="border-color:${sports[current].color}55;border-style:dashed" onclick="randomSubOption()" title="Random stat for this sport">🎲 Random</button>`;
+  document.getElementById('tabs').innerHTML=sports[current].options.map(o=>`<button type="button" class='tab live-dot ${o===currentOption?'active':''}' style='border-color:${sports[current].color}55' onclick="setOption('${o}')">${o}</button>`).join('')+`<button type="button" class="tab random-orbit" style="border-color:${sports[current].color}55" onclick="randomSubOption()" title="Random stat for this sport">🎲 Random</button>`;
 }
 function randomSport(){
-  const keys = Object.keys(sports);
+  const all = Object.keys(sports);
+  const inSeason = all.filter(function(s){ return sportInSeason(s); });
+  const keys = inSeason.length ? inSeason : all;
   if(!keys.length) return;
   let s = keys[Math.floor(Math.random()*keys.length)];
   let n = 0;
@@ -639,6 +1207,10 @@ function randomSport(){
   currentOption = sports[s].options[0];
   renderTabs();
   renderSport();
+  if(current==='MLB' || current==='NFL' || current==='NBA'){
+    _snapActiveSportNavLeft();
+    _snapActiveMarketTabLeft();
+  }
 }
 function randomSubOption(){
   const opts = sports[current].options;
@@ -647,14 +1219,48 @@ function randomSubOption(){
   let n = 0;
   while(opts.length>1 && o===currentOption && n++<20) o = opts[Math.floor(Math.random()*opts.length)];
   setOption(o);
+  if(current==='MLB' || current==='NFL' || current==='NBA') _snapActiveMarketTabLeft();
 }
 function setSport(s){_trackSectionSwitch(s);current=s;currentOption=sports[s].options[0];renderTabs();renderSport();}
+function _snapActiveMarketTabLeft(){
+  const tabsEl=document.getElementById('tabs');
+  if(!tabsEl) return;
+  const active=tabsEl.querySelector('.tab.active');
+  if(!active) return;
+  requestAnimationFrame(function(){
+    try{
+      active.scrollIntoView({behavior:'smooth',inline:'start',block:'nearest'});
+    }catch(_){
+      const left=active.offsetLeft-8;
+      tabsEl.scrollLeft=left>0?left:0;
+    }
+  });
+}
+function _snapActiveSportNavLeft(){
+  const navEl=document.getElementById('bottomnav');
+  if(!navEl) return;
+  const active=navEl.querySelector('.navitem.active');
+  if(!active) return;
+  requestAnimationFrame(function(){
+    try{
+      active.scrollIntoView({behavior:'smooth',inline:'start',block:'nearest'});
+    }catch(_){
+      const left=active.offsetLeft-8;
+      navEl.scrollLeft=left>0?left:0;
+    }
+  });
+}
 function renderSport(){
-  const _paywalled = _freePickUsed && !_devMode;
+  const _paywalled = _freePickUsed && !_devMode && !_isPro;
   const data=sports[current];document.getElementById('sportTitle').textContent=current;document.getElementById('sportDesc').textContent=data.desc;document.getElementById('sportHintBadge').textContent=current+' Live Lineups';
   if(current==='MLB'){
     document.getElementById('options').innerHTML='';
-    if(currentOption==='Ks'){
+    if(!sportInSeason('MLB')){
+      document.getElementById('mlbControls').innerHTML=_oosPanelHtml('MLB');
+      document.getElementById('pickCountRow').innerHTML='';
+      document.getElementById('picksTitle').textContent='⚾ MLB Picks';
+      document.getElementById('picks').innerHTML=_oosPicksLine('MLB');
+    }else if(currentOption==='Ks'){
       document.getElementById('mlbControls').innerHTML=`<div class='btnrow' style='margin:10px 0'><button class='btn' id='ksLoadBtn' onclick='moneyTransformButton(this);startKsLoad()' ${(ksPickCount>=1&&!pickLocked&&!_paywalled)?'':'disabled'}>Pick Lucky Pitcher ⚾</button>${ksLoaded||ksPicks.length?" <button class='btn' onclick='clearKs()'>Clear</button>":''}</div><div class='muted'>Loads today's MLB probable starters with K/9 data.</div><div class='muted' style='margin-top:6px'>Date: ${todayStr}</div>`;
       document.getElementById('pickCountRow').innerHTML=[1,2,3].map(n=>`<button class='btn ${ksPickCount!==n?'btn2':''} ${(pickLocked||_paywalled)?'locked':''}' ${pickLocked?'disabled':''} onclick="setKsCount(${n})">${n} Pitcher${n>1?'s':''}${(n>1||_paywalled)&&!_devMode?' 🔒':''}</button>`).join('');
       renderKsPicks();
@@ -677,30 +1283,131 @@ function renderSport(){
     }
   } else if(current==='NFL'){
     document.getElementById('options').innerHTML='';
-    document.getElementById('mlbControls').innerHTML=`<div style='text-align:center;padding:32px 16px'><div style='font-size:36px;margin-bottom:10px'>🏈</div><div style='font-size:16px;font-weight:700;color:#f59e0b;margin-bottom:6px'>NFL — Out of Season</div><div class='muted' style='font-size:13px'>NFL picks will be available when the season kicks off. Check back in August!</div></div>`;
-    document.getElementById('pickCountRow').innerHTML='';
-    renderNFLPicks();
+    if(!sportInSeason('NFL')){
+      document.getElementById('mlbControls').innerHTML=_oosPanelHtml('NFL');
+      document.getElementById('pickCountRow').innerHTML='';
+      document.getElementById('picksTitle').textContent='🏈 NFL Picks';
+      document.getElementById('picks').innerHTML=_oosPicksLine('NFL');
+    }else{
+      document.getElementById('mlbControls').innerHTML=`<div class='btnrow' style='margin:10px 0'><button class='btn' id='nflLoadBtn' onclick='moneyTransformButton(this);startNFLLoad()' ${(nflPickCount>=1&&!pickLocked&&!_paywalled)?'':'disabled'}>${_getNFLLoadBtnLabel()}</button>${nflLoaded||nflPicks.length?" <button class='btn' onclick='clearNFL()'>Clear</button>":''}</div><div class='muted'>Loads today's NFL game players from ESPN.</div><div class='muted' style='margin-top:6px'>Date: ${todayStr}</div>`;
+      document.getElementById('pickCountRow').innerHTML=[1,2,3].map(n=>`<button class='btn ${nflPickCount!==n?'btn2':''} ${(pickLocked||_paywalled)?'locked':''}' ${pickLocked?'disabled':''} onclick="setNFLCount(${n})">${n} Player${n>1?'s':''}${(n>1||_paywalled)&&!_devMode?' 🔒':''}</button>`).join('');
+      renderNFLPicks();
+    }
   } else if(current==='NBA'){
     document.getElementById('options').innerHTML='';
+    if(!sportInSeason('NBA')){
+      document.getElementById('mlbControls').innerHTML=_oosPanelHtml('NBA');
+      document.getElementById('pickCountRow').innerHTML='';
+      document.getElementById('picksTitle').textContent='🏀 NBA Picks';
+      document.getElementById('picks').innerHTML=_oosPicksLine('NBA');
+    }else{
     document.getElementById('mlbControls').innerHTML=`<div class='btnrow' style='margin:10px 0'><button class='btn' id='nbaLoadBtn' onclick='moneyTransformButton(this);startNBALoad()' ${(nbaPickCount>=1&&!pickLocked&&!_paywalled)?'':'disabled'}>Pick Lucky Player 🏀</button>${nbaLoaded||nbaPicks.length?" <button class='btn' onclick='clearNBA()'>Clear</button>":''}</div><div class='muted'>Loads today's NBA game players from ESPN.</div><div class='muted' style='margin-top:6px'>Date: ${todayStr}</div>`;
     document.getElementById('pickCountRow').innerHTML=[1,2,3].map(n=>`<button class='btn ${nbaPickCount!==n?'btn2':''} ${(pickLocked||_paywalled)?'locked':''}' ${pickLocked?'disabled':''} onclick="setNBACount(${n})">${n} Player${n>1?'s':''}${(n>1||_paywalled)&&!_devMode?' 🔒':''}</button>`).join('');
     renderNBAPicks();
+    }
   } else if(current==='NHL'){
     document.getElementById('options').innerHTML='';
+    if(!sportInSeason('NHL')){
+      document.getElementById('mlbControls').innerHTML=_oosPanelHtml('NHL');
+      document.getElementById('pickCountRow').innerHTML='';
+      document.getElementById('picksTitle').textContent='🏒 NHL Picks';
+      document.getElementById('picks').innerHTML=_oosPicksLine('NHL');
+    }else{
     document.getElementById('mlbControls').innerHTML=`<div class='btnrow' style='margin:10px 0'><button class='btn' id='nhlLoadBtn' onclick='moneyTransformButton(this);startNHLLoad()' ${(nhlPickCount>=1&&!pickLocked&&!_paywalled)?'':'disabled'}>Pick Lucky Player 🏒</button>${nhlLoaded||nhlPicks.length?" <button class='btn' onclick='clearNHL()'>Clear</button>":''}</div><div class='muted'>Loads today's NHL game players from ESPN.</div><div class='muted' style='margin-top:6px'>Date: ${todayStr}</div>`;
     document.getElementById('pickCountRow').innerHTML=[1,2,3].map(n=>`<button class='btn ${nhlPickCount!==n?'btn2':''} ${(pickLocked||_paywalled)?'locked':''}' ${pickLocked?'disabled':''} onclick="setNHLCount(${n})">${n} Player${n>1?'s':''}${(n>1||_paywalled)&&!_devMode?' 🔒':''}</button>`).join('');
     renderNHLPicks();
+    }
   } else if(current==='Soccer'){
     document.getElementById('options').innerHTML='';
+    if(!sportInSeason('Soccer')){
+      document.getElementById('mlbControls').innerHTML=_oosPanelHtml('Soccer');
+      document.getElementById('pickCountRow').innerHTML='';
+      document.getElementById('picksTitle').textContent='⚽ Soccer Picks';
+      document.getElementById('picks').innerHTML=_oosPicksLine('Soccer');
+    }else{
     document.getElementById('mlbControls').innerHTML=`<div class='btnrow' style='margin:10px 0'><button class='btn' id='soccerLoadBtn' onclick='moneyTransformButton(this);startSoccerLoad()' ${(soccerPickCount>=1&&!pickLocked&&!_paywalled)?'':'disabled'}>Pick Lucky Player ⚽</button>${soccerLoaded||soccerPicks.length?" <button class='btn' onclick='clearSoccer()'>Clear</button>":''}</div><div class='muted'>Loads today's MLS game players from ESPN.</div><div class='muted' style='margin-top:6px'>Date: ${todayStr}</div>`;
     document.getElementById('pickCountRow').innerHTML=[1,2,3].map(n=>`<button class='btn ${soccerPickCount!==n?'btn2':''} ${(pickLocked||_paywalled)?'locked':''}' ${pickLocked?'disabled':''} onclick="setSoccerCount(${n})">${n} Player${n>1?'s':''}${(n>1||_paywalled)&&!_devMode?' 🔒':''}</button>`).join('');
     renderSoccerPicks();
+    }
   } else {
     document.getElementById('mlbControls').innerHTML='';
     document.getElementById('pickCountRow').innerHTML='';
     document.getElementById('options').innerHTML='';
     renderPicks([]);
   }
+  setUpdatedTimestamp();
+  syncSlipActions();
+}
+function _currentPicksCount(){
+  if(current==='MLB'){
+    if(currentOption==='Ks') return ksPicks.length;
+    if(currentOption==='Hits') return hitsPicks.length;
+    if(currentOption==='Total Bases') return basesPicks.length;
+    if(currentOption==='RBI') return rbiPicks.length;
+    return mlbPicks.length;
+  }
+  if(current==='NFL') return nflPicks.length;
+  if(current==='NBA') return nbaPicks.length;
+  if(current==='NHL') return nhlPicks.length;
+  if(current==='Soccer') return soccerPicks.length;
+  return 0;
+}
+function copyCurrentSportPicks(){
+  if(!_currentPicksCount()) return;
+  if(current==='MLB' && currentOption==='HR' && mlbPicks.length){ copyPicks(); return; }
+  const lines = [];
+  if(current==='MLB'){
+    if(currentOption==='Ks') ksPicks.forEach((p,i)=>lines.push(`${i+1}. ${p.player||'Player'} (${p.teamAbbr||p.team||''}) - ${(p.dir||'Over')} ${p.kLine||''} Ks`));
+    else if(currentOption==='Hits') hitsPicks.forEach((p,i)=>lines.push(`${i+1}. ${p.player||'Player'} (${p.teamAbbr||p.team||''}) - ${(p.dir||'Over')} ${p.line||''} Hits`));
+    else if(currentOption==='Total Bases') basesPicks.forEach((p,i)=>lines.push(`${i+1}. ${p.player||'Player'} (${p.teamAbbr||p.team||''}) - ${(p.dir||'Over')} ${p.line||''} Total Bases`));
+    else if(currentOption==='RBI') rbiPicks.forEach((p,i)=>lines.push(`${i+1}. ${p.player||'Player'} (${p.teamAbbr||p.team||''}) - ${(p.dir||'Over')} ${p.line||''} RBI`));
+  } else if(current==='NFL'){
+    nflPicks.forEach((p,i)=>lines.push(`${i+1}. ${p.player||'Player'} (${p.teamAbbr||p.team||''}) - ${(p.dir||'Over')} ${p.line||''} ${currentOption}`));
+  } else if(current==='NBA'){
+    nbaPicks.forEach((p,i)=>lines.push(`${i+1}. ${p.player||'Player'} (${p.teamAbbr||p.team||''}) - ${(p.dir||'Over')} ${p.line||''} ${currentOption}`));
+  } else if(current==='NHL'){
+    nhlPicks.forEach((p,i)=>lines.push(`${i+1}. ${p.player||'Player'} (${p.teamAbbr||p.team||''}) - ${(p.dir||'Over')} ${p.line||''} ${currentOption}`));
+  } else if(current==='Soccer'){
+    soccerPicks.forEach((p,i)=>lines.push(`${i+1}. ${p.player||'Player'} (${p.teamAbbr||p.team||''}) - ${(p.dir||'Over')} ${p.line||''} ${currentOption}`));
+  }
+  if(!lines.length) return;
+  copyTextRobust(`🎯 Pro Sports Quick Pix — ${current} ${currentOption}\n\n${lines.join('\n')}${_picksShareFooter()}`).then(function(){ showToast('Slip copied to clipboard.'); });
+}
+function clearCurrentSportPicks(){
+  if(current==='MLB'){
+    if(currentOption==='Ks'){ clearKs(); return; }
+    if(currentOption==='Hits'){ clearHits(); return; }
+    if(currentOption==='Total Bases'){ clearBases(); return; }
+    if(currentOption==='RBI'){ clearRBI(); return; }
+    clearMLB(); return;
+  }
+  if(current==='NFL'){ clearNFL(); return; }
+  if(current==='NBA'){ clearNBA(); return; }
+  if(current==='NHL'){ clearNHL(); return; }
+  if(current==='Soccer'){ clearSoccer(); return; }
+}
+function syncSlipActions(){
+  const copyBtn = document.getElementById('slipCopyBtn');
+  const clearBtn = document.getElementById('slipClearBtn');
+  if(!copyBtn || !clearBtn) return;
+  const has = _currentPicksCount() > 0;
+  copyBtn.disabled = !has;
+  clearBtn.disabled = false;
+  clearBtn.classList.toggle('slip-btn-dim', !has);
+  _syncDevClearBtnStyle();
+}
+function showToast(message, kind, placement){
+  const stack = (placement==='center' ? document.getElementById('toastStackCenter') : document.getElementById('toastStack'));
+  if(!stack) return;
+  const t = document.createElement('div');
+  t.className = 'toast'+(kind ? ' '+kind : '');
+  t.textContent = message;
+  stack.appendChild(t);
+  setTimeout(function(){
+    t.style.opacity = '0';
+    t.style.transform = 'translateY(4px)';
+    setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, 180);
+  }, 2200);
 }
 function setOption(o){currentOption=o;renderTabs();renderSport();}
 function setCount(n){if(pickLocked) return; if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'HR',attempted_count:n});showUpgradeWall({attemptedHR:n});return;} pickCount=n;renderSport();}
@@ -767,7 +1474,7 @@ function renderKsPicks(){
   if(ksLoading){
     document.getElementById('picks').innerHTML='<div class="muted">Loading pitcher data...</div>';
   } else if(ksPicks.length>0){
-    document.getElementById('picks').innerHTML=ksPicks.map((p,i)=>`<div class='item expandable' onclick="const d=this.querySelector('.details'); d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'><span>${p.player} ${teamPill(p.teamAbbr)} <span class='chev'>▾</span></span><span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir||'Over'} ${p.kLine}</span> <span style='opacity:.6;font-size:11px'>Ks</span></span></div><div class='details'><div class='muted'>${p.dir||'Over'} ${p.kLine} Ks</div><div class='muted'>K/9: ${p.k9}</div><div class='muted'>ERA: ${p.era}</div></div></div>`).join('');
+    document.getElementById('picks').innerHTML=ksPicks.map((p,i)=>`<div class='item expandable' onclick="const d=this.querySelector('.details'); d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'>${mlbRowTopPlayerHtml(p)}<span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir||'Over'} ${p.kLine}</span> <span style='opacity:.6;font-size:11px'>Ks</span></span></div><div class='details'><div class='muted'>${p.dir||'Over'} ${p.kLine} Ks</div><div class='muted'>K/9: ${p.k9}</div><div class='muted'>ERA: ${p.era}</div></div></div>`).join('');
   } else if(ksLoaded&&ksPicks.length===0){
     document.getElementById('picks').innerHTML='<div class="muted">No pitcher data available today.</div>';
   } else if(!ksLoaded&&!ksLoading){
@@ -777,6 +1484,14 @@ function renderKsPicks(){
   if(loadBtn) loadBtn.disabled=!(!pickLocked);
 }
 function clearKs(){ksToken++;ksLoaded=false;ksLoading=false;ksPicks=[];ksPitcherUsed=new Set();ksLivePool=[];pickLocked=false;ksPickCount=0;renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Choose a count and click Pick Lucky Pitcher.</div>';}
+function _validatePlayerCountOrWarn(n, noun){
+  if(n>=1 && n<=3) return true;
+  const label = noun || 'players';
+  document.getElementById('picks').innerHTML='<div class="muted">Please choose 1, 2, or 3 '+label+' first.</div>';
+  showToast('Choose 1, 2, or 3 '+label+' first.', 'error', 'center');
+  stopMoneyTransformButton();
+  return false;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MLB HITS
@@ -787,7 +1502,7 @@ function renderHitsPicks(){
   if(hitsLoading){
     document.getElementById('picks').innerHTML='<div class="muted">Loading hitter data...</div>';
   } else if(hitsPicks.length>0){
-    document.getElementById('picks').innerHTML=hitsPicks.map(p=>`<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'><span>${p.player} ${teamPill(p.teamAbbr)} <span class='chev'>▾</span></span><span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>Hits</span></span></div><div class='details'><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>${p.dir} ${p.line} Hits</div><div class='muted'>Season Hits: ${p.seasonHits}</div><div class='muted'>AVG: ${p.avg}</div></div></div>`).join('');
+    document.getElementById('picks').innerHTML=hitsPicks.map(p=>`<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'>${mlbRowTopPlayerHtml(p)}<span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>Hits</span></span></div><div class='details'><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>${p.dir} ${p.line} Hits</div><div class='muted'>Season Hits: ${p.seasonHits}</div><div class='muted'>AVG: ${p.avg}</div></div></div>`).join('');
   } else if(hitsLoaded&&hitsPicks.length===0){
     document.getElementById('picks').innerHTML='<div class="muted">No hitter data available today.</div>';
   } else {
@@ -805,7 +1520,7 @@ function poRevealHitsCard(p,idx){
   card.style.animationDelay='0s';
   card.innerHTML=`
     <div class="rowtop" onclick="const d=this.nextElementSibling;d.style.display=d.style.display==='block'?'none':'block'">
-      <span>${p.player} ${teamPill(p.teamAbbr)} <span class="chev">&#9662;</span></span>
+      ${mlbRowTopPlayerHtml(p,'<span class="chev">&#9662;</span>')}
       <span class="muted"><span style="font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}">${p.dir} ${p.line}</span> <span style="opacity:.6;font-size:11px">Hits</span></span>
     </div>
     <div class="details">
@@ -818,10 +1533,11 @@ function poRevealHitsCard(p,idx){
 }
 async function startHitsLoad(){
   pickRandomRhythm();
+  if(!_validatePlayerCountOrWarn(hitsPickCount, 'players')) return;
   openPickOverlay();
   const loadBtn=document.getElementById('hitsLoadBtn');
   if(loadBtn) loadBtn.disabled=true;
-  const _markFreeAfter=(!_freePickUsed&&!_devMode);
+  const _markFreeAfter=(!_freePickUsed&&!_devMode&&!_paywallBypassActive());
   const token=++hitsToken;
   hitsLoading=true;hitsLoaded=false;hitsPicks=[];hitsUsed=new Set();hitsLivePool=[];pickLocked=true;
   _firstSfxIdx=-1;_lastSfxIdx=-1;
@@ -829,10 +1545,15 @@ async function startHitsLoad(){
   let shuffler=null;
   const stopShuffle=()=>{if(shuffler)shuffler._timers?.forEach(t=>{clearTimeout(t);clearInterval(t);});shuffler=null;};
   try{
-    const pool=await getTodaysMlbHitters();
+    const poolRaw=await getTodaysMlbHitters();
+    const knownHr=poolRaw.filter(function(x){
+      const v=parseFloat(x && x.hr);
+      return !Number.isNaN(v);
+    });
+    const pool=knownHr.length?knownHr:poolRaw;
     if(token!==hitsToken)return;
     // Annotate each player with a prop line based on season hits
-    const annotated=pool.map(p=>{
+    const annotated=_withOppTeamFromPool(pool).map(p=>{
       const h=parseInt(p.hits||p.seasonHits||0)||0;
       const line=h>0?Math.round((h/162*1.1)*2)/2:0.5; // ~1.1 hits/game projected
       return Object.assign({},p,{seasonHits:h,line:Math.max(line,0.5)});
@@ -842,20 +1563,27 @@ async function startHitsLoad(){
     if(!annotated.length){
       document.getElementById('picks').innerHTML='<div class="muted">No hitter data found for today.</div>';
       poSetError('No hitter data found for today.');
+      showToast('No live hitter data found for today.', 'error', 'center');
+      pickLocked=false;
+      if(loadBtn)loadBtn.disabled=false;
+      stopPickSfxNow();
+      closePickOverlay();
       stopMoneyTransformButton();renderHitsPicks();return;
     }
     const max=Math.min(hitsPickCount,3);
     poSeedSkeletons(max);
     shuffler=startNameShuffle(annotated,token,()=>hitsToken);
+    const selectedTeams=new Set();
     for(let i=0;i<max;i++){
       if(token!==hitsToken)return;
       await sleep(Math.max(500,getRhythmSuspense(i)));
       if(token!==hitsToken)return;
-      const avail=annotated.filter(x=>!hitsUsed.has(x.player));
-      const choice=Object.assign({},avail.length?pickRandom(avail):pickRandom(annotated));
+      const picked=pickDiversifiedPlayer(annotated,hitsUsed,selectedTeams);
+      const choice=Object.assign({},picked||pickRandom(annotated));
       choice.dir=Math.random()<0.5?'Over':'Under';
       hitsPicks.push(choice);
       hitsUsed.add(choice.player);
+      if(choice.teamAbbr || choice.team) selectedTeams.add(choice.teamAbbr||choice.team);
       renderHitsPicks();
       poRevealHitsCard(choice,i);
       if(i===max-1)stopMoneyTransformButton();
@@ -889,7 +1617,7 @@ function renderBasesPicks(){
   if(basesLoading){
     document.getElementById('picks').innerHTML='<div class="muted">Loading hitter data...</div>';
   } else if(basesPicks.length>0){
-    document.getElementById('picks').innerHTML=basesPicks.map(p=>`<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'><span>${p.player} ${teamPill(p.teamAbbr)} <span class='chev'>▾</span></span><span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>Bases</span></span></div><div class='details'><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>${p.dir} ${p.line} Total Bases</div><div class='muted'>Season SLG: ${p.slg}</div><div class='muted'>AVG: ${p.avg}</div></div></div>`).join('');
+    document.getElementById('picks').innerHTML=basesPicks.map(p=>`<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'>${mlbRowTopPlayerHtml(p)}<span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>Bases</span></span></div><div class='details'><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>${p.dir} ${p.line} Total Bases</div><div class='muted'>Season SLG: ${p.slg}</div><div class='muted'>AVG: ${p.avg}</div></div></div>`).join('');
   } else if(basesLoaded&&basesPicks.length===0){
     document.getElementById('picks').innerHTML='<div class="muted">No hitter data available today.</div>';
   } else {
@@ -907,7 +1635,7 @@ function poRevealBasesCard(p,idx){
   card.style.animationDelay='0s';
   card.innerHTML=`
     <div class="rowtop" onclick="const d=this.nextElementSibling;d.style.display=d.style.display==='block'?'none':'block'">
-      <span>${p.player} ${teamPill(p.teamAbbr)} <span class="chev">&#9662;</span></span>
+      ${mlbRowTopPlayerHtml(p,'<span class="chev">&#9662;</span>')}
       <span class="muted"><span style="font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}">${p.dir} ${p.line}</span> <span style="opacity:.6;font-size:11px">Bases</span></span>
     </div>
     <div class="details">
@@ -920,10 +1648,11 @@ function poRevealBasesCard(p,idx){
 }
 async function startBasesLoad(){
   pickRandomRhythm();
+  if(!_validatePlayerCountOrWarn(basesPickCount, 'players')) return;
   openPickOverlay();
   const loadBtn=document.getElementById('basesLoadBtn');
   if(loadBtn) loadBtn.disabled=true;
-  const _markFreeAfter=(!_freePickUsed&&!_devMode);
+  const _markFreeAfter=(!_freePickUsed&&!_devMode&&!_paywallBypassActive());
   const token=++basesToken;
   basesLoading=true;basesLoaded=false;basesPicks=[];basesUsed=new Set();basesLivePool=[];pickLocked=true;
   _firstSfxIdx=-1;_lastSfxIdx=-1;
@@ -934,7 +1663,7 @@ async function startBasesLoad(){
     const pool=await getTodaysMlbHitters();
     if(token!==basesToken)return;
     // Total Bases line = SLG * 4 projected per game, round to .5
-    const annotated=pool.map(p=>{
+    const annotated=_withOppTeamFromPool(pool).map(p=>{
       const slg=parseFloat(p.slg||p.avg||'.250');
       const line=slg>0?Math.round((slg*4*0.9)*2)/2:1.5;
       return Object.assign({},p,{slg:p.slg||p.avg||'.250',line:Math.max(line,0.5)});
@@ -944,20 +1673,27 @@ async function startBasesLoad(){
     if(!annotated.length){
       document.getElementById('picks').innerHTML='<div class="muted">No hitter data found for today.</div>';
       poSetError('No hitter data found for today.');
+      showToast('No live hitter data found for today.', 'error', 'center');
+      pickLocked=false;
+      if(loadBtn)loadBtn.disabled=false;
+      stopPickSfxNow();
+      closePickOverlay();
       stopMoneyTransformButton();renderBasesPicks();return;
     }
     const max=Math.min(basesPickCount,3);
     poSeedSkeletons(max);
     shuffler=startNameShuffle(annotated,token,()=>basesToken);
+    const selectedTeams=new Set();
     for(let i=0;i<max;i++){
       if(token!==basesToken)return;
       await sleep(Math.max(500,getRhythmSuspense(i)));
       if(token!==basesToken)return;
-      const avail=annotated.filter(x=>!basesUsed.has(x.player));
-      const choice=Object.assign({},avail.length?pickRandom(avail):pickRandom(annotated));
+      const picked=pickDiversifiedPlayer(annotated,basesUsed,selectedTeams);
+      const choice=Object.assign({},picked||pickRandom(annotated));
       choice.dir=Math.random()<0.5?'Over':'Under';
       basesPicks.push(choice);
       basesUsed.add(choice.player);
+      if(choice.teamAbbr || choice.team) selectedTeams.add(choice.teamAbbr||choice.team);
       renderBasesPicks();
       poRevealBasesCard(choice,i);
       if(i===max-1)stopMoneyTransformButton();
@@ -991,7 +1727,7 @@ function renderRBIPicks(){
   if(rbiLoading){
     document.getElementById('picks').innerHTML='<div class="muted">Loading hitter data...</div>';
   } else if(rbiPicks.length>0){
-    document.getElementById('picks').innerHTML=rbiPicks.map(p=>`<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'><span>${p.player} ${teamPill(p.teamAbbr)} <span class='chev'>▾</span></span><span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>RBI</span></span></div><div class='details'><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>${p.dir} ${p.line} RBI</div><div class='muted'>Season RBI: ${p.seasonRbi}</div><div class='muted'>AVG: ${p.avg}</div></div></div>`).join('');
+    document.getElementById('picks').innerHTML=rbiPicks.map(p=>`<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'>${mlbRowTopPlayerHtml(p)}<span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>RBI</span></span></div><div class='details'><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>${p.dir} ${p.line} RBI</div><div class='muted'>Season RBI: ${p.seasonRbi}</div><div class='muted'>AVG: ${p.avg}</div></div></div>`).join('');
   } else if(rbiLoaded&&rbiPicks.length===0){
     document.getElementById('picks').innerHTML='<div class="muted">No hitter data available today.</div>';
   } else {
@@ -1009,7 +1745,7 @@ function poRevealRBICard(p,idx){
   card.style.animationDelay='0s';
   card.innerHTML=`
     <div class="rowtop" onclick="const d=this.nextElementSibling;d.style.display=d.style.display==='block'?'none':'block'">
-      <span>${p.player} ${teamPill(p.teamAbbr)} <span class="chev">&#9662;</span></span>
+      ${mlbRowTopPlayerHtml(p,'<span class="chev">&#9662;</span>')}
       <span class="muted"><span style="font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}">${p.dir} ${p.line}</span> <span style="opacity:.6;font-size:11px">RBI</span></span>
     </div>
     <div class="details">
@@ -1022,10 +1758,11 @@ function poRevealRBICard(p,idx){
 }
 async function startRBILoad(){
   pickRandomRhythm();
+  if(!_validatePlayerCountOrWarn(rbiPickCount, 'players')) return;
   openPickOverlay();
   const loadBtn=document.getElementById('rbiLoadBtn');
   if(loadBtn) loadBtn.disabled=true;
-  const _markFreeAfter=(!_freePickUsed&&!_devMode);
+  const _markFreeAfter=(!_freePickUsed&&!_devMode&&!_paywallBypassActive());
   const token=++rbiToken;
   rbiLoading=true;rbiLoaded=false;rbiPicks=[];rbiUsed=new Set();rbiLivePool=[];pickLocked=true;
   _firstSfxIdx=-1;_lastSfxIdx=-1;
@@ -1036,7 +1773,7 @@ async function startRBILoad(){
     const pool=await getTodaysMlbHitters();
     if(token!==rbiToken)return;
     // RBI line: season RBI / 162 * 0.9 games, round to .5
-    const annotated=pool.map(p=>{
+    const annotated=_withOppTeamFromPool(pool).map(p=>{
       const rbi=parseInt(p.rbi||p.seasonRbi||0)||0;
       const line=rbi>0?Math.round((rbi/162*0.9)*2)/2:0.5;
       return Object.assign({},p,{seasonRbi:rbi,line:Math.max(line,0.5)});
@@ -1046,20 +1783,27 @@ async function startRBILoad(){
     if(!annotated.length){
       document.getElementById('picks').innerHTML='<div class="muted">No hitter data found for today.</div>';
       poSetError('No hitter data found for today.');
+      showToast('No live hitter data found for today.', 'error', 'center');
+      pickLocked=false;
+      if(loadBtn)loadBtn.disabled=false;
+      stopPickSfxNow();
+      closePickOverlay();
       stopMoneyTransformButton();renderRBIPicks();return;
     }
     const max=Math.min(rbiPickCount,3);
     poSeedSkeletons(max);
     shuffler=startNameShuffle(annotated,token,()=>rbiToken);
+    const selectedTeams=new Set();
     for(let i=0;i<max;i++){
       if(token!==rbiToken)return;
       await sleep(Math.max(500,getRhythmSuspense(i)));
       if(token!==rbiToken)return;
-      const avail=annotated.filter(x=>!rbiUsed.has(x.player));
-      const choice=Object.assign({},avail.length?pickRandom(avail):pickRandom(annotated));
+      const picked=pickDiversifiedPlayer(annotated,rbiUsed,selectedTeams);
+      const choice=Object.assign({},picked||pickRandom(annotated));
       choice.dir=Math.random()<0.5?'Over':'Under';
       rbiPicks.push(choice);
       rbiUsed.add(choice.player);
+      if(choice.teamAbbr || choice.team) selectedTeams.add(choice.teamAbbr||choice.team);
       renderRBIPicks();
       poRevealRBICard(choice,i);
       if(i===max-1)stopMoneyTransformButton();
@@ -1087,7 +1831,7 @@ async function startRBILoad(){
 // ─────────────────────────────────────────────────────────────────────────────
 // NFL
 // ─────────────────────────────────────────────────────────────────────────────
-function setNFLCount(n){if(pickLocked)return;nflPickCount=n;renderSport();}
+function setNFLCount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'NFL',option:currentOption,attempted_count:n});showUpgradeWall({attemptedNFL:n});return;}nflPickCount=n;renderSport();}
 function renderNFLPicks(){
   document.getElementById('picksTitle').textContent='🏈 NFL Picks';
   if(nflLoading){
@@ -1095,25 +1839,54 @@ function renderNFLPicks(){
   } else if(nflPicks.length>0){
     document.getElementById('picks').innerHTML=nflPicks.map((p)=>{
       const statLabel=p.statLabel||currentOption;
-      if(statLabel==='TDs') return `<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'><span>${p.player} ${teamPill(p.teamAbbr)} <span class='chev'>▾</span></span><span class='muted'><span style='font-weight:700;color:#6ee7ff'>${p.td}</span> <span style='opacity:.6;font-size:11px'>TDs</span></span></div><div class='details'><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>Season TDs: ${p.td}</div></div></div>`;
-      return `<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'><span>${p.player} ${teamPill(p.teamAbbr)} <span class='chev'>▾</span></span><span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>${statLabel}</span></span></div><div class='details'><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>${p.dir} ${p.line} ${statLabel}</div><div class='muted'>Season avg: ${p.seasonAvg}</div></div></div>`;
+      if(statLabel==='TDs') return `<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'>${nflRowTopPlayerHtml(p)}<span class='muted'><span style='font-weight:700;color:#6ee7ff'>${p.td}</span> <span style='opacity:.6;font-size:11px'>TDs</span></span></div><div class='details'><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>Season TDs: ${p.td}</div><div class='muted'>Game status: ${gameStatusText(p.game)}</div><div class='muted'>Start time: ${gameStartText(p.game)||'—'}</div><div class='muted'>Venue: ${gameVenueText(p.game)||'—'}</div></div></div>`;
+      return `<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'>${nflRowTopPlayerHtml(p)}<span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>${statLabel}</span></span></div><div class='details'><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>${p.dir} ${p.line} ${statLabel}</div><div class='muted'>Season avg: ${p.seasonAvg||'—'}</div><div class='muted'>Game status: ${gameStatusText(p.game)}</div><div class='muted'>Start time: ${gameStartText(p.game)||'—'}</div><div class='muted'>Venue: ${gameVenueText(p.game)||'—'}</div></div></div>`;
     }).join('');
   } else if(nflLoaded&&nflPicks.length===0){
     document.getElementById('picks').innerHTML='<div class="muted">No NFL player data available today.</div>';
   } else {
-    document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Choose a count and click Pick Lucky Player.</div>';
+    document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Choose a count and click '+_getNFLLoadHintShort()+'.</div>';
   }
   const btn=document.getElementById('nflLoadBtn');
   if(btn) btn.disabled=!!pickLocked;
 }
-function clearNFL(){nflToken++;nflLoaded=false;nflLoading=false;nflPicks=[];nflUsed=new Set();nflLivePool=[];pickLocked=false;nflPickCount=1;renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Choose a count and click Pick Lucky Player.</div>';}
+function clearNFL(){nflToken++;nflLoaded=false;nflLoading=false;nflPicks=[];nflUsed=new Set();nflLivePool=[];pickLocked=false;nflPickCount=1;renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Choose a count and click '+_getNFLLoadHintShort()+'.</div>';}
 async function getTodaysNFLPlayers(option){
-  const sbUrl='https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard';
-  const sb=await fetchJson(sbUrl);
-  const events=(sb&&sb.events)||[];
+  const cacheKey = 'nflLastGoodPool:'+String(option||'');
+  const cacheAnyKey = 'nflLastGoodPool:any';
+  function readNFLCache(){
+    try{
+      const raw = _lhMem.getItem(cacheKey);
+      if(!raw) return [];
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    }catch(_){ return []; }
+  }
+  function writeNFLCache(arr){
+    try{
+      if(Array.isArray(arr) && arr.length){
+        const slim = JSON.stringify(arr.slice(0,260));
+        _lhMem.setItem(cacheKey, slim);
+        _lhMem.setItem(cacheAnyKey, slim);
+      }
+    }catch(_){}
+  }
+  function readNFLCacheAny(){
+    try{
+      const raw = _lhMem.getItem(cacheAnyKey);
+      if(!raw) return [];
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    }catch(_){ return []; }
+  }
+  const events=await getScoreboardEventsNearby('https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard',1,1);
+  const teamGameMap=_teamGameMapFromEvents(events);
+  const teamOppMap=_teamOpponentMapFromEvents(events);
   const players=[];
   const seen=new Set();
   for(const ev of events){
+    const teamGameMap=_eventGameByTeamAbbr(ev);
+    const eventGame=_espnEventGame(ev);
     const sumUrl=`https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=${ev.id}`;
     let sum;
     try{sum=await fetchJson(sumUrl);}catch(e){continue;}
@@ -1131,16 +1904,26 @@ async function getTodaysNFLPlayers(option){
         else if(option==='Pass Yds') relevantGroup=(gname==='passing');
         if(!relevantGroup) continue;
         for(const athlete of (group.athletes||[])){
-          const name=athlete.athlete&&athlete.athlete.displayName||'';
+          const athleteObj = athlete && athlete.athlete || {};
+          const name=athleteObj.displayName||'';
           if(!name) continue;
-          const pos=athlete.athlete&&athlete.athlete.position&&athlete.athlete.position.abbreviation||'';
+          const espnId=athleteObj.id!=null?String(athleteObj.id):'';
+          const headshotUrl = athleteObj.headshot && athleteObj.headshot.href ? String(athleteObj.headshot.href) : '';
+          const pos=athleteObj.position&&athleteObj.position.abbreviation||'';
           const vals=athlete.stats||[];
           if(option==='TDs'){
             // Accumulate TDs across rushing/receiving/passing per player
             const tdVal=parseFloat(vals[3]||0);
             const existing=players.find(x=>x.player===name&&x.teamAbbr===teamAbbr);
-            if(existing){ existing.td+=tdVal; existing.seasonAvg=(existing.td)+' TDs'; }
-            else { players.push({player:name,teamAbbr,pos,statLabel:'TDs',td:tdVal,line:0,seasonAvg:tdVal+' TDs'}); }
+            if(existing){
+              existing.td+=tdVal;
+              existing.seasonAvg=(existing.td)+' TDs';
+              if(!existing.espnId&&espnId) existing.espnId=espnId;
+              if(!existing.headshotUrl&&headshotUrl) existing.headshotUrl=headshotUrl;
+              if(!existing.game) existing.game = teamGameMap[teamAbbr]||eventGame;
+            } else {
+              players.push({player:name,espnId,headshotUrl,teamAbbr,oppTeamAbbr:teamOppMap[teamAbbr]||'',pos,statLabel:'TDs',td:tdVal,line:0,seasonAvg:tdVal+' TDs',game:teamGameMap[teamAbbr]||eventGame});
+            }
           } else {
             if(seen.has(name+gname)) continue;
             seen.add(name+gname);
@@ -1149,26 +1932,29 @@ async function getTodaysNFLPlayers(option){
             else if(option==='Rec Yds'){statVal=parseFloat(vals[1]||0);seasonAvg=statVal+' yds';}
             else if(option==='Receptions'){statVal=parseFloat(vals[0]||0);seasonAvg=statVal+' rec';}
             else if(option==='Pass Yds'){statVal=parseFloat(vals[1]||0);seasonAvg=statVal+' yds';}
-            if(statVal===0) continue;
             const line=Math.round(statVal*2)/2||(option==='Pass Yds'?225.5:option==='Rush Yds'?55.5:option==='Rec Yds'?45.5:option==='Receptions'?4.5:0.5);
-            players.push({player:name,teamAbbr,pos,statLabel:option,line,seasonAvg});
+            players.push({player:name,espnId,headshotUrl,teamAbbr,oppTeamAbbr:teamOppMap[teamAbbr]||'',pos,statLabel:option,line,seasonAvg,game:teamGameMap[teamAbbr]||eventGame});
           }
         }
       }
     }
   }
-  // If no live game data, build a mock pool from schedule participants
-  if(!players.length){
-    for(const ev of events){
-      const comps=(ev.competitions||[ev])[0];
-      for(const c of (comps&&comps.competitors||[])){
-        const abbr=c.team&&c.team.abbreviation||'';
-        const defaults={NFL:{TDs:0.5,'Rush Yds':55.5,'Rec Yds':45.5,'Receptions':4.5,'Pass Yds':225.5}};
-        players.push({player:abbr+' Player',teamAbbr:abbr,pos:'',statLabel:option,line:defaults.NFL[option]||0.5,seasonAvg:'—'});
-      }
-    }
+  if(players.length){
+    writeNFLCache(players);
+    return players;
   }
-  return players;
+  const cached = readNFLCache();
+  const cachedAny = readNFLCacheAny();
+  const seasonMap=_seasonAvgMapFromPools([cached,cachedAny]);
+  if(cached.length) return _fillSeasonAvgFromMap(_hydratePlayersGame(cached,teamGameMap,teamOppMap),seasonMap);
+  if(cachedAny.length) return _fillSeasonAvgFromMap(_hydratePlayersGame(cachedAny,teamGameMap,teamOppMap),seasonMap);
+  const defaults={TDs:0.5,'Rush Yds':55.5,'Rec Yds':45.5,'Receptions':4.5,'Pass Yds':225.5};
+  const rosterPool=await _buildRosterFallbackPlayers('football/nfl', events, option, defaults);
+  if(rosterPool.length){
+    const hydrated=_fillSeasonAvgFromMap(_hydratePlayersGame(rosterPool,teamGameMap,teamOppMap),seasonMap);
+    return hydrated;
+  }
+  return [];
 }
 function poRevealNFLCard(p, idx){
   const sk=document.getElementById('poSkel-'+idx);
@@ -1180,33 +1966,40 @@ function poRevealNFLCard(p, idx){
   if(statLabel==='TDs'){
     card.innerHTML=`
     <div class="rowtop" onclick="const d=this.nextElementSibling;d.style.display=d.style.display==='block'?'none':'block'">
-      <span>${p.player} ${teamPill(p.teamAbbr)} <span class="chev">&#9662;</span></span>
+      ${nflRowTopPlayerHtml(p,'<span class="chev">&#9662;</span>')}
       <span class="muted"><span style="font-weight:700;color:#6ee7ff">${p.td}</span> <span style="opacity:.6;font-size:11px">TDs</span></span>
     </div>
     <div class="details">
       <div class="muted">Position: ${p.pos||'—'}</div>
       <div class="muted">Season TDs: ${p.td}</div>
+      <div class="muted">Game status: ${gameStatusText(p.game)}</div>
+      <div class="muted">Start time: ${gameStartText(p.game)||'—'}</div>
+      <div class="muted">Venue: ${gameVenueText(p.game)||'—'}</div>
     </div>`;
   } else {
     card.innerHTML=`
     <div class="rowtop" onclick="const d=this.nextElementSibling;d.style.display=d.style.display==='block'?'none':'block'">
-      <span>${p.player} ${teamPill(p.teamAbbr)} <span class="chev">&#9662;</span></span>
+      ${nflRowTopPlayerHtml(p,'<span class="chev">&#9662;</span>')}
       <span class="muted"><span style="font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}">${p.dir} ${p.line}</span> <span style="opacity:.6;font-size:11px">${statLabel}</span></span>
     </div>
     <div class="details">
       <div class="muted">Position: ${p.pos||'—'}</div>
       <div class="muted">${p.dir} ${p.line} ${statLabel}</div>
-      <div class="muted">Season avg: ${p.seasonAvg}</div>
+      <div class="muted">Season avg: ${p.seasonAvg||'—'}</div>
+      <div class="muted">Game status: ${gameStatusText(p.game)}</div>
+      <div class="muted">Start time: ${gameStartText(p.game)||'—'}</div>
+      <div class="muted">Venue: ${gameVenueText(p.game)||'—'}</div>
     </div>`;
   }
   if(!sk) document.getElementById('poCards').appendChild(card);
 }
 async function startNFLLoad(){
   pickRandomRhythm();
+  if(!_validatePlayerCountOrWarn(nflPickCount, 'players')) return;
   openPickOverlay();
   const loadBtn=document.getElementById('nflLoadBtn');
   if(loadBtn) loadBtn.disabled=true;
-  const _markFreeAfter=(!_freePickUsed&&!_devMode);
+  const _markFreeAfter=(!_freePickUsed&&!_devMode&&!_paywallBypassActive());
   const token=++nflToken;
   nflLoading=true;nflLoaded=false;nflPicks=[];nflUsed=new Set();nflLivePool=[];pickLocked=true;
   _firstSfxIdx=-1;_lastSfxIdx=-1;
@@ -1221,20 +2014,27 @@ async function startNFLLoad(){
     if(!pool.length){
       document.getElementById('picks').innerHTML='<div class="muted">No NFL players found for today.</div>';
       poSetError('No NFL players found for today.');
+      showToast('No live NFL players found for today.', 'error', 'center');
+      pickLocked=false;
+      if(loadBtn) loadBtn.disabled=false;
+      stopPickSfxNow();
+      closePickOverlay();
       stopMoneyTransformButton();renderNFLPicks();return;
     }
     const max=Math.min(nflPickCount,3);
+    const selectedTeams=new Set();
     poSeedSkeletons(max);
     shuffler=startNameShuffle(pool,token,()=>nflToken);
     for(let i=0;i<max;i++){
       if(token!==nflToken)return;
       await sleep(Math.max(500,getRhythmSuspense(i)));
       if(token!==nflToken)return;
-      const avail=pool.filter(x=>!nflUsed.has(x.player));
-      const choice=Object.assign({},avail.length?pickRandom(avail):pickRandom(pool));
+      const picked=pickDiversifiedPlayer(pool,nflUsed,selectedTeams);
+      const choice=Object.assign({},picked||pickRandom(pool));
       if(choice.statLabel!=='TDs') choice.dir=Math.random()<0.5?'Over':'Under';
       nflPicks.push(choice);
       nflUsed.add(choice.player);
+      if(choice.teamAbbr) selectedTeams.add(choice.teamAbbr);
       renderNFLPicks();
       poRevealNFLCard(choice,i);
       if(i===max-1)stopMoneyTransformButton();
@@ -1270,7 +2070,7 @@ function renderNBAPicks(){
   } else if(nbaPicks.length>0){
     document.getElementById('picks').innerHTML=nbaPicks.map((p)=>{
       const statLabel=p.statLabel||currentOption;
-      return `<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'><span>${p.player} ${teamPill(p.teamAbbr)} <span class='chev'>▾</span></span><span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>${statLabel}</span></span></div><div class='details'><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>${p.dir} ${p.line} ${statLabel}</div><div class='muted'>Season avg: ${p.seasonAvg}</div></div></div>`;
+      return `<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'>${nbaRowTopPlayerHtml(p)}<span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>${statLabel}</span></span></div><div class='details'><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>${p.dir} ${p.line} ${statLabel}</div><div class='muted'>Season avg: ${p.seasonAvg||'—'}</div><div class='muted'>Game status: ${gameStatusText(p.game)}</div><div class='muted'>Start time: ${gameStartText(p.game)||'—'}</div><div class='muted'>Venue: ${gameVenueText(p.game)||'—'}</div></div></div>`;
     }).join('');
   } else if(nbaLoaded&&nbaPicks.length===0){
     document.getElementById('picks').innerHTML='<div class="muted">No NBA player data available today.</div>';
@@ -1282,12 +2082,41 @@ function renderNBAPicks(){
 }
 function clearNBA(){nbaToken++;nbaLoaded=false;nbaLoading=false;nbaPicks=[];nbaUsed=new Set();nbaLivePool=[];pickLocked=false;nbaPickCount=0;renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Choose a count and click Pick Lucky Player.</div>';}
 async function getTodaysNBAPlayers(option){
-  const sbUrl='https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard';
-  const sb=await fetchJson(sbUrl);
-  const events=(sb&&sb.events)||[];
+  const cacheKey = 'nbaLastGoodPool:'+String(option||'');
+  const cacheAnyKey = 'nbaLastGoodPool:any';
+  function readNBACache(){
+    try{
+      const raw = _lhMem.getItem(cacheKey);
+      if(!raw) return [];
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    }catch(_){ return []; }
+  }
+  function writeNBACache(arr){
+    try{
+      if(Array.isArray(arr) && arr.length){
+        const slim = JSON.stringify(arr.slice(0,260));
+        _lhMem.setItem(cacheKey, slim);
+        _lhMem.setItem(cacheAnyKey, slim);
+      }
+    }catch(_){}
+  }
+  function readNBACacheAny(){
+    try{
+      const raw = _lhMem.getItem(cacheAnyKey);
+      if(!raw) return [];
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    }catch(_){ return []; }
+  }
+  const events=await getScoreboardEventsNearby('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard',1,1);
+  const teamGameMap=_teamGameMapFromEvents(events);
+  const teamOppMap=_teamOpponentMapFromEvents(events);
   const players=[];
   const seen=new Set();
   for(const ev of events){
+    const teamGameMap=_eventGameByTeamAbbr(ev);
+    const eventGame=_espnEventGame(ev);
     const sumUrl=`https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=${ev.id}`;
     let sum;
     try{sum=await fetchJson(sumUrl);}catch(e){continue;}
@@ -1298,8 +2127,9 @@ async function getTodaysNBAPlayers(option){
       // NBA has one group per team, stat labels: MIN,PTS,FG,3PT,FT,REB,AST,TO,STL,BLK,OREB,DREB,PF,+/-
       for(const group of stats){
         for(const athlete of (group.athletes||[])){
-          const name=athlete.athlete&&athlete.athlete.displayName||'';
-          const nbaPos=athlete.athlete&&athlete.athlete.position&&athlete.athlete.position.abbreviation||'';
+          const athleteObj = athlete && athlete.athlete || {};
+          const name=athleteObj.displayName||'';
+          const nbaPos=athleteObj.position&&athleteObj.position.abbreviation||'';
           if(!name||seen.has(name)) continue;
           seen.add(name);
           const vals=athlete.stats||[];
@@ -1318,24 +2148,29 @@ async function getTodaysNBAPlayers(option){
           else if(option==='3PM'){statVal=threeMade;line=Math.round(statVal*2)/2||1.5;seasonAvg=statVal+' 3PM';}
           else if(option==='PRA'){statVal=pra;line=Math.round(pra*2)/2||24.5;seasonAvg=statVal+' PRA';}
           else{statVal=pts;line=14.5;seasonAvg=statVal+' pts';}
-          if(statVal===0)continue;
-          players.push({player:name,teamAbbr,pos:nbaPos,statLabel:option,line,seasonAvg});
+          const espnId=athleteObj.id!=null?String(athleteObj.id):'';
+          const headshotUrl = athleteObj.headshot && athleteObj.headshot.href ? String(athleteObj.headshot.href) : '';
+          players.push({player:name,espnId,headshotUrl,teamAbbr,oppTeamAbbr:teamOppMap[teamAbbr]||'',pos:nbaPos,statLabel:option,line,seasonAvg,game:teamGameMap[teamAbbr]||eventGame});
         }
       }
     }
-
   }
-  if(!players.length){
-    for(const ev of events){
-      const comps=(ev.competitions||[ev])[0];
-      for(const c of (comps&&comps.competitors||[])){
-        const abbr=c.team&&c.team.abbreviation||'';
-        const defaults={Points:19.5,Rebounds:5.5,Assists:4.5,'3PM':1.5,PRA:24.5};
-        players.push({player:abbr+' Player',teamAbbr:abbr,statLabel:option,line:defaults[option]||14.5,seasonAvg:'—'});
-      }
-    }
+  if(players.length){
+    writeNBACache(players);
+    return players;
   }
-  return players;
+  const cached = readNBACache();
+  const cachedAny = readNBACacheAny();
+  const seasonMap=_seasonAvgMapFromPools([cached,cachedAny]);
+  if(cached.length) return _fillSeasonAvgFromMap(_hydratePlayersGame(cached,teamGameMap,teamOppMap),seasonMap);
+  if(cachedAny.length) return _fillSeasonAvgFromMap(_hydratePlayersGame(cachedAny,teamGameMap,teamOppMap),seasonMap);
+  const defaults={Points:19.5,Rebounds:5.5,Assists:4.5,'3PM':1.5,PRA:24.5};
+  const rosterPool=await _buildRosterFallbackPlayers('basketball/nba', events, option, defaults);
+  if(rosterPool.length){
+    const hydrated=_fillSeasonAvgFromMap(_hydratePlayersGame(rosterPool,teamGameMap,teamOppMap),seasonMap);
+    return hydrated;
+  }
+  return [];
 }
 function poRevealNBACard(p, idx){
   const sk=document.getElementById('poSkel-'+idx);
@@ -1346,22 +2181,26 @@ function poRevealNBACard(p, idx){
   const statLabel=p.statLabel||currentOption;
   card.innerHTML=`
     <div class="rowtop" onclick="const d=this.nextElementSibling;d.style.display=d.style.display==='block'?'none':'block'">
-      <span>${p.player} ${teamPill(p.teamAbbr)} <span class="chev">&#9662;</span></span>
+      ${nbaRowTopPlayerHtml(p,'<span class="chev">&#9662;</span>')}
       <span class="muted"><span style="font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}">${p.dir} ${p.line}</span> <span style="opacity:.6;font-size:11px">${statLabel}</span></span>
     </div>
     <div class="details">
       <div class="muted">Position: ${p.pos||'—'}</div>
       <div class="muted">${p.dir} ${p.line} ${statLabel}</div>
-      <div class="muted">Season avg: ${p.seasonAvg}</div>
+      <div class="muted">Season avg: ${p.seasonAvg||'—'}</div>
+      <div class="muted">Game status: ${gameStatusText(p.game)}</div>
+      <div class="muted">Start time: ${gameStartText(p.game)||'—'}</div>
+      <div class="muted">Venue: ${gameVenueText(p.game)||'—'}</div>
     </div>`;
   if(!sk) document.getElementById('poCards').appendChild(card);
 }
 async function startNBALoad(){
   pickRandomRhythm();
+  if(!_validatePlayerCountOrWarn(nbaPickCount, 'players')) return;
   openPickOverlay();
   const loadBtn=document.getElementById('nbaLoadBtn');
   if(loadBtn)loadBtn.disabled=true;
-  const _markFreeAfter=(!_freePickUsed&&!_devMode);
+  const _markFreeAfter=(!_freePickUsed&&!_devMode&&!_paywallBypassActive());
   const token=++nbaToken;
   nbaLoading=true;nbaLoaded=false;nbaPicks=[];nbaUsed=new Set();nbaLivePool=[];pickLocked=true;
   _firstSfxIdx=-1;_lastSfxIdx=-1;
@@ -1376,20 +2215,27 @@ async function startNBALoad(){
     if(!pool.length){
       document.getElementById('picks').innerHTML='<div class="muted">No NBA players found for today.</div>';
       poSetError('No NBA players found for today.');
+      showToast('No live NBA players found for today.', 'error', 'center');
+      pickLocked=false;
+      if(loadBtn)loadBtn.disabled=false;
+      stopPickSfxNow();
+      closePickOverlay();
       stopMoneyTransformButton();renderNBAPicks();return;
     }
     const max=Math.min(nbaPickCount,3);
+    const selectedTeams=new Set();
     poSeedSkeletons(max);
     shuffler=startNameShuffle(pool,token,()=>nbaToken);
     for(let i=0;i<max;i++){
       if(token!==nbaToken)return;
       await sleep(Math.max(500,getRhythmSuspense(i)));
       if(token!==nbaToken)return;
-      const avail=pool.filter(x=>!nbaUsed.has(x.player));
-      const choice=Object.assign({},avail.length?pickRandom(avail):pickRandom(pool));
+      const picked=pickDiversifiedPlayer(pool,nbaUsed,selectedTeams);
+      const choice=Object.assign({},picked||pickRandom(pool));
       choice.dir=Math.random()<0.5?'Over':'Under';
       nbaPicks.push(choice);
       nbaUsed.add(choice.player);
+      if(choice.teamAbbr) selectedTeams.add(choice.teamAbbr);
       renderNBAPicks();
       poRevealNBACard(choice,i);
       if(i===max-1)stopMoneyTransformButton();
@@ -1425,7 +2271,7 @@ function renderNHLPicks(){
   } else if(nhlPicks.length>0){
     document.getElementById('picks').innerHTML=nhlPicks.map((p)=>{
       const statLabel=p.statLabel||currentOption;
-      return `<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'><span>${p.player} ${teamPill(p.teamAbbr)} <span class='chev'>▾</span></span><span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>${statLabel}</span></span></div><div class='details'><div class='muted'>${p.dir} ${p.line} ${statLabel}</div><div class='muted'>Season avg: ${p.seasonAvg}</div><div class='muted'>Position: ${p.pos||'—'}</div></div></div>`;
+      return `<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'>${nhlRowTopPlayerHtml(p)}<span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>${statLabel}</span></span></div><div class='details'><div class='muted'>${p.dir} ${p.line} ${statLabel}</div><div class='muted'>Season avg: ${p.seasonAvg||'—'}</div><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>Game status: ${gameStatusText(p.game)}</div><div class='muted'>Start time: ${gameStartText(p.game)||'—'}</div><div class='muted'>Venue: ${gameVenueText(p.game)||'—'}</div></div></div>`;
     }).join('');
   } else if(nhlLoaded&&nhlPicks.length===0){
     document.getElementById('picks').innerHTML='<div class="muted">No NHL player data available today.</div>';
@@ -1437,12 +2283,41 @@ function renderNHLPicks(){
 }
 function clearNHL(){nhlToken++;nhlLoaded=false;nhlLoading=false;nhlPicks=[];nhlUsed=new Set();nhlLivePool=[];pickLocked=false;nhlPickCount=0;renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Choose a count and click Pick Lucky Player.</div>';}
 async function getTodaysNHLPlayers(option){
-  const sbUrl='https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard';
-  const sb=await fetchJson(sbUrl);
-  const events=(sb&&sb.events)||[];
+  const cacheKey = 'nhlLastGoodPool:'+String(option||'');
+  const cacheAnyKey = 'nhlLastGoodPool:any';
+  function readNHLCache(){
+    try{
+      const raw = _lhMem.getItem(cacheKey);
+      if(!raw) return [];
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    }catch(_){ return []; }
+  }
+  function writeNHLCache(arr){
+    try{
+      if(Array.isArray(arr) && arr.length){
+        const slim = JSON.stringify(arr.slice(0,260));
+        _lhMem.setItem(cacheKey, slim);
+        _lhMem.setItem(cacheAnyKey, slim);
+      }
+    }catch(_){}
+  }
+  function readNHLCacheAny(){
+    try{
+      const raw = _lhMem.getItem(cacheAnyKey);
+      if(!raw) return [];
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    }catch(_){ return []; }
+  }
+  const events=await getScoreboardEventsNearby('https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard',1,1);
+  const teamGameMap=_teamGameMapFromEvents(events);
+  const teamOppMap=_teamOpponentMapFromEvents(events);
   const players=[];
   const seen=new Set();
   for(const ev of events){
+    const teamGameMap=_eventGameByTeamAbbr(ev);
+    const eventGame=_espnEventGame(ev);
     const sumUrl=`https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/summary?event=${ev.id}`;
     let sum;
     try{sum=await fetchJson(sumUrl);}catch(e){continue;}
@@ -1454,8 +2329,9 @@ async function getTodaysNHLPlayers(option){
         const gname=(group.name||'').toLowerCase();
         const isGoalie=(gname==='goalies');
         for(const athlete of (group.athletes||[])){
-          const name=athlete.athlete&&athlete.athlete.displayName||'';
-          const pos=athlete.athlete&&athlete.athlete.position&&athlete.athlete.position.abbreviation||'';
+          const athleteObj = athlete && athlete.athlete || {};
+          const name=athleteObj.displayName||'';
+          const pos=athleteObj.position&&athleteObj.position.abbreviation||'';
           if(!name||seen.has(name+gname))continue;
           seen.add(name+gname);
           const vals=athlete.stats||[];
@@ -1489,24 +2365,29 @@ async function getTodaysNHLPlayers(option){
             line=statVal>0?Math.round(statVal*2)/2:2.5;
             seasonAvg=statVal+' SOG';
           } else {continue;}
-          if(statVal===0&&option!=='Goals'&&option!=='Assists'&&option!=='Points')continue;
-          players.push({player:name,teamAbbr,pos,statLabel:option,line,seasonAvg});
+          const espnId=athleteObj.id!=null?String(athleteObj.id):'';
+          const headshotUrl = athleteObj.headshot && athleteObj.headshot.href ? String(athleteObj.headshot.href) : '';
+          players.push({player:name,espnId,headshotUrl,teamAbbr,oppTeamAbbr:teamOppMap[teamAbbr]||'',pos,statLabel:option,line,seasonAvg,game:teamGameMap[teamAbbr]||eventGame});
         }
       }
     }
-
   }
-  if(!players.length){
-    for(const ev of events){
-      const comps=(ev.competitions||[ev])[0];
-      for(const c of (comps&&comps.competitors||[])){
-        const abbr=c.team&&c.team.abbreviation||'';
-        const defaults={Goals:0.5,Shots:2.5,Assists:0.5,Points:0.5,'Goalie Saves':24.5};
-        players.push({player:abbr+' Player',teamAbbr:abbr,pos:'',statLabel:option,line:defaults[option]||0.5,seasonAvg:'—'});
-      }
-    }
+  if(players.length){
+    writeNHLCache(players);
+    return players;
   }
-  return players;
+  const cached = readNHLCache();
+  const cachedAny = readNHLCacheAny();
+  const seasonMap=_seasonAvgMapFromPools([cached,cachedAny]);
+  if(cached.length) return _fillSeasonAvgFromMap(_hydratePlayersGame(cached,teamGameMap,teamOppMap),seasonMap);
+  if(cachedAny.length) return _fillSeasonAvgFromMap(_hydratePlayersGame(cachedAny,teamGameMap,teamOppMap),seasonMap);
+  const defaults={Goals:0.5,Shots:2.5,Assists:0.5,Points:0.5,'Goalie Saves':24.5};
+  const rosterPool=await _buildRosterFallbackPlayers('hockey/nhl', events, option, defaults);
+  if(rosterPool.length){
+    const hydrated=_fillSeasonAvgFromMap(_hydratePlayersGame(rosterPool,teamGameMap,teamOppMap),seasonMap);
+    return hydrated;
+  }
+  return [];
 }
 function poRevealNHLCard(p, idx){
   const sk=document.getElementById('poSkel-'+idx);
@@ -1517,22 +2398,26 @@ function poRevealNHLCard(p, idx){
   const statLabel=p.statLabel||currentOption;
   card.innerHTML=`
     <div class="rowtop" onclick="const d=this.nextElementSibling;d.style.display=d.style.display==='block'?'none':'block'">
-      <span>${p.player} ${teamPill(p.teamAbbr)} <span class="chev">&#9662;</span></span>
+      ${nhlRowTopPlayerHtml(p,'<span class="chev">&#9662;</span>')}
       <span class="muted"><span style="font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}">${p.dir} ${p.line}</span> <span style="opacity:.6;font-size:11px">${statLabel}</span></span>
     </div>
     <div class="details">
       <div class="muted">${p.dir} ${p.line} ${statLabel}</div>
-      <div class="muted">Season avg: ${p.seasonAvg}</div>
+      <div class="muted">Season avg: ${p.seasonAvg||'—'}</div>
       <div class="muted">Position: ${p.pos||'—'}</div>
+      <div class="muted">Game status: ${gameStatusText(p.game)}</div>
+      <div class="muted">Start time: ${gameStartText(p.game)||'—'}</div>
+      <div class="muted">Venue: ${gameVenueText(p.game)||'—'}</div>
     </div>`;
   if(!sk) document.getElementById('poCards').appendChild(card);
 }
 async function startNHLLoad(){
   pickRandomRhythm();
+  if(!_validatePlayerCountOrWarn(nhlPickCount, 'skaters')) return;
   openPickOverlay();
   const loadBtn=document.getElementById('nhlLoadBtn');
   if(loadBtn)loadBtn.disabled=true;
-  const _markFreeAfter=(!_freePickUsed&&!_devMode);
+  const _markFreeAfter=(!_freePickUsed&&!_devMode&&!_paywallBypassActive());
   const token=++nhlToken;
   nhlLoading=true;nhlLoaded=false;nhlPicks=[];nhlUsed=new Set();nhlLivePool=[];pickLocked=true;
   _firstSfxIdx=-1;_lastSfxIdx=-1;
@@ -1547,20 +2432,27 @@ async function startNHLLoad(){
     if(!pool.length){
       document.getElementById('picks').innerHTML='<div class="muted">No NHL players found for today.</div>';
       poSetError('No NHL players found for today.');
+      showToast('No live NHL players found for today.', 'error', 'center');
+      pickLocked=false;
+      if(loadBtn)loadBtn.disabled=false;
+      stopPickSfxNow();
+      closePickOverlay();
       stopMoneyTransformButton();renderNHLPicks();return;
     }
     const max=Math.min(nhlPickCount,3);
+    const selectedTeams=new Set();
     poSeedSkeletons(max);
     shuffler=startNameShuffle(pool,token,()=>nhlToken);
     for(let i=0;i<max;i++){
       if(token!==nhlToken)return;
       await sleep(Math.max(500,getRhythmSuspense(i)));
       if(token!==nhlToken)return;
-      const avail=pool.filter(x=>!nhlUsed.has(x.player));
-      const choice=Object.assign({},avail.length?pickRandom(avail):pickRandom(pool));
+      const picked=pickDiversifiedPlayer(pool,nhlUsed,selectedTeams);
+      const choice=Object.assign({},picked||pickRandom(pool));
       choice.dir=Math.random()<0.5?'Over':'Under';
       nhlPicks.push(choice);
       nhlUsed.add(choice.player);
+      if(choice.teamAbbr) selectedTeams.add(choice.teamAbbr);
       renderNHLPicks();
       poRevealNHLCard(choice,i);
       if(i===max-1)stopMoneyTransformButton();
@@ -1596,7 +2488,7 @@ function renderSoccerPicks(){
   } else if(soccerPicks.length>0){
     document.getElementById('picks').innerHTML=soccerPicks.map((p)=>{
       const statLabel=p.statLabel||currentOption;
-      return `<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'><span>${p.player} ${teamPill(p.teamAbbr)} <span class='chev'>▾</span></span><span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>${statLabel}</span></span></div><div class='details'><div class='muted'>${p.dir} ${p.line} ${statLabel}</div><div class='muted'>Season avg: ${p.seasonAvg}</div><div class='muted'>Position: ${p.pos||'—'}</div></div></div>`;
+      return `<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'>${soccerRowTopPlayerHtml(p)}<span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>${statLabel}</span></span></div><div class='details'><div class='muted'>${p.dir} ${p.line} ${statLabel}</div><div class='muted'>Season avg: ${p.seasonAvg||'—'}</div><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>Game status: ${gameStatusText(p.game)}</div><div class='muted'>Start time: ${gameStartText(p.game)||'—'}</div><div class='muted'>Venue: ${gameVenueText(p.game)||'—'}</div></div></div>`;
     }).join('');
   } else if(soccerLoaded&&soccerPicks.length===0){
     document.getElementById('picks').innerHTML='<div class="muted">No Soccer player data available today.</div>';
@@ -1608,12 +2500,41 @@ function renderSoccerPicks(){
 }
 function clearSoccer(){soccerToken++;soccerLoaded=false;soccerLoading=false;soccerPicks=[];soccerUsed=new Set();soccerLivePool=[];pickLocked=false;soccerPickCount=0;renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Choose a count and click Pick Lucky Player.</div>';}
 async function getTodaysSoccerPlayers(option){
-  const sbUrl='https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/scoreboard';
-  const sb=await fetchJson(sbUrl);
-  const events=(sb&&sb.events)||[];
+  const cacheKey = 'soccerLastGoodPool:'+String(option||'');
+  const cacheAnyKey = 'soccerLastGoodPool:any';
+  function readSoccerCache(){
+    try{
+      const raw = _lhMem.getItem(cacheKey);
+      if(!raw) return [];
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    }catch(_){ return []; }
+  }
+  function writeSoccerCache(arr){
+    try{
+      if(Array.isArray(arr) && arr.length){
+        const slim = JSON.stringify(arr.slice(0,260));
+        _lhMem.setItem(cacheKey, slim);
+        _lhMem.setItem(cacheAnyKey, slim);
+      }
+    }catch(_){}
+  }
+  function readSoccerCacheAny(){
+    try{
+      const raw = _lhMem.getItem(cacheAnyKey);
+      if(!raw) return [];
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    }catch(_){ return []; }
+  }
+  const events=await getScoreboardEventsNearby('https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/scoreboard',1,1);
+  const teamGameMap=_teamGameMapFromEvents(events);
+  const teamOppMap=_teamOpponentMapFromEvents(events);
   const players=[];
   const seen=new Set();
   for(const ev of events){
+    const teamGameMap=_eventGameByTeamAbbr(ev);
+    const eventGame=_espnEventGame(ev);
     const sumUrl=`https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=${ev.id}`;
     let sum;
     try{sum=await fetchJson(sumUrl);}catch(e){continue;}
@@ -1623,6 +2544,7 @@ async function getTodaysSoccerPlayers(option){
       const teamAbbr=roster.team&&roster.team.abbreviation||'';
       for(const entry of (roster.roster||[])){
         const name=entry.athlete&&entry.athlete.displayName||'';
+        const espnId=entry.athlete&&entry.athlete.id!=null?Number(entry.athlete.id):'';
         const pos=entry.athlete&&entry.athlete.position&&entry.athlete.position.abbreviation||'';
         if(!name||seen.has(name))continue;
         seen.add(name);
@@ -1658,7 +2580,7 @@ async function getTodaysSoccerPlayers(option){
           line=statVal>0?Math.round(statVal*2)/2:0.5;
           seasonAvg=statVal+' SOT';
         } else {continue;}
-        players.push({player:name,teamAbbr,pos,statLabel:option,line,seasonAvg});
+        players.push({player:name,espnId,teamAbbr,oppTeamAbbr:teamOppMap[teamAbbr]||'',pos,statLabel:option,line,seasonAvg,game:teamGameMap[teamAbbr]||eventGame});
       }
     }
     // Fallback: try boxscore.players if rosters empty
@@ -1669,26 +2591,32 @@ async function getTodaysSoccerPlayers(option){
         for(const group of (teamBlock.statistics||[])){
           for(const athlete of (group.athletes||[])){
             const name=athlete.athlete&&athlete.athlete.displayName||'';
+            const espnId=athlete.athlete&&athlete.athlete.id!=null?Number(athlete.athlete.id):'';
             if(!name||seen.has(name))continue;
             seen.add(name);
-            players.push({player:name,teamAbbr,pos:'',statLabel:option,line:0.5,seasonAvg:'—'});
+            players.push({player:name,espnId,teamAbbr,oppTeamAbbr:teamOppMap[teamAbbr]||'',pos:'',statLabel:option,line:0.5,seasonAvg:'—',game:teamGameMap[teamAbbr]||eventGame});
           }
         }
       }
     }
-
   }
-  if(!players.length){
-    for(const ev of events){
-      const comps=(ev.competitions||[ev])[0];
-      for(const c of (comps&&comps.competitors||[])){
-        const abbr=c.team&&c.team.abbreviation||'';
-        const defaults={Goals:0.5,Assists:0.5,Shots:1.5,SOT:0.5,'GK Saves':2.5};
-        players.push({player:abbr+' Player',teamAbbr:abbr,pos:'',statLabel:option,line:defaults[option]||0.5,seasonAvg:'—'});
-      }
-    }
+  if(players.length){
+    writeSoccerCache(players);
+    return players;
   }
-  return players;
+  // No placeholder players: use last known real soccer pool first.
+  const cached = readSoccerCache();
+  const cachedAny = readSoccerCacheAny();
+  const seasonMap=_seasonAvgMapFromPools([cached,cachedAny]);
+  if(cached.length) return _fillSeasonAvgFromMap(_hydratePlayersGame(cached,teamGameMap,teamOppMap),seasonMap);
+  if(cachedAny.length) return _fillSeasonAvgFromMap(_hydratePlayersGame(cachedAny,teamGameMap,teamOppMap),seasonMap);
+  const defaults={Goals:0.5,Assists:0.5,Shots:1.5,SOT:0.5,'GK Saves':2.5};
+  const rosterPool=await _buildRosterFallbackPlayers('soccer/usa.1', events, option, defaults);
+  if(rosterPool.length){
+    const hydrated=_fillSeasonAvgFromMap(_hydratePlayersGame(rosterPool,teamGameMap,teamOppMap),seasonMap);
+    return hydrated;
+  }
+  return [];
 }
 function poRevealSoccerCard(p, idx){
   const sk=document.getElementById('poSkel-'+idx);
@@ -1699,22 +2627,26 @@ function poRevealSoccerCard(p, idx){
   const statLabel=p.statLabel||currentOption;
   card.innerHTML=`
     <div class="rowtop" onclick="const d=this.nextElementSibling;d.style.display=d.style.display==='block'?'none':'block'">
-      <span>${p.player} ${teamPill(p.teamAbbr)} <span class="chev">&#9662;</span></span>
+      ${soccerRowTopPlayerHtml(p,'<span class="chev">&#9662;</span>')}
       <span class="muted"><span style="font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}">${p.dir} ${p.line}</span> <span style="opacity:.6;font-size:11px">${statLabel}</span></span>
     </div>
     <div class="details">
       <div class="muted">${p.dir} ${p.line} ${statLabel}</div>
-      <div class="muted">Season avg: ${p.seasonAvg}</div>
+      <div class="muted">Season avg: ${p.seasonAvg||'—'}</div>
       <div class="muted">Position: ${p.pos||'—'}</div>
+      <div class="muted">Game status: ${gameStatusText(p.game)}</div>
+      <div class="muted">Start time: ${gameStartText(p.game)||'—'}</div>
+      <div class="muted">Venue: ${gameVenueText(p.game)||'—'}</div>
     </div>`;
   if(!sk) document.getElementById('poCards').appendChild(card);
 }
 async function startSoccerLoad(){
   pickRandomRhythm();
+  if(!_validatePlayerCountOrWarn(soccerPickCount, 'players')) return;
   openPickOverlay();
   const loadBtn=document.getElementById('soccerLoadBtn');
   if(loadBtn)loadBtn.disabled=true;
-  const _markFreeAfter=(!_freePickUsed&&!_devMode);
+  const _markFreeAfter=(!_freePickUsed&&!_devMode&&!_paywallBypassActive());
   const token=++soccerToken;
   soccerLoading=true;soccerLoaded=false;soccerPicks=[];soccerUsed=new Set();soccerLivePool=[];pickLocked=true;
   _firstSfxIdx=-1;_lastSfxIdx=-1;
@@ -1729,20 +2661,27 @@ async function startSoccerLoad(){
     if(!pool.length){
       document.getElementById('picks').innerHTML='<div class="muted">No MLS players found for today.</div>';
       poSetError('No MLS players found for today.');
+      showToast('No live MLS players found for today.', 'error', 'center');
+      pickLocked=false;
+      if(loadBtn)loadBtn.disabled=false;
+      stopPickSfxNow();
+      closePickOverlay();
       stopMoneyTransformButton();renderSoccerPicks();return;
     }
     const max=Math.min(soccerPickCount,3);
+    const selectedTeams=new Set();
     poSeedSkeletons(max);
     shuffler=startNameShuffle(pool,token,()=>soccerToken);
     for(let i=0;i<max;i++){
       if(token!==soccerToken)return;
       await sleep(Math.max(500,getRhythmSuspense(i)));
       if(token!==soccerToken)return;
-      const avail=pool.filter(x=>!soccerUsed.has(x.player));
-      const choice=Object.assign({},avail.length?pickRandom(avail):pickRandom(pool));
+      const picked=pickDiversifiedPlayer(pool,soccerUsed,selectedTeams);
+      const choice=Object.assign({},picked||pickRandom(pool));
       choice.dir=Math.random()<0.5?'Over':'Under';
       soccerPicks.push(choice);
       soccerUsed.add(choice.player);
+      if(choice.teamAbbr) selectedTeams.add(choice.teamAbbr);
       renderSoccerPicks();
       poRevealSoccerCard(choice,i);
       if(i===max-1)stopMoneyTransformButton();
@@ -1769,17 +2708,526 @@ async function startSoccerLoad(){
 
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 function pickRandom(arr){return arr[Math.floor(Math.random()*arr.length)];}
+function pickDiversifiedPlayer(pool, usedPlayersSet, usedTeamsSet){
+  const base=(pool||[]).filter(function(x){return !usedPlayersSet.has(x.player);});
+  if(!base.length) return null;
+  const noSameTeam=base.filter(function(x){
+    return !x.teamAbbr || !usedTeamsSet.has(x.teamAbbr);
+  });
+  const noOpponent=noSameTeam.filter(function(x){
+    return !x.oppTeamAbbr || !usedTeamsSet.has(x.oppTeamAbbr);
+  });
+  if(noOpponent.length) return pickRandom(noOpponent);
+  if(noSameTeam.length) return pickRandom(noSameTeam);
+  return pickRandom(base);
+}
+function _withOppTeamFromPool(list){
+  const arr=Array.isArray(list)?list:[];
+  const perGame={};
+  for(const p of arr){
+    const gk = String((p&&p.gamePk) || (p&&p.game&&p.game.gamePk) || '');
+    const t = p && (p.teamAbbr || p.team) || '';
+    if(!gk || !t) continue;
+    if(!perGame[gk]) perGame[gk]=new Set();
+    perGame[gk].add(t);
+  }
+  return arr.map(function(p){
+    if(p && p.oppTeamAbbr) return p;
+    const gk = String((p&&p.gamePk) || (p&&p.game&&p.game.gamePk) || '');
+    const t = p && (p.teamAbbr || p.team) || '';
+    let opp='';
+    const teams = gk && perGame[gk] ? Array.from(perGame[gk]) : [];
+    if(teams.length===2 && t){
+      opp = teams[0]===t ? teams[1] : teams[0];
+    }
+    return Object.assign({},p,{oppTeamAbbr:opp});
+  });
+}
 function pickWithoutDuplicateHitter(arr, usedHitters){const avail=arr.filter(x=>!usedHitters.has(x.player));return avail.length?pickRandom(avail):arr.length?pickRandom(arr):null;}
 function normalizeName(s){return String(s||'').replace(/\s+/g,' ').trim();}
 function teamLogoUrl(teamId){return teamId ? `https://www.mlbstatic.com/team-logos/team-cap-on-dark/${teamId}.svg` : '';}
+/** MLB Stats API person id → headshot (MLB CDN / Cloudinary). */
+function mlbHeadshotUrl(playerId){
+  const id = Number(playerId);
+  if(!id || id !== id) return '';
+  return 'https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_76,h_76,q_auto:best/v1/people/'+id+'/headshot/67/current';
+}
+/** Left column for pick rows: optional headshot + name + team pill + chevron. */
+function mlbRowTopPlayerHtml(p, chevHtml){
+  const chev = chevHtml != null ? chevHtml : "<span class=\"chev\">▾</span>";
+  const team = p.teamAbbr || p.team || '';
+  const url = mlbHeadshotUrl(p.playerId);
+  const img = url
+    ? '<img class="mlb-headshot" src="'+url+'" alt="" width="38" height="38" loading="lazy" decoding="async" onerror="this.remove()">'
+    : '';
+  return '<span class="rowtop-left">'+img+'<span class="rowtop-name">'+p.player+' '+teamPill(team)+' '+chev+'</span></span>';
+}
+function nbaHeadshotUrl(p){
+  const direct = p && p.headshotUrl ? String(p.headshotUrl) : '';
+  if(direct) return direct.replace(/^http:\/\//,'https://');
+  const rawId = p && p.espnId != null ? String(p.espnId) : '';
+  const id = rawId.replace(/[^0-9]/g,'');
+  if(!id) return '';
+  return 'https://a.espncdn.com/i/headshots/nba/players/full/'+id+'.png';
+}
+function nbaRowTopPlayerHtml(p, chevHtml){
+  const chev = chevHtml != null ? chevHtml : "<span class=\"chev\">▾</span>";
+  const team = p.teamAbbr || '';
+  const url = nbaHeadshotUrl(p);
+  const img = url
+    ? '<img class="nba-headshot" src="'+url+'" alt="" width="38" height="38" loading="lazy" decoding="async" onerror="this.onerror=null;this.src=\'https://a.espncdn.com/i/headshots/nba/players/full/0.png\'">'
+    : '';
+  return '<span class="rowtop-left">'+img+'<span class="rowtop-name">'+p.player+' '+teamPill(team)+' '+chev+'</span></span>';
+}
+function nhlHeadshotUrl(p){
+  const direct = p && p.headshotUrl ? String(p.headshotUrl) : '';
+  if(direct) return direct.replace(/^http:\/\//,'https://');
+  const rawId = p && p.espnId != null ? String(p.espnId) : '';
+  const id = rawId.replace(/[^0-9]/g,'');
+  if(!id) return '';
+  return 'https://a.espncdn.com/i/headshots/nhl/players/full/'+id+'.png';
+}
+function nhlRowTopPlayerHtml(p, chevHtml){
+  const chev = chevHtml != null ? chevHtml : "<span class=\"chev\">▾</span>";
+  const team = p.teamAbbr || '';
+  const url = nhlHeadshotUrl(p);
+  const img = url
+    ? '<img class="nhl-headshot" src="'+url+'" alt="" width="38" height="38" loading="lazy" decoding="async" onerror="this.onerror=null;this.src=\'https://a.espncdn.com/i/headshots/nhl/players/full/0.png\'">'
+    : '';
+  return '<span class="rowtop-left">'+img+'<span class="rowtop-name">'+p.player+' '+teamPill(team)+' '+chev+'</span></span>';
+}
+function nflHeadshotUrl(p){
+  const direct = p && p.headshotUrl ? String(p.headshotUrl) : '';
+  if(direct) return direct.replace(/^http:\/\//,'https://');
+  const rawId = p && p.espnId != null ? String(p.espnId) : '';
+  const id = rawId.replace(/[^0-9]/g,'');
+  if(!id) return '';
+  return 'https://a.espncdn.com/i/headshots/nfl/players/full/'+id+'.png';
+}
+function nflRowTopPlayerHtml(p, chevHtml){
+  const chev = chevHtml != null ? chevHtml : "<span class=\"chev\">▾</span>";
+  const team = p.teamAbbr || '';
+  const url = nflHeadshotUrl(p);
+  const img = url
+    ? '<img class="nfl-headshot" src="'+url+'" alt="" width="38" height="38" loading="lazy" decoding="async" onerror="this.onerror=null;this.src=\'https://a.espncdn.com/i/headshots/nfl/players/full/0.png\'">'
+    : '';
+  return '<span class="rowtop-left">'+img+'<span class="rowtop-name">'+p.player+' '+teamPill(team)+' '+chev+'</span></span>';
+}
+function soccerHeadshotUrl(espnId){
+  const id = Number(espnId);
+  if(!id || id !== id) return '';
+  return 'https://a.espncdn.com/i/headshots/soccer/players/full/'+id+'.png';
+}
+function soccerRowTopPlayerHtml(p, chevHtml){
+  const chev = chevHtml != null ? chevHtml : "<span class=\"chev\">▾</span>";
+  const team = p.teamAbbr || '';
+  const url = soccerHeadshotUrl(p.espnId);
+  const img = url
+    ? '<img class="soccer-headshot" src="'+url+'" alt="" width="38" height="38" loading="lazy" decoding="async" onerror="this.onerror=null;this.src=\'https://a.espncdn.com/i/headshots/soccer/players/full/0.png\'">'
+    : '';
+  return '<span class="rowtop-left">'+img+'<span class="rowtop-name">'+p.player+' '+teamPill(team)+' '+chev+'</span></span>';
+}
 function isPitcher(pos){return String(pos||'').toUpperCase()==='P';}
 function slotToBattingOrder(slot){if(slot==null) return null; const s=String(slot).trim(); if(!s) return null; const m=s.match(/^(\d+)(?:-\d+)?$/); return m ? parseInt(m[1],10) : null;}
 function gameStatusText(g){return g?.status?.abstractGameState || g?.status?.detailedState || 'Scheduled';}
 function gameStartText(g){const d = g?.gameDate ? new Date(g.gameDate) : null; return d ? d.toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}) : ''; }
 function gameVenueText(g){return g?.venue?.name || ''; }
 function gameKey(g){return String(g?.gamePk || g?.gamePk || '');}
-async function fetchJson(url){const r=await fetch(url,{cache:'no-store'}); if(!r.ok) throw new Error('Fetch failed'); return await r.json();}
-async function getTodaysMlbHitters(){const today=todayStr; const scheduleUrl=`https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${today}&hydrate=team`; const sched=await fetchJson(scheduleUrl); const dates=(sched && sched.dates) ? sched.dates : []; const games=[]; dates.forEach(d=>{(d.games||[]).forEach(g=>games.push(g));}); const pools=[]; const gameMap={}; for(const g of games){ const gamePk=g.gamePk; gameMap[String(gamePk)]={gamePk, gameDate:g.gameDate, status:g.status, venue:g.venue}; const boxUrl=`https://statsapi.mlb.com/api/v1/game/${gamePk}/boxscore`; try{ const box=await fetchJson(boxUrl); const collect=(teamObj, side)=>{ const batterIds=teamObj?.batters || []; const teamName = teamObj?.team?.name || teamObj?.team?.abbreviation || side; batterIds.forEach(id=>{ const key=`ID${id}`; const p=teamObj.players?.[key]; if(!p) return; const person = p.person || {}; const pos = p.position?.abbreviation || person?.primaryPosition?.abbreviation || ''; if(isPitcher(pos)) return; const bo = slotToBattingOrder(p.battingOrder); if(bo===null) return; pools.push({player: normalizeName(person.fullName), team: teamName, teamAbbr: teamObj?.team?.abbreviation || teamObj?.team?.name || side, teamId: teamObj?.team?.id || null, order: bo, gamePk, game: gameMap[String(gamePk)], hr: p.seasonStats?.batting?.homeRuns ?? '–', avg: p.seasonStats?.batting?.avg ?? '.---', pos}); });}; collect(box?.teams?.home, 'home'); collect(box?.teams?.away, 'away'); } catch(e){} } const unique=new Map(); pools.forEach(x=>{const k=`${x.player}::${x.team}`; if(!unique.has(k)) unique.set(k,x);}); return [...unique.values()].sort((a,b)=>(a.order-b.order)||a.player.localeCompare(b.player)); }
+async function fetchJson(url){
+  let lastErr;
+  for(let i=0;i<2;i++){
+    try{
+      const r=await fetch(url,{cache:'no-store'});
+      if(!r.ok) throw new Error('Fetch failed');
+      return await r.json();
+    }catch(e){
+      lastErr=e;
+      if(i===0) await sleep(180);
+    }
+  }
+  throw lastErr||new Error('Fetch failed');
+}
+function _espnDatesParamOffset(days){
+  const d=new Date();
+  d.setDate(d.getDate()+days);
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,'0');
+  const dd=String(d.getDate()).padStart(2,'0');
+  return ''+y+m+dd;
+}
+async function getScoreboardEventsNearby(baseUrl, backDays, aheadDays){
+  const seen=new Set();
+  const events=[];
+  const pushEvents=(arr)=>{
+    for(const ev of (arr||[])){
+      if(!ev || !ev.id || seen.has(ev.id)) continue;
+      seen.add(ev.id);
+      events.push(ev);
+    }
+  };
+  try{
+    const sb=await fetchJson(baseUrl);
+    pushEvents(sb&&sb.events);
+  }catch(_){}
+  if(events.length) return events;
+  for(let off=-Math.max(0,backDays||0);off<=Math.max(0,aheadDays||0);off++){
+    if(off===0) continue;
+    const u=baseUrl+(baseUrl.indexOf('?')>=0?'&':'?')+'dates='+_espnDatesParamOffset(off);
+    try{
+      const sb=await fetchJson(u);
+      pushEvents(sb&&sb.events);
+      if(events.length) break;
+    }catch(_){}
+  }
+  return events;
+}
+function _espnEventGame(ev){
+  const comp = ev && ev.competitions && ev.competitions[0] || {};
+  return {
+    gameDate: ev && ev.date || comp && comp.date || '',
+    status: ev && ev.status || comp && comp.status || {},
+    venue: { name: comp && comp.venue && (comp.venue.fullName || comp.venue.name) || '' }
+  };
+}
+function _eventGameByTeamAbbr(ev){
+  const out={};
+  const g=_espnEventGame(ev);
+  const comp = ev && ev.competitions && ev.competitions[0] || {};
+  for(const c of (comp.competitors||[])){
+    const abbr = c && c.team && c.team.abbreviation || '';
+    if(abbr) out[abbr]=g;
+  }
+  return out;
+}
+function _eventOpponentByTeamAbbr(ev){
+  const out={};
+  const comp = ev && ev.competitions && ev.competitions[0] || {};
+  const teams = (comp.competitors||[]).map(function(c){
+    return c && c.team && c.team.abbreviation || '';
+  }).filter(Boolean);
+  if(teams.length===2){
+    out[teams[0]]=teams[1];
+    out[teams[1]]=teams[0];
+  }
+  return out;
+}
+function _teamGameMapFromEvents(events){
+  const out={};
+  for(const ev of (events||[])) Object.assign(out,_eventGameByTeamAbbr(ev));
+  return out;
+}
+function _teamOpponentMapFromEvents(events){
+  const out={};
+  for(const ev of (events||[])) Object.assign(out,_eventOpponentByTeamAbbr(ev));
+  return out;
+}
+function _hydratePlayersGame(players, teamGameMap, teamOppMap){
+  if(!Array.isArray(players) || !players.length) return players||[];
+  return players.map(function(p){
+    const team = p && p.teamAbbr ? p.teamAbbr : '';
+    const tm = team ? (teamGameMap[team]||null) : null;
+    const opp = team ? (teamOppMap && teamOppMap[team] || '') : '';
+    if(p && p.game && (p.oppTeamAbbr || !opp)) return p;
+    return Object.assign({},p,{
+      game:p && p.game ? p.game : tm,
+      oppTeamAbbr:p && p.oppTeamAbbr ? p.oppTeamAbbr : opp
+    });
+  });
+}
+function _seasonAvgMapFromPools(pools){
+  const map=new Map();
+  for(const pool of (pools||[])){
+    for(const p of (pool||[])){
+      const team = p && (p.teamAbbr || p.team) || '';
+      const key = (p && p.player || '')+'::'+team+'::'+(p && p.statLabel || '');
+      const avg = p && p.seasonAvg;
+      if(!key || avg==null || avg==='' || avg==='—') continue;
+      map.set(key, avg);
+    }
+  }
+  return map;
+}
+function _fillSeasonAvgFromMap(players, seasonMap){
+  if(!Array.isArray(players) || !players.length || !seasonMap || !seasonMap.size) return players||[];
+  return players.map(function(p){
+    const team = p && (p.teamAbbr || p.team) || '';
+    const key = (p && p.player || '')+'::'+team+'::'+(p && p.statLabel || '');
+    const fallbackAvg = seasonMap.get(key);
+    if(!fallbackAvg) return p;
+    if(p && p.seasonAvg!=null && p.seasonAvg!=='' && p.seasonAvg!=='—') return p;
+    return Object.assign({},p,{seasonAvg:fallbackAvg});
+  });
+}
+function _eventTeamRefs(events){
+  const out=[];
+  const seen=new Set();
+  for(const ev of (events||[])){
+    const comps = ev && ev.competitions || [];
+    const comp = comps[0] || ev || {};
+    for(const c of (comp.competitors||[])){
+      const id = c && c.team && c.team.id != null ? String(c.team.id) : '';
+      if(!id || seen.has(id)) continue;
+      seen.add(id);
+      out.push({
+        id,
+        abbr: c.team && c.team.abbreviation || '',
+        name: c.team && (c.team.displayName || c.team.name) || '',
+        game: _espnEventGame(ev)
+      });
+    }
+  }
+  return out;
+}
+function _parseRosterAthletes(rosterJson){
+  const list=[];
+  const pushAth=(a)=>{
+    if(!a) return;
+    list.push({
+      id: a.id != null ? String(a.id) : '',
+      name: a.displayName || a.fullName || a.shortName || '',
+      pos: a.position && (a.position.abbreviation || a.position.name) || '',
+      headshotUrl: a.headshot && a.headshot.href ? String(a.headshot.href) : ''
+    });
+  };
+  const athletes = rosterJson && rosterJson.athletes;
+  if(Array.isArray(athletes)){
+    for(const g of athletes){
+      if(Array.isArray(g && g.items)){
+        for(const a of g.items) pushAth(a);
+      }else{
+        pushAth(g);
+      }
+    }
+  }
+  return list;
+}
+/** Pull official season hitting totals (HR, AVG) from StatsAPI for batters missing boxscore seasonStats. */
+function _parseMlbPersonSeasonHitting(statsArr){
+  if(!Array.isArray(statsArr)) return null;
+  for(const st of statsArr){
+    const g=(st.group&&st.group.displayName||'').toLowerCase();
+    if(g!=='hitting') continue;
+    const t=(st.type&&st.type.displayName||'').toLowerCase();
+    if(!t.includes('season')) continue;
+    const splits=st.splits||[];
+    const row=splits.find(function(sp){return sp&&sp.stat;})||splits[0];
+    if(row&&row.stat) return row.stat;
+    if(st.totals) return st.totals;
+  }
+  return null;
+}
+async function _enrichMlbHittersSeasonBatting(list){
+  const arr=Array.isArray(list)?list:[];
+  const ids=[...new Set(arr.map(function(p){return p&&p.playerId;}).filter(function(id){
+    const n=Number(id); return n===n&&n>0;
+  }))];
+  if(!ids.length) return arr;
+  const map=new Map();
+  const BATCH=40;
+  for(let i=0;i<ids.length;i+=BATCH){
+    const chunk=ids.slice(i,i+BATCH).join(',');
+    try{
+      const j=await fetchJson('https://statsapi.mlb.com/api/v1/people?personIds='+encodeURIComponent(chunk)+'&hydrate=stats(group=[hitting],type=[season])');
+      const people=j.people||[];
+      for(const person of people){
+        const stat=_parseMlbPersonSeasonHitting(person.stats);
+        if(!stat) continue;
+        const hr=parseInt(stat.homeRuns,10);
+        map.set(Number(person.id),{
+          hr:Number.isFinite(hr)?hr:0,
+          avg:stat.avg!=null?String(stat.avg):'.---'
+        });
+      }
+    }catch(_){}
+  }
+  return arr.map(function(p){
+    const id=Number(p&&p.playerId);
+    if(!id) return p;
+    const hit=map.get(id);
+    if(!hit) return p;
+    return Object.assign({},p,{hr:hit.hr,avg:hit.avg});
+  });
+}
+async function _buildRosterFallbackPlayers(sportPath, events, option, defaults){
+  const teams=_eventTeamRefs(events);
+  const teamOppMap=_teamOpponentMapFromEvents(events);
+  const out=[];
+  const seen=new Set();
+  for(const t of teams){
+    let roster;
+    try{
+      roster = await fetchJson('https://site.api.espn.com/apis/site/v2/sports/'+sportPath+'/teams/'+encodeURIComponent(t.id)+'/roster');
+    }catch(_){ continue; }
+    const athletes=_parseRosterAthletes(roster);
+    for(const a of athletes){
+      const key=(a.id||'')+'::'+(t.abbr||'');
+      if(!a.name || seen.has(key)) continue;
+      seen.add(key);
+      out.push({
+        player:a.name,
+        espnId:a.id||'',
+        headshotUrl:a.headshotUrl||'',
+        teamAbbr:t.abbr||'',
+        oppTeamAbbr:teamOppMap[t.abbr||'']||'',
+        pos:a.pos||'',
+        statLabel:option,
+        line:defaults && defaults[option] != null ? defaults[option] : 0.5,
+        seasonAvg:'—',
+        game:t.game||null
+      });
+    }
+  }
+  return out;
+}
+async function getTodaysMlbHitters(){
+  const today=todayStr;
+  const scheduleUrl=`https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${today}&hydrate=team`;
+  const sched=await fetchJson(scheduleUrl);
+  const dates=(sched && sched.dates) ? sched.dates : [];
+  const games=[];
+  dates.forEach(d=>{(d.games||[]).forEach(g=>games.push(g));});
+  const pools=[];
+  const gameMap={};
+  for(const g of games){
+    const gamePk=g.gamePk;
+    gameMap[String(gamePk)]={gamePk, gameDate:g.gameDate, status:g.status, venue:g.venue};
+    const boxUrl=`https://statsapi.mlb.com/api/v1/game/${gamePk}/boxscore`;
+    try{
+      const box=await fetchJson(boxUrl);
+      const collect=(teamObj, side)=>{
+        const teamName = teamObj?.team?.name || teamObj?.team?.abbreviation || side;
+        const teamAbbr = teamObj?.team?.abbreviation || teamObj?.team?.name || side;
+        const teamId = teamObj?.team?.id || null;
+        const playersMap = teamObj?.players || {};
+
+        // Primary source: confirmed batting order IDs.
+        const batterIds = teamObj?.batters || [];
+        for(const id of batterIds){
+          const key=`ID${id}`;
+          const p=playersMap[key];
+          if(!p) continue;
+          const person=p.person||{};
+          const pos=p.position?.abbreviation||person?.primaryPosition?.abbreviation||'';
+          if(isPitcher(pos)) continue;
+          const bo=slotToBattingOrder(p.battingOrder);
+          if(bo===null) continue;
+          pools.push({
+            player: normalizeName(person.fullName),
+            playerId: person.id!=null?Number(person.id):Number(id),
+            team: teamName,
+            teamAbbr,
+            teamId,
+            order: bo,
+            gamePk,
+            game: gameMap[String(gamePk)],
+            hr: (function(){
+              const v=p.seasonStats&&p.seasonStats.batting&&p.seasonStats.batting.homeRuns;
+              const n=parseInt(v,10); return Number.isFinite(n)?n:0;
+            })(),
+            avg: p.seasonStats?.batting?.avg ?? '.---',
+            pos
+          });
+        }
+
+        // Fallback when lineups are not posted yet:
+        // choose likely hitters from all team players with batting season stats.
+        if(!batterIds.length){
+          const candidates=[];
+          for(const key of Object.keys(playersMap)){
+            const p=playersMap[key];
+            const person=p?.person||{};
+            const name=normalizeName(person.fullName||'');
+            if(!name) continue;
+            const pos=p?.position?.abbreviation||person?.primaryPosition?.abbreviation||'';
+            if(isPitcher(pos)) continue;
+            const batting=p?.seasonStats?.batting||{};
+            const ab=parseInt(batting.atBats||0,10)||0;
+            if(ab<=0) continue;
+            candidates.push({
+              player:name,
+              playerId: person.id!=null?Number(person.id):NaN,
+              team: teamName,
+              teamAbbr,
+              teamId,
+              order: 99,
+              gamePk,
+              game: gameMap[String(gamePk)],
+              hr: (function(){const n=parseInt(batting.homeRuns,10);return Number.isFinite(n)?n:0;})(),
+              avg: batting.avg ?? '.---',
+              pos,
+              _ab: ab
+            });
+          }
+          candidates.sort((a,b)=>b._ab-a._ab || a.player.localeCompare(b.player));
+          candidates.slice(0,12).forEach(c=>{
+            delete c._ab;
+            pools.push(c);
+          });
+        }
+      };
+      collect(box?.teams?.home, 'home');
+      collect(box?.teams?.away, 'away');
+    }catch(e){}
+  }
+  // Safety fallback: if we only got one game worth of hitters, backfill from
+  // each scheduled team's active roster so all teams playing today are represented.
+  {
+    const teamsSeen=new Set(pools.map(p=>String(p.teamAbbr||'')));
+    const scheduledTeams=[];
+    const seenTeamIds=new Set();
+    for(const g of games){
+      const home=g?.teams?.home?.team||{};
+      const away=g?.teams?.away?.team||{};
+      const gObj=gameMap[String(g.gamePk)]||null;
+      const hId=home.id!=null?String(home.id):'';
+      const aId=away.id!=null?String(away.id):'';
+      const hAbbr=home.abbreviation||'';
+      const aAbbr=away.abbreviation||'';
+      if(hId && !seenTeamIds.has(hId)){ seenTeamIds.add(hId); scheduledTeams.push({id:hId,abbr:hAbbr,name:home.name||hAbbr,opp:aAbbr,game:gObj,gamePk:g.gamePk}); }
+      if(aId && !seenTeamIds.has(aId)){ seenTeamIds.add(aId); scheduledTeams.push({id:aId,abbr:aAbbr,name:away.name||aAbbr,opp:hAbbr,game:gObj,gamePk:g.gamePk}); }
+    }
+    if(scheduledTeams.length>=4 && teamsSeen.size<=2){
+      for(const t of scheduledTeams){
+        let r;
+        try{
+          r=await fetchJson('https://statsapi.mlb.com/api/v1/teams/'+encodeURIComponent(t.id)+'/roster?rosterType=active');
+        }catch(_){ continue; }
+        const roster=(r&&r.roster)||[];
+        let added=0;
+        for(const rp of roster){
+          const person=rp&&rp.person||{};
+          const pos=rp&&rp.position&&rp.position.abbreviation||'';
+          const name=normalizeName(person.fullName||'');
+          if(!name||isPitcher(pos)) continue;
+          pools.push({
+            player:name,
+            playerId: person.id!=null?Number(person.id):NaN,
+            team:t.name,
+            teamAbbr:t.abbr,
+            oppTeamAbbr:t.opp||'',
+            teamId:Number(t.id),
+            order:99,
+            gamePk:t.gamePk,
+            game:t.game,
+            hr:0,
+            avg:'.---',
+            pos
+          });
+          added++;
+          if(added>=12) break;
+        }
+      }
+    }
+  }
+  const unique=new Map();
+  pools.forEach(x=>{
+    const k=`${x.player}::${x.team}`;
+    if(!unique.has(k)) unique.set(k,x);
+  });
+  const merged=[...unique.values()];
+  const enriched=await _enrichMlbHittersSeasonBatting(merged);
+  return enriched.sort((a,b)=>(a.order-b.order)||a.player.localeCompare(b.player));
+}
 async function getTodaysPitchers(){
   const today=todayStr;
   // Single call — season stats are embedded in probablePitcher.stats[]
@@ -1795,6 +3243,7 @@ async function getTodaysPitchers(){
         if(!pp||!pp.id||seen.has(pp.id)) return;
         seen.add(pp.id);
         const teamAbbr=g.teams?.[side]?.team?.abbreviation||side;
+        const oppAbbr=g.teams?.[side==='home'?'away':'home']?.team?.abbreviation||'';
         // Find statsSingleSeason pitching block
         const seasonStat=(pp.stats||[]).find(s=>s.type?.displayName==='statsSingleSeason'&&s.group?.displayName==='pitching');
         const stat=seasonStat?.stats||{};
@@ -1804,7 +3253,11 @@ async function getTodaysPitchers(){
         if(kLine===null) return; // skip pitchers with no K/9 data
         results.push({
           player: normalizeName(pp.fullName||`Pitcher ${pp.id}`),
+          playerId: pp.id,
           teamAbbr,
+          oppTeamAbbr: oppAbbr,
+          gamePk: g.gamePk,
+          game: {gamePk:g.gamePk, gameDate:g.gameDate, status:g.status, venue:g.venue},
           era,
           k9: k9.toFixed(1),
           kLine
@@ -1819,7 +3272,7 @@ function renderMLB(){
   if(mlbLoading){
     document.getElementById('picks').innerHTML='<div class="muted">Loading MLB picks...</div>';
   } else if(mlbPicks.length>0){
-    document.getElementById('picks').innerHTML=mlbPicks.map((p,i)=>`<div class='item expandable' onclick="const d=this.querySelector('.details'); d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'><span>${p.player} ${teamPill(p.teamAbbr || p.team)} <span class='chev'>▾</span></span><span class='muted'><span style='font-weight:700;color:#6ee7ff'>${p.hr}</span> <span style='opacity:.6;font-size:11px'>HR</span></span></div><div class='details'>${p.pos?`<div class='muted'>Position: ${p.pos}</div>`:''}<div class='muted'>Season AVG: ${p.avg}</div><div class='muted'>Game status: ${gameStatusText(p.game)}</div><div class='muted'>Start time: ${gameStartText(p.game)}</div><div class='muted'>Venue: ${gameVenueText(p.game)}</div></div></div>`).join('');
+    document.getElementById('picks').innerHTML=mlbPicks.map((p,i)=>`<div class='item expandable' onclick="const d=this.querySelector('.details'); d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'>${mlbRowTopPlayerHtml(p)}<span class='muted'><span style='font-weight:700;color:#6ee7ff'>${(p.hr==null||p.hr==='–')?0:p.hr}</span> <span style='opacity:.6;font-size:11px'>HR</span></span></div><div class='details'>${p.pos?`<div class='muted'>Position: ${p.pos}</div>`:''}<div class='muted'>Season AVG: ${p.avg}</div><div class='muted'>Game status: ${gameStatusText(p.game)}</div><div class='muted'>Start time: ${gameStartText(p.game)}</div><div class='muted'>Venue: ${gameVenueText(p.game)}</div></div></div>`).join('');
   } else if(mlbLoaded&&mlbPicks.length===0){
     document.getElementById('picks').innerHTML='<div class="muted">No available picks.</div>';
   } else if(!mlbLoaded&&!mlbLoading&&mlbPicks.length===0){
@@ -1846,7 +3299,7 @@ async function startMLBLoad(){
   if(loadBtn) loadBtn.disabled=true;
   // markFreePickUsed() is called AFTER picks render — not here — so the
   // upgrade wall doesn't fire 200ms into the load and wipe the UI.
-  const _markFreeAfter = (!_freePickUsed && !_devMode && !document.getElementById('disablePaywall')?.checked);
+  const _markFreeAfter = (!_freePickUsed && !_devMode && !_paywallBypassActive());
   const token=++mlbToken;
   mlbLoading=true;mlbLoaded=false;mlbPicks=[];mlbTeamsUsed=[];mlbHitterUsed=new Set();mlbLivePool=[];pickLocked=true;
   _firstSfxIdx=-1;_lastSfxIdx=-1; // reset SFX state for this run
@@ -1856,7 +3309,8 @@ async function startMLBLoad(){
   try{
     const pool=await getTodaysMlbHitters();
     if(token!==mlbToken) return;
-    mlbLivePool=pool;
+    const poolDiv=_withOppTeamFromPool(pool);
+    mlbLivePool=poolDiv;
     mlbLoading=false;mlbLoaded=true;
     if(!pickCount || pickCount<1 || pickCount>3){
       mlbPicks=[];renderMLB();return;
@@ -1864,22 +3318,30 @@ async function startMLBLoad(){
     if(!pool.length){
       document.getElementById('picks').innerHTML='<div class="muted">No live hitters found for today.</div>';
       poSetError('No live hitters found for today.');
+      showToast('No live hitters found for today.', 'error', 'center');
+      pickLocked=false;
+      if(loadBtn) loadBtn.disabled=false;
+      stopPickSfxNow();
+      stopMoneyTransformButton();
+      closePickOverlay();
       renderMLB();return;
     }
     const max=Math.min(pickCount,3);
     // Seed overlay with skeleton cards before names are known
     poSeedSkeletons(max);
-    shuffler=startNameShuffle(pool, token);
+    shuffler=startNameShuffle(poolDiv, token);
+    const selectedTeams=new Set();
     for(let i=0;i<max;i++){
       if(token!==mlbToken) return;
       // Spin this card for at least 500ms before revealing
       await sleep(Math.max(500, getRhythmSuspense(i)));
       if(token!==mlbToken) return;
-      let choice=pickWithoutDuplicateHitter(pool,mlbHitterUsed);
-      if(!choice) choice=pickRandom(pool);
+      const picked=pickDiversifiedPlayer(poolDiv,mlbHitterUsed,selectedTeams);
+      let choice=Object.assign({},picked||pickRandom(poolDiv));
       mlbPicks.push(choice);
       mlbTeamsUsed.push(choice.team);
       mlbHitterUsed.add(choice.player);
+      if(choice.teamAbbr || choice.team) selectedTeams.add(choice.teamAbbr||choice.team);
       renderMLB();
       poRevealCard(choice, i);
       const lastCard=document.querySelector('#picks .item:last-child');
@@ -1912,7 +3374,7 @@ function poRevealKsCard(p, idx){
   card.style.animationDelay = '0s';
   card.innerHTML = `
     <div class="rowtop" onclick="const d=this.nextElementSibling;d.style.display=d.style.display==='block'?'none':'block'">
-      <span>${p.player} ${teamPill(p.teamAbbr)} <span class="chev">&#9662;</span></span>
+      ${mlbRowTopPlayerHtml(p,'<span class="chev">&#9662;</span>')}
       <span class="muted"><span style="font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}">${p.dir||'Over'} ${p.kLine}</span> <span style="opacity:.6;font-size:11px">Ks</span></span>
     </div>
     <div class="details">
@@ -1926,11 +3388,12 @@ function poRevealKsCard(p, idx){
 async function startKsLoad(){
   trackEvent('pick_load_start',{sport:'MLB',option:'Ks'});
   pickRandomRhythm();
+  if(!_validatePlayerCountOrWarn(ksPickCount, 'pitchers')) return;
   // ── Open full-screen overlay ──
   openPickOverlay();
   const loadBtn=document.getElementById('ksLoadBtn');
   if(loadBtn) loadBtn.disabled=true;
-  const _markFreeAfter = (!_freePickUsed && !_devMode);
+  const _markFreeAfter = (!_freePickUsed && !_devMode && !_paywallBypassActive());
   const token=++ksToken;
   ksLoading=true;ksLoaded=false;ksPicks=[];ksPitcherUsed=new Set();ksLivePool=[];pickLocked=true;
   _firstSfxIdx=-1;_lastSfxIdx=-1;
@@ -1938,13 +3401,18 @@ async function startKsLoad(){
   let shuffler=null;
   const stopShuffle=()=>{ if(shuffler) shuffler._timers?.forEach(t=>{clearTimeout(t);clearInterval(t);}); shuffler=null; };
   try{
-    const pool=await getTodaysPitchers();
+    const pool=_withOppTeamFromPool(await getTodaysPitchers());
     if(token!==ksToken) return;
     ksLivePool=pool;
     ksLoading=false;ksLoaded=true;
     if(!pool.length){
       document.getElementById('picks').innerHTML='<div class="muted">No probable pitchers found for today.</div>';
       poSetError('No probable pitchers found for today.');
+      showToast('No probable pitchers found for today.', 'error', 'center');
+      pickLocked=false;
+      if(loadBtn) loadBtn.disabled=false;
+      stopPickSfxNow();
+      closePickOverlay();
       renderKsPicks();
       stopMoneyTransformButton();
       return;
@@ -1952,15 +3420,17 @@ async function startKsLoad(){
     const max=Math.min(ksPickCount,3);
     poSeedSkeletons(max);
     shuffler=startNameShuffle(pool, token, ()=>ksToken);
+    const selectedTeams=new Set();
     for(let i=0;i<max;i++){
       if(token!==ksToken) return;
       await sleep(Math.max(500, getRhythmSuspense(i)));
       if(token!==ksToken) return;
-      const avail=pool.filter(x=>!ksPitcherUsed.has(x.player));
-      const choice=Object.assign({},avail.length?pickRandom(avail):pickRandom(pool));
+      const picked=pickDiversifiedPlayer(pool,ksPitcherUsed,selectedTeams);
+      const choice=Object.assign({},picked||pickRandom(pool));
       choice.dir=Math.random()<0.5?'Over':'Under';
       ksPicks.push(choice);
       ksPitcherUsed.add(choice.player);
+      if(choice.teamAbbr || choice.team) selectedTeams.add(choice.teamAbbr||choice.team);
       renderKsPicks();
       poRevealKsCard(choice, i);
       const lastCard=document.querySelector('#picks .item:last-child');
@@ -1994,7 +3464,15 @@ function toggleTheme(){
   document.body.classList.toggle('light');
   const isLight = document.body.classList.contains('light');
   const btn = document.getElementById('themeToggle');
-  if(btn) btn.textContent = isLight ? '☀️ Day' : '🌙 Night';
+  if(btn){
+    if(isLight){
+      btn.textContent = '🌙 Dark mode';
+      btn.setAttribute('aria-label', 'Switch to dark mode');
+    }else{
+      btn.textContent = '☀️ Light mode';
+      btn.setAttribute('aria-label', 'Switch to light mode');
+    }
+  }
 }
 
 function openAgeGate(){
@@ -2004,6 +3482,32 @@ function openAgeGate(){
 function closeAgeGateModal(){
   const m = document.getElementById('ageGateModal');
   if(m) m.style.display = 'none';
+}
+function initLegalModalStyling(){
+  ['rgModal','termsModal','privacyModal','affiliateModal'].forEach(function(id){
+    const modal = document.getElementById(id);
+    if(!modal) return;
+    const card = modal.firstElementChild;
+    if(card) card.classList.add('legal-modal-card');
+    const closeBtn = modal.querySelector('button');
+    if(closeBtn) closeBtn.classList.add('legal-modal-close');
+  });
+}
+function syncAppVersionBadge(){
+  const el = document.getElementById('appVersion');
+  if(!el) return;
+  el.textContent = APP_VERSION;
+  el.setAttribute('title', 'Release '+APP_VERSION);
+}
+/** #appVersion may appear after this script; run sync once the node exists. */
+function scheduleSyncAppVersionBadge(){
+  const run=function(){ syncAppVersionBadge(); };
+  if(document.getElementById('appVersion')){ run(); return; }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded', run, {once:true});
+  }else{
+    setTimeout(run, 0);
+  }
 }
 function ageGateNo(){
   window.location.href = 'https://www.sesamestreet.org/games';
@@ -2072,6 +3576,26 @@ const _sportLoadBtnMap={
   NHL:{id:'nhlLoadBtn',label:'Pick Lucky Player 🏒'},
   Soccer:{id:'soccerLoadBtn',label:'Pick Lucky Player ⚽'},
 };
+function _getNFLLoadBtnLabel(){
+  switch(currentOption){
+    case 'Rush Yds': return 'Pick Lucky Runner 🏈';
+    case 'Rec Yds':
+    case 'Receptions': return 'Pick Lucky Receiver 🏈';
+    case 'Pass Yds': return 'Pick Lucky Passer 🏈';
+    case 'TDs':
+    default: return 'Pick Lucky Player 🏈';
+  }
+}
+function _getNFLLoadHintShort(){
+  switch(currentOption){
+    case 'Rush Yds': return 'Pick Lucky Runner';
+    case 'Rec Yds':
+    case 'Receptions': return 'Pick Lucky Receiver';
+    case 'Pass Yds': return 'Pick Lucky Passer';
+    case 'TDs':
+    default: return 'Pick Lucky Player';
+  }
+}
 function _getLoadBtnInfo(){
   if(current==='MLB'){
     if(currentOption==='Ks') return _sportLoadBtnMap.Ks;
@@ -2080,6 +3604,7 @@ function _getLoadBtnInfo(){
     if(currentOption==='RBI') return _sportLoadBtnMap.RBI;
     return _sportLoadBtnMap.MLB;
   }
+  if(current==='NFL') return { id:'nflLoadBtn', label:_getNFLLoadBtnLabel() };
   return _sportLoadBtnMap[current]||_sportLoadBtnMap.MLB;
 }
 let _moneyFlipTimer = null;
@@ -2115,8 +3640,43 @@ function stopMoneyTransformButton(){
 let _userName = '';
 let _userEmail = '';
 let _freePickUsed = false;
+let _isPro = false;
 
-renderTabs();renderSport();
+/** Dev-only: checkbox skips consuming the free pick on successful runs. */
+function _paywallBypassActive(){
+  try{ return !!document.getElementById('disablePaywall')?.checked; }catch(_){ return false; }
+}
+
+/** Local calendar YYYY-MM-DD (not UTC) — matches lineup "today" and user expectations at local midnight. */
+function _localCalendarDay(){
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+/**
+ * Sync _isPro / _freePickUsed from lhProfile + apply daily reset rules.
+ * - Free pick is consumed only for the calendar day stored in freePickDate.
+ * - Legacy profiles (freePickUsed without date): stamp date so daily reset works.
+ */
+function _refreshFreePickConsumedState(d){
+  if(!d || typeof d !== 'object') return;
+  const day = _localCalendarDay();
+  let dirty = false;
+  if(d.freePickUsed && d.freePickDate && d.freePickDate !== day){
+    d.freePickUsed = false;
+    d.freePickDate = null;
+    dirty = true;
+  }
+  if(d.freePickUsed && !d.freePickDate){
+    d.freePickDate = day;
+    dirty = true;
+  }
+  if(dirty){
+    try{ _lhMem.setItem('lhProfile', JSON.stringify(d)); }catch(_){}
+  }
+  _isPro = !!d.isPro;
+  _freePickUsed = !!(d.freePickUsed && d.freePickDate === day);
+}
 
 function hasLocalProfile(){
   try{
@@ -2126,11 +3686,18 @@ function hasLocalProfile(){
     return !!(d && (d.name || d.email));
   }catch(e){ return false; }
 }
+function openLoginFromTopbar(){
+  showOverlay();
+  obStep(2);
+}
 function syncLogoutButton(){
   const btn = document.getElementById('logoutBtn');
   if(!btn) return;
   const fbUser = window.firebaseAuth && window.firebaseAuth.currentUser;
-  btn.style.display = (hasLocalProfile() || fbUser) ? 'inline-block' : 'none';
+  const loggedIn = !!(hasLocalProfile() || fbUser);
+  btn.style.display = 'inline-block';
+  btn.textContent = loggedIn ? 'Log out' : 'Log in';
+  btn.onclick = loggedIn ? logoutSession : openLoginFromTopbar;
 }
 function logoutSession(){
   if(!confirm('Sign out and clear this profile on this device?')) return;
@@ -2152,14 +3719,8 @@ function obInit(){
       const d = JSON.parse(profile);
       _userName = d.name || '';
       _userEmail = d.email || '';
-      const _todayStr = new Date().toISOString().slice(0,10);
-      _freePickUsed = (d.freePickUsed && d.freePickDate === _todayStr) ? true : false;
-      if(!_freePickUsed && d.freePickUsed && d.freePickDate !== _todayStr){
-        d.freePickUsed = false; d.freePickDate = null;
-        try{ _lhMem.setItem('lhProfile', JSON.stringify(d)); }catch(e){}
-      }
+      _refreshFreePickConsumedState(d);
       document.getElementById('onboardOverlay').style.display='none';
-      const _isPro = d.isPro || false;
       if(_isPro){ renderSport(); } else if(!_freePickUsed){ showFreeBadge(); } else { setTimeout(showUpgradeWall, 300); }
       syncLogoutButton();
     }catch(e){ showOverlay(); syncLogoutButton(); }
@@ -2216,7 +3777,7 @@ function obSendCode(){
   }).then(()=>{
     obStartResendTimer(30);
   }).catch(err=>{
-    document.getElementById('ob-code-error').textContent = 'Email delivery failed — use the skip link below to continue.';
+    document.getElementById('ob-code-error').textContent = 'Email delivery failed. Try again or use Resend after the timer.';
   });
 }
 
@@ -2253,10 +3814,9 @@ function obComplete(){
   _lhMem.setItem('lhProfile', JSON.stringify({name, email, freePickUsed:false}));
   document.getElementById('ob-welcome').innerHTML =
     `Welcome, <strong style="color:#6ee7ff">${name}</strong>! 🎉<br><span style="color:#9fb0d0;font-size:.88rem">Your free HR pick is unlocked.</span>`;
-  // Auto-select 1 Batter so Pick Lucky Hitter is enabled on first arrival
-  pickCount = 1;
+  _isPro = false;
   obStep(3);
-  renderSport();
+  showFreeBadge();
   syncLogoutButton();
 }
 
@@ -2293,35 +3853,45 @@ function obDismiss(){
 }
 
 function showFreeBadge(){
-  if(_freePickUsed) return;
+  if(_freePickUsed || _isPro) return;
   const badge = document.getElementById('freeBadge');
   if(badge) badge.style.display='inline-block';
-  // Lock batter count to 1 only
-  pickCount=1;
+  // Free tier: exactly one pick per run — enable load buttons on every sport tab
+  pickCount = 1;
+  ksPickCount = 1;
+  hitsPickCount = 1;
+  basesPickCount = 1;
+  rbiPickCount = 1;
+  nflPickCount = 1;
+  nbaPickCount = 1;
+  nhlPickCount = 1;
+  soccerPickCount = 1;
   renderSport();
 }
 
 function markFreePickUsed(){
   if(_devMode) return; // dev mode: skip paywall entirely
+  if(_isPro) return;
+  if(_paywallBypassActive()) return;
   _freePickUsed = true;
   const badge = document.getElementById('freeBadge');
   if(badge) badge.style.display='none';
   try{
     const d = JSON.parse(_lhMem.getItem('lhProfile')||'{}');
     d.freePickUsed = true;
-    d.freePickDate = new Date().toISOString().slice(0,10);
+    d.freePickDate = _localCalendarDay();
     _lhMem.setItem('lhProfile', JSON.stringify(d));
   }catch(e){}
   setTimeout(showUpgradeWall, 4000);
 }
 
 function _buildPaywallOverlayHTML(){
-  return `<div id="poPaywallRoot" class="po-paywall-panel" style="text-align:center;padding:28px 18px 40px;max-width:420px;margin:0 auto">
+  return `<div id="poPaywallRoot" class="po-paywall-panel paywall-overlay-card">
       <div style="font-size:2.2rem;margin-bottom:12px">🔒</div>
-      <div style="font-weight:900;font-size:1.1rem;color:#eef3ff;margin-bottom:10px">Unlock unlimited picks</div>
-      <div style="color:#9fb0d0;font-size:.92rem;line-height:1.55;margin-bottom:22px">You’ve used your free daily pick or this count needs Pro.<br>Upgrade for unlimited picks, every count option, and more.</div>
-      <button onclick="showUpgradeModal()" style="padding:13px 26px;border-radius:14px;border:0;background:linear-gradient(90deg,#6ee7ff,#8b5cf6);color:#07111f;font-weight:900;font-size:.98rem;cursor:pointer">Upgrade 🚀</button>
-      <div style="margin-top:14px;font-size:.8rem;color:#56627a">Free pick resets daily. Swipe down or tap ✕ to close.</div>
+      <div class="paywall-overlay-title">Unlock unlimited picks</div>
+      <div class="paywall-overlay-sub">You’ve used your free daily pick or this count needs Pro.<br>Upgrade for unlimited picks, every count option, and more.</div>
+      <button class="btn-cta btn-cta-md" onclick="showUpgradeModal()">Upgrade 🚀</button>
+      <div class="paywall-overlay-note">Free pick resets daily. Swipe down or tap ✕ to close.</div>
     </div>`;
 }
 function isPaywallOverlayOpen(){
@@ -2364,6 +3934,7 @@ function showUpgradeWall(opts){
   else if(opts.attemptedNBA != null) nbaPickCount = opts.attemptedNBA;
   else if(opts.attemptedNHL != null) nhlPickCount = opts.attemptedNHL;
   else if(opts.attemptedSoccer != null) soccerPickCount = opts.attemptedSoccer;
+  else if(opts.attemptedNFL != null) nflPickCount = opts.attemptedNFL;
   else {
     pickCount = 0;
     ksPickCount = 0;
@@ -2373,6 +3944,7 @@ function showUpgradeWall(opts){
     nbaPickCount = 0;
     nhlPickCount = 0;
     soccerPickCount = 0;
+    nflPickCount = 1;
   }
   renderSport();
   const row = document.getElementById('pickCountRow');
@@ -2387,6 +3959,7 @@ function showUpgradeWall(opts){
     } else if(current === 'NBA') sel = nbaPickCount;
     else if(current === 'NHL') sel = nhlPickCount;
     else if(current === 'Soccer') sel = soccerPickCount;
+    else if(current === 'NFL') sel = nflPickCount;
     row.querySelectorAll('button').forEach(b=>{
       b.disabled = false;
       const num = parseInt(b.textContent.trim(), 10) || 0;
@@ -2404,7 +3977,7 @@ function showUpgradeWall(opts){
       <div style="font-size:1.6rem;margin-bottom:10px">🔒</div>
       <div style="font-weight:900;font-size:1rem;color:#eef3ff;margin-bottom:8px">Free Pick Used!</div>
       <div style="color:#9fb0d0;font-size:.88rem;line-height:1.5;margin-bottom:18px">You’ve used your 1 free daily pick.<br>Upgrade to unlock unlimited picks, all batter counts, and more.</div>
-      <button onclick="showUpgradeModal()" style="padding:12px 24px;border-radius:14px;border:0;background:linear-gradient(90deg,#6ee7ff,#8b5cf6);color:#07111f;font-weight:900;font-size:.95rem;cursor:pointer">Upgrade 🚀</button>
+      <button class="btn-cta btn-cta-sm" onclick="showUpgradeModal()">Upgrade 🚀</button>
       <div style="margin-top:12px;font-size:.78rem;color:#56627a">Resets daily. Come back tomorrow for another free pick.</div>
     </div>`;
   showPaywallOverlayIfNeeded();
@@ -2441,6 +4014,8 @@ function startCheckout(){
       d.isPro = true;
       d.freePickUsed = false;
       _lhMem.setItem('lhProfile', JSON.stringify(d));
+      _isPro = true;
+      _freePickUsed = false;
     } catch(e){}
     // Clean URL
     history.replaceState({}, '', window.location.pathname);
@@ -2455,8 +4030,10 @@ function startCheckout(){
   }
 })();
 
-// Run onboarding check on load
+// Run onboarding check on load (obInit sets _isPro / _freePickUsed from lhProfile first)
 obInit();
+renderTabs();
+renderSport();
 document.addEventListener('DOMContentLoaded', ()=>{
   syncLogoutButton();
   if(window.firebaseOnAuthStateChanged && window.firebaseAuth){
@@ -2484,30 +4061,30 @@ function getRhythmSuspense(i){
 
 <!-- PRO UPGRADE MODAL -->
 <div id="stripeModal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(7,17,31,.96);align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(8px)">
-  <div style="background:linear-gradient(160deg,#111c33,#0e1a30);border:1px solid #26355f;border-radius:22px;padding:32px 28px;max-width:400px;width:100%;color:#eef3ff;position:relative;box-shadow:0 24px 80px rgba(0,0,0,.7)">
-    <button onclick="closeStripeModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:#56627a;font-size:1.3rem;cursor:pointer;line-height:1">✕</button>
-    <div style="text-align:center;margin-bottom:8px">
-      <div style="font-size:2rem;margin-bottom:6px">🏆</div>
-      <div style="font-size:1.3rem;font-weight:900;color:#eef3ff;margin-bottom:4px">Go Pro</div>
-      <div style="font-size:.88rem;color:#9fb0d0;margin-bottom:22px">Unlock everything in Pro Sports Quick Pix</div>
+  <div class="stripe-modal-card">
+    <button class="stripe-modal-close" onclick="closeStripeModal()">✕</button>
+    <div class="stripe-modal-head">
+      <div class="stripe-modal-trophy">🏆</div>
+      <div class="stripe-modal-title">Go Pro</div>
+      <div class="stripe-modal-sub">Unlock everything in Pro Sports Quick Pix</div>
     </div>
-    <div style="background:rgba(110,231,255,.06);border:1px solid rgba(110,231,255,.15);border-radius:14px;padding:16px 18px;margin-bottom:22px">
-      <div style="font-size:.82rem;color:#9fb0d0;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;font-weight:700">What you get</div>
-      <div style="display:flex;flex-direction:column;gap:9px;font-size:.9rem">
-        <div style="display:flex;align-items:center;gap:10px"><span style="color:#6ee7ff;font-size:1rem">✓</span> Unlimited daily HR picks</div>
-        <div style="display:flex;align-items:center;gap:10px"><span style="color:#6ee7ff;font-size:1rem">✓</span> All pick counts (1–3) across all sports</div>
-        <div style="display:flex;align-items:center;gap:10px"><span style="color:#6ee7ff;font-size:1rem">✓</span> NBA, NHL, Soccer &amp; NFL picks (when in season)</div>
-        <div style="display:flex;align-items:center;gap:10px"><span style="color:#6ee7ff;font-size:1rem">✓</span> No daily reset limits</div>
-        <div style="display:flex;align-items:center;gap:10px"><span style="color:#6ee7ff;font-size:1rem">✓</span> Priority access to new sports</div>
+    <div class="stripe-modal-list">
+      <div class="stripe-modal-list-head">What you get</div>
+      <div class="stripe-modal-list-items">
+        <div class="stripe-modal-list-item"><span class="stripe-modal-check">✓</span> Unlimited daily HR picks</div>
+        <div class="stripe-modal-list-item"><span class="stripe-modal-check">✓</span> All pick counts (1–3) across all sports</div>
+        <div class="stripe-modal-list-item"><span class="stripe-modal-check">✓</span> NBA, NHL, Soccer &amp; NFL picks (when in season)</div>
+        <div class="stripe-modal-list-item"><span class="stripe-modal-check">✓</span> No daily reset limits</div>
+        <div class="stripe-modal-list-item"><span class="stripe-modal-check">✓</span> Priority access to new sports</div>
       </div>
     </div>
-    <div style="text-align:center;margin-bottom:6px">
-      <span style="font-size:2rem;font-weight:900;color:#eef3ff">$4.99</span><span style="color:#9fb0d0;font-size:.9rem"> / month</span>
+    <div class="stripe-modal-price-wrap">
+      <span class="stripe-modal-price">$4.99</span><span class="stripe-modal-price-sub"> / month</span>
     </div>
-    <div style="text-align:center;font-size:.78rem;color:#56627a;margin-bottom:18px">Cancel anytime. Billed monthly.</div>
-    <button id="checkoutBtn" onclick="startCheckout()" style="width:100%;padding:14px;border-radius:14px;border:0;background:linear-gradient(90deg,#6ee7ff,#8b5cf6);color:#07111f;font-weight:900;font-size:1rem;cursor:pointer;transition:opacity .2s">Subscribe for $4.99/mo 🚀</button>
+    <div class="stripe-modal-note">Cancel anytime. Billed monthly.</div>
+    <button id="checkoutBtn" class="btn-cta btn-cta-lg" onclick="startCheckout()" style="width:100%;transition:opacity .2s">Subscribe for $4.99/mo 🚀</button>
     <div id="checkoutError" style="color:#f87171;font-size:.82rem;text-align:center;margin-top:8px;min-height:18px"></div>
-    <div style="text-align:center;margin-top:14px;font-size:.75rem;color:#56627a">Secured by <strong style="color:#9fb0d0">Stripe</strong> · 256-bit SSL encryption</div>
+    <div class="stripe-modal-secure">Secured by <strong>Stripe</strong> · 256-bit SSL encryption</div>
   </div>
 </div>
 
@@ -2518,13 +4095,12 @@ function getRhythmSuspense(i){
 
 <!-- AGE CHECK (trust banner link) -->
 <div id="ageGateModal" style="display:none;position:fixed;inset:0;z-index:10002;background:rgba(7,17,31,.96);align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(8px)">
-  <div style="background:linear-gradient(160deg,#111c33,#0e1a30);border:1px solid rgba(110,231,255,.22);border-radius:22px;padding:28px 24px;max-width:400px;width:100%;color:#eef3ff;position:relative;box-shadow:0 24px 80px rgba(0,0,0,.55);text-align:center">
-    <button type="button" onclick="closeAgeGateModal()" style="position:absolute;top:14px;right:14px;background:none;border:none;color:#56627a;font-size:1.25rem;cursor:pointer;line-height:1" title="Close">✕</button>
-    <div style="font-size:2rem;margin-bottom:10px">🔞</div>
-    <div style="font-size:1.15rem;font-weight:900;color:#eef3ff;margin-bottom:10px">Age check</div>
+  <div class="age-modal-card">
+    <div class="age-modal-icon">🔞</div>
+    <div class="age-modal-title">Age check</div>
     <p class="ob-age-q">Are you <strong>21 or older</strong> and using this app only where it is legal for you?</p>
     <div class="ob-age-actions">
-      <button type="button" class="ob-btn ob-age-yes-split" onclick="closeAgeGateModal()">Yes — continue</button>
+      <button type="button" class="ob-btn ob-age-yes-split" onclick="_ageYesTripleOrProceed(true)">Yes</button>
       <button type="button" class="ob-age-no-btn" onclick="ageGateNo()">No</button>
     </div>
   </div>
@@ -2677,8 +4253,8 @@ function poRevealCard(p, idx){
   card.style.animationDelay = '0s';
   card.innerHTML = `
     <div class="rowtop" onclick="const d=this.nextElementSibling;d.style.display=d.style.display==='block'?'none':'block'">
-      <span>${p.player} ${teamPill(p.teamAbbr||p.team)} <span class="chev">▾</span></span>
-      <span class="muted"><span style="font-weight:700;color:#6ee7ff">${p.hr}</span> <span style="opacity:.6;font-size:11px">HR</span></span>
+      ${mlbRowTopPlayerHtml(p,'<span class="chev">▾</span>')}
+      <span class="muted"><span style="font-weight:700;color:#6ee7ff">${(p.hr==null||p.hr==='–')?0:p.hr}</span> <span style="opacity:.6;font-size:11px">HR</span></span>
     </div>
     <div class="details">
       <div class="muted">Position: ${p.pos||'—'}</div>
@@ -2908,7 +4484,19 @@ function copyPicksFromOverlay(){
 #fbSendBtn{width:100%;padding:10px;border-radius:10px;border:none;
   background:var(--accent);color:#07111f;font-weight:700;font-size:14px;cursor:pointer;transition:opacity .2s;}
 #fbSendBtn:disabled{opacity:.5;cursor:default;}
-#fbThanks{display:none;text-align:center;padding:18px 0;font-size:15px;color:var(--accent);font-weight:600;}
+#fbThanks{
+  display:none;
+  text-align:center;
+  padding:14px 12px;
+  margin-top:6px;
+  font-size:16px;
+  color:#6ee7ff;
+  font-weight:800;
+  line-height:1.4;
+  border:1px solid rgba(110,231,255,.35);
+  border-radius:12px;
+  background:rgba(110,231,255,.1);
+}
 #fbClose{position:absolute;top:12px;right:14px;background:none;border:none;color:var(--muted);
   font-size:18px;cursor:pointer;line-height:1;}
 
@@ -2937,7 +4525,7 @@ function copyPicksFromOverlay(){
   </div>
   <textarea id="fbComment" rows="3" placeholder="Optional comment..."></textarea>
   <button id="fbSendBtn" onclick="fbSubmit()">Send Feedback</button>
-  <div id="fbThanks">Thanks for your feedback! &#127775;</div>
+  <div id="fbThanks">Thank You for your feedback!</div>
 </div>
 
 <script>
@@ -2959,7 +4547,11 @@ function fbSubmit(){
   const comment=document.getElementById('fbComment').value.trim();
   if(!stars){ fbSetStar(1); return; }
   const btn=document.getElementById('fbSendBtn');
-  btn.disabled=true; btn.textContent='Sending...';
+  const thanks=document.getElementById('fbThanks');
+  const closeDelayMs = 2500;
+  btn.disabled=true;
+  btn.style.display='none';
+  thanks.style.display='block';
   const params={
     to_email:'digitaldr@gmail.com',
     subject:'Pro Sports Quick Pix — User Feedback',
@@ -2970,28 +4562,30 @@ function fbSubmit(){
     sub_option: currentOption||'—',
     timestamp: new Date().toLocaleString()
   };
+  function finishFeedbackFlow(){
+    setTimeout(()=>{
+      if(_fbPanelOpen) toggleFeedback();
+      _fbStar=0;
+      document.querySelectorAll('.fb-star').forEach(s=>s.classList.remove('on'));
+      document.querySelectorAll('.fb-tag').forEach(t=>t.classList.remove('on'));
+      document.getElementById('fbComment').value='';
+      btn.style.display='block';
+      btn.disabled=false;
+      btn.textContent='Send Feedback';
+      thanks.style.display='none';
+    }, closeDelayMs);
+  }
   trackEvent('feedback_submit',{rating:stars,tags:tags});
-  emailjs.send('service_ymxyo11','template_feedback',params)
-    .then(()=>{
-      document.getElementById('fbSendBtn').style.display='none';
-      document.getElementById('fbThanks').style.display='block';
-      setTimeout(()=>{
-        toggleFeedback();
-        // Reset
-        _fbStar=0;
-        document.querySelectorAll('.fb-star').forEach(s=>s.classList.remove('on'));
-        document.querySelectorAll('.fb-tag').forEach(t=>t.classList.remove('on'));
-        document.getElementById('fbComment').value='';
-        document.getElementById('fbSendBtn').style.display='block';
-        document.getElementById('fbSendBtn').disabled=false;
-        document.getElementById('fbSendBtn').textContent='Send Feedback';
-        document.getElementById('fbThanks').style.display='none';
-      },2500);
-    })
-    .catch(()=>{
-      btn.disabled=false; btn.textContent='Send Feedback';
-      alert('Could not send feedback right now. Please try again.');
+  if(typeof emailjs !== 'undefined' && typeof emailjs.send === 'function'){
+    emailjs.send('service_ymxyo11','template_feedback',params).catch(function(err){
+      console.error('EmailJS feedback error:', err);
+      var hint = (err && (err.text || err.message)) ? String(err.text || err.message) : '';
+      if(hint) console.error('Detail:', hint);
     });
+  } else {
+    console.warn('EmailJS feedback service unavailable in this session.');
+  }
+  finishFeedbackFlow();
 }
 </script>
 <script data-pplx-inline-edit>
@@ -3070,5 +4664,33 @@ function fbSubmit(){
 
 function setPlayerPickSelected(el){try{document.querySelectorAll('.item').forEach(x=>x.classList.remove('selected')); if(el) el.classList.add('selected')}catch(e){}}
 document.addEventListener('click',function(e){const item=e.target.closest('.item'); if(item && item.classList.contains('expandable')) setPlayerPickSelected(item);});
-</script></body>
+function updateLegalStateLine(){
+  const el=document.getElementById('legalStateLine');
+  if(!el) return;
+  const setLine=function(stateLabel){
+    const safe=(stateLabel && String(stateLabel).trim()) ? String(stateLabel).trim() : 'Your state';
+    el.textContent=safe+' only where legal. Results are not guaranteed. For entertainment only.';
+  };
+  setLine('Your state');
+  fetch('https://ipapi.co/json/',{cache:'no-store'})
+    .then(function(r){ return r && r.ok ? r.json() : null; })
+    .then(function(j){
+      if(!j) return;
+      const country=(j.country_name||j.country||'').toString().trim();
+      const region=(j.region||j.region_code||'').toString().trim();
+      if(region && /^united states$/i.test(country)) setLine(region);
+      else if(region) setLine(region);
+      else if(country) setLine(country);
+    })
+    .catch(function(){});
+}
+updateLegalStateLine();
+initLegalModalStyling();
+scheduleSyncAppVersionBadge();
+_syncDevClearBtnStyle();
+</script>
+<div class="app-version" id="appVersion">v1.21</div>
+<div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
+<div class="toast-stack center" id="toastStackCenter" aria-live="polite" aria-atomic="true"></div>
+</body>
 </html>
