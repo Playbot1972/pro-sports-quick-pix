@@ -17,7 +17,7 @@
 <!-- Google Analytics 4 — replace G-XXXXXXXXXX with your real Measurement ID -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
 <script>
-  const APP_VERSION = 'v1.08';
+  const APP_VERSION = 'v1.09';
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
@@ -1154,7 +1154,10 @@ function randomSport(){
   currentOption = sports[s].options[0];
   renderTabs();
   renderSport();
-  if(current==='MLB' || current==='NFL' || current==='NBA') _snapActiveMarketTabLeft();
+  if(current==='MLB' || current==='NFL' || current==='NBA'){
+    _snapActiveSportNavLeft();
+    _snapActiveMarketTabLeft();
+  }
 }
 function randomSubOption(){
   const opts = sports[current].options;
@@ -1177,6 +1180,20 @@ function _snapActiveMarketTabLeft(){
     }catch(_){
       const left=active.offsetLeft-8;
       tabsEl.scrollLeft=left>0?left:0;
+    }
+  });
+}
+function _snapActiveSportNavLeft(){
+  const navEl=document.getElementById('bottomnav');
+  if(!navEl) return;
+  const active=navEl.querySelector('.navitem.active');
+  if(!active) return;
+  requestAnimationFrame(function(){
+    try{
+      active.scrollIntoView({behavior:'smooth',inline:'start',block:'nearest'});
+    }catch(_){
+      const left=active.offsetLeft-8;
+      navEl.scrollLeft=left>0?left:0;
     }
   });
 }
@@ -4512,7 +4529,7 @@ document.addEventListener('click',function(e){const item=e.target.closest('.item
 initLegalModalStyling();
 syncAppVersionBadge();
 </script>
-<div class="app-version" id="appVersion">v1.08</div>
+<div class="app-version" id="appVersion">v1.09</div>
 <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 <div class="toast-stack center" id="toastStackCenter" aria-live="polite" aria-atomic="true"></div>
 </body>
