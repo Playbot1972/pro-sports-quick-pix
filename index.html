@@ -338,7 +338,6 @@ window.safeHeadshot = function(obj){
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
       <button type="button" id="logoutBtn" onclick="logoutSession()" style="display:none;padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:inherit;font-weight:700;font-size:12px;cursor:pointer">Log out</button>
       <button id="themeToggle" class="badge" onclick="toggleTheme()" style="cursor:pointer;border:0">🌙 Night</button>
-      <button type="button" class="badge" onclick="previewOrchestralLootStinger()" style="cursor:pointer;border:0;font-size:11px;font-weight:700" title="Play the last-pick orchestral sting once">🔊 Preview sting</button>
       <div class="badge" id="sportHintBadge">Choose a sport tab</div>
     </div>
   </div>
@@ -581,7 +580,9 @@ function playChingSfx(isFirst, isLast) {
     const p = el.play();
     if (p && typeof p.catch === 'function') p.catch(() => {});
     setTimeout(() => { try { el.pause(); el.volume = 0.88; } catch(_){} }, cutMs);
-    if (isLast) setTimeout(() => { try { playOrchestralLootStinger(); } catch (_) {} }, 55);
+    // Epic orchestral layer: only on final reveal, ~40% so it stays special (not every run).
+    if (isLast && Math.random() < 0.4)
+      setTimeout(() => { try { playOrchestralLootStinger(); } catch (_) {} }, 55 + Math.floor(Math.random() * 45));
   } catch (_) {}
 }
 
@@ -608,14 +609,6 @@ function unlockPickSfxFromGesture(){
   try{ _ensureLootAudioCtx(); }catch(_){}
   _pickSfxAudioPrimed = true;
 }
-/** Top-bar “Preview sting”: same gesture rules as a pick tap so Web Audio + SFX unlock reliably. */
-function previewOrchestralLootStinger(){
-  try{
-    unlockPickSfxFromGesture();
-    playOrchestralLootStinger();
-  }catch(_){}
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
 
 const sports={MLB:{icon:'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Major_League_Baseball_logo.svg/1280px-Major_League_Baseball_logo.svg.png',desc:'Load live lineup hitters for today, then picks appear one at a time.',options:['HR','Hits','Total Bases','RBI','Ks'],color:'#6ee7ff'},NFL:{icon:'https://upload.wikimedia.org/wikipedia/en/a/a2/National_Football_League_logo.svg',desc:'Starter options: passing yards, rushing yards, receiving yards, receptions, TDs.',options:['TDs','Rush Yds','Rec Yds','Receptions','Pass Yds'],color:'#34d399'},NBA:{icon:'https://upload.wikimedia.org/wikipedia/en/0/03/National_Basketball_Association_logo.svg',desc:'Starter options: points, rebounds, assists, threes, PRA.',options:['Points','Assists','Rebounds','3PM','PRA'],color:'#f59e0b'},NHL:{icon:'https://media.nhl.com/site/asset/public/images/2022/01/NewShield-02023704-10094134.jpg',desc:'Starter options: shots on goal, goals, assists, goalie saves, points.',options:['Goals','Shots','Assists','Points','Goalie Saves'],color:'#60a5fa'},Soccer:{icon:'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Soccerball.svg/3840px-Soccerball.svg.png',desc:'Starter options: shots, shots on target, goals, assists, goalkeeper saves.',options:['Goals','Assists','Shots','SOT','GK Saves'],color:'#f472b6'}};
