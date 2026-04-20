@@ -2469,7 +2469,6 @@ function markFreePickUsed(){
   }
   // Brief beat after picks finish, then same full-screen surface: slide up paywall sheet in overlay + sync main panel
   setTimeout(function(){
-    showFreePickUsedFullScreen();
     showUpgradeWall();
   }, 1100);
 }
@@ -2513,16 +2512,13 @@ function showUpgradeWall(opts){
   const loadBtnInfo = _getLoadBtnInfo();
   const loadBtn = document.getElementById(loadBtnInfo.id);
   if(loadBtn) loadBtn.disabled = true;
-  // Show upgrade notice in picks panel
+  // Same full-screen slide as pick runs — primary Upgrade lives in #pickOverlay
   const picks = document.getElementById('picks');
-  if(picks) picks.innerHTML = `
-    <div style="text-align:center;padding:24px 16px">
-      <div style="font-size:1.6rem;margin-bottom:10px">🔒</div>
-      <div style="font-weight:900;font-size:1rem;color:#eef3ff;margin-bottom:8px">Free Pick Used!</div>
-      <div style="color:#9fb0d0;font-size:.88rem;line-height:1.5;margin-bottom:18px">You’ve used your 1 free daily pick.<br>Upgrade to unlock unlimited picks, all batter counts, and more.</div>
-      <button onclick="showUpgradeModal()" style="padding:12px 24px;border-radius:14px;border:0;background:linear-gradient(90deg,#6ee7ff,#8b5cf6);color:#07111f;font-weight:900;font-size:.95rem;cursor:pointer">Upgrade 🚀</button>
-      <div style="margin-top:12px;font-size:.78rem;color:#56627a">Resets daily. Come back tomorrow for another free pick.</div>
-    </div>`;
+  if(picks){
+    picks.innerHTML = '<div class="muted" style="text-align:center;padding:22px 14px;line-height:1.55">The upgrade prompt uses the same full-screen slide as your picks run. Close it with ✕; reload the page if you need to open it again.</div>';
+  }
+  var wallKind = _freePickUsed ? 'free' : 'upgrade';
+  showPaywallOverlaySlide(wallKind);
 }
 
 // ── Stripe Payment Link ──
@@ -2765,8 +2761,23 @@ function _freePickUsedOverlayHtml(){
   );
 }
 
-/** Same full-screen slide as HR picks: if overlay is open, close then reopen with paywall content. */
-function openFreePickUsedOverlayFull(){
+function _upgradeTeaserOverlayHtml(){
+  return (
+    '<div class="po-paywall-panel">'+
+      '<div class="po-pw-icon">🎁</div>'+
+      '<div class="po-pw-title">Unlock full picks</div>'+
+      '<div class="po-pw-text">More than one pick per run, every sport, and all count options are included with upgrade.</div>'+
+      '<div class="po-pw-actions">'+
+        '<button type="button" class="po-pw-btn" onclick="showUpgradeModal()">Upgrade \uD83D\uDE80</button>'+
+        '<button type="button" class="po-pw-btn po-pw-secondary" onclick="closePickOverlay()">Close</button>'+
+      '</div>'+
+      '<div class="po-pw-hint">Free tier includes 1 pick per day. Close this screen to keep browsing.</div>'+
+    '</div>'
+  );
+}
+
+/** Full-screen paywall in #pickOverlay — same slide-up as homerun run (close + reopen if already open). */
+function openPaywallOverlayFull(kind){
   const ov = document.getElementById('pickOverlay');
   if(!ov) return;
   const oldHost = document.getElementById('poFreeUsedHost');
@@ -2775,18 +2786,23 @@ function openFreePickUsedOverlayFull(){
   ov.classList.add('open');
   _poOpen = true;
   document.getElementById('poShareBtn').style.display = 'none';
-  document.getElementById('poTitle').textContent = '🎁 Free pick used';
-  document.getElementById('poCards').innerHTML = _freePickUsedOverlayHtml();
+  if(kind === 'free'){
+    document.getElementById('poTitle').textContent = '🎁 Free pick used';
+    document.getElementById('poCards').innerHTML = _freePickUsedOverlayHtml();
+  }else{
+    document.getElementById('poTitle').textContent = '🔒 Upgrade';
+    document.getElementById('poCards').innerHTML = _upgradeTeaserOverlayHtml();
+  }
 }
 
-function showFreePickUsedFullScreen(){
+function showPaywallOverlaySlide(kind){
   const ov = document.getElementById('pickOverlay');
   if(!ov) return;
   if(ov.classList.contains('open')){
     closePickOverlay();
-    setTimeout(function(){ openFreePickUsedOverlayFull(); }, 420);
+    setTimeout(function(){ openPaywallOverlayFull(kind); }, 420);
   }else{
-    openFreePickUsedOverlayFull();
+    openPaywallOverlayFull(kind);
   }
 }
 
