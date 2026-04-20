@@ -14,10 +14,12 @@
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script>
+  // Initialize EmailJS ONCE here — do NOT call emailjs.init() inside obSendCode()
   document.addEventListener('DOMContentLoaded', function() {
     if (typeof emailjs !== 'undefined') emailjs.init('YcyxPL19ITeg2I5ed');
   });
 </script>
+
 <!-- ───────────────────────────────────────────────
      WIN SFX — all preloaded, swap via sfxSelect
      Royalty-free under the Mixkit License.
@@ -73,60 +75,6 @@ body.light{--card:#ffffff;--card2:#eef2ff;--text:#14213d;--muted:#56627a;--line:
 @keyframes bar{0%{transform:translateX(-120%)}50%{transform:translateX(140%)}100%{transform:translateX(260%)} }
 .locked{opacity:.45;filter:grayscale(.15);background:rgba(255,255,255,.08)!important;color:var(--text)!important}
 .locked[disabled]{pointer-events:none}
-/* Count row: don’t use global .locked look — show clear selected vs not-selected even when disabled */
-#pickCountRow .btn{position:relative;}
-#pickCountRow .btn.locked.btn2{
-  opacity:.78 !important;
-  filter:none !important;
-  background:rgba(255,255,255,.07) !important;
-  color:#9fb0d0 !important;
-  border:1px solid rgba(255,255,255,.14) !important;
-  box-shadow:inset 0 0 0 1px rgba(0,0,0,.12) !important;
-}
-/* Selected count: checkmark + extra padding so label never clashes */
-#pickCountRow .btn.pick-active{
-  padding-right:22px;
-}
-#pickCountRow .btn.pick-active::after{
-  content:'✓';
-  position:absolute;
-  top:6px;right:8px;
-  font-size:12px;font-weight:900;
-  color:rgba(8,16,31,.52);
-  line-height:1;
-  pointer-events:none;
-}
-#pickCountRow .btn.locked.pick-active{
-  opacity:1 !important; filter:none !important;
-  background:linear-gradient(90deg,#6ee7ff,#8b5cf6) !important;
-  color:#08101f !important;
-  border-color:rgba(110,231,255,.55) !important;
-  box-shadow:0 0 0 2px rgba(110,231,255,.45),0 6px 22px rgba(110,231,255,.22) !important;
-}
-#pickCountRow .btn.locked.pick-active::after{
-  color:rgba(8,16,31,.78);
-}
-/* Free-pick-used: full overlay body (same surface as HR pick run) */
-.po-paywall-panel{
-  max-width:380px;margin:8vh auto 48px;padding:28px 22px 32px;
-  text-align:center;border-radius:20px;
-  background:linear-gradient(180deg,rgba(27,42,83,.55),rgba(7,15,28,.92));
-  border:1px solid rgba(110,231,255,.22);
-  box-shadow:0 20px 50px rgba(0,0,0,.35);
-}
-.po-paywall-panel .po-pw-icon{font-size:2.4rem;line-height:1;margin-bottom:12px;}
-.po-paywall-panel .po-pw-title{font-weight:900;font-size:1.15rem;color:#eef3ff;margin-bottom:10px;}
-.po-paywall-panel .po-pw-text{color:#9fb0d0;font-size:.9rem;line-height:1.55;margin-bottom:22px;}
-.po-paywall-panel .po-pw-actions{display:flex;flex-direction:column;gap:10px;max-width:300px;margin:0 auto;}
-.po-paywall-panel .po-pw-btn{
-  padding:13px 20px;border-radius:14px;border:0;
-  background:linear-gradient(90deg,#6ee7ff,#8b5cf6);color:#07111f;
-  font-weight:900;font-size:1rem;cursor:pointer;
-}
-.po-paywall-panel .po-pw-btn.po-pw-secondary{
-  background:rgba(255,255,255,.08);color:var(--text);border:1px solid var(--line);
-}
-.po-paywall-panel .po-pw-hint{margin-top:16px;font-size:.76rem;color:#56627a;line-height:1.45;}
 .trust-banner{margin:14px 0 16px;padding:14px 16px;border:1px solid rgba(110,231,255,.25);border-radius:16px;background:linear-gradient(180deg,rgba(17,28,51,.95),rgba(24,39,71,.95));box-shadow:0 10px 28px rgba(0,0,0,.18)}
 .trust-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
 .trust-badge{padding:8px 12px;border-radius:999px;background:linear-gradient(90deg,#6ee7ff,#8b5cf6);color:#08101f;font-weight:900;letter-spacing:.5px;font-size:13px;}
@@ -214,7 +162,7 @@ body.light{--card:#ffffff;--card2:#eef2ff;--text:#14213d;--muted:#56627a;--line:
   transition:background .2s;
 }
 .po-close:hover{background:rgba(255,255,255,.2);}
-.po-body{padding:16px 18px 40px;flex:1;position:relative;}
+.po-body{padding:16px 18px 40px;flex:1;}
 .po-cards{display:flex;flex-direction:column;gap:10px;margin-top:4px;}
 .po-skeleton{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:16px;padding:14px 16px;}
 .po-skel-line{border-radius:6px;background:linear-gradient(90deg,rgba(255,255,255,.07) 25%,rgba(255,255,255,.13) 50%,rgba(255,255,255,.07) 75%);background-size:200% 100%;animation:skelShim 1.2s ease-in-out infinite;}
@@ -255,7 +203,7 @@ body::after{right:0;border-left:1px solid rgba(52,211,153,.22);}
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, updateProfile, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -269,36 +217,17 @@ body::after{right:0;border-left:1px solid rgba(52,211,153,.22);}
   };
 
   const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  // Session-only auth: closing the browser ends the login (age gate still uses device storage).
-  await setPersistence(auth, browserSessionPersistence);
-  window.firebaseAuth = auth;
+  window.firebaseAuth = getAuth(app);
   window.firebaseDb = getFirestore(app);
   window.firebaseGoogleProvider = new GoogleAuthProvider();
-  window.firebaseSignInWithGooglePopup = () => signInWithPopup(window.firebaseAuth, window.firebaseGoogleProvider);
-  window.firebaseSignInWithGoogleRedirect = () => signInWithRedirect(window.firebaseAuth, window.firebaseGoogleProvider);
-  window.firebaseGetRedirectResult = () => getRedirectResult(window.firebaseAuth);
+  window.firebaseSignInWithGoogle = () => signInWithPopup(window.firebaseAuth, window.firebaseGoogleProvider);
   window.firebaseCreateEmailUser = (email, password) => createUserWithEmailAndPassword(window.firebaseAuth, email, password);
   window.firebaseSignInEmailUser = (email, password) => signInWithEmailAndPassword(window.firebaseAuth, email, password);
   window.firebaseOnAuthStateChanged = onAuthStateChanged;
   window.firebaseSignOut = () => signOut(window.firebaseAuth);
-  window.firebaseSendPasswordReset = (email) => sendPasswordResetEmail(window.firebaseAuth, email);
-  window.firebaseUpdateDisplayName = (name) => {
-    const u = window.firebaseAuth.currentUser;
-    if (!u || !name) return Promise.resolve();
-    return updateProfile(u, { displayName: name });
-  };
   window.firebaseSaveUserProfile = async (profile) => {
     const u = window.firebaseAuth.currentUser; if (!u) return null;
-    const data = { uid: u.uid, email: u.email || '', updatedAt: Date.now() };
-    if (profile) {
-      if (profile.name !== undefined) data.name = profile.name;
-      if (profile.provider !== undefined) data.provider = profile.provider;
-      if (profile.freePickUsed !== undefined) data.freePickUsed = profile.freePickUsed;
-      if (profile.freePickDate !== undefined) data.freePickDate = profile.freePickDate;
-      if (profile.isPro !== undefined) data.isPro = profile.isPro;
-    }
-    await setDoc(doc(window.firebaseDb, 'users', u.uid), data, { merge: true });
+    await setDoc(doc(window.firebaseDb, 'users', u.uid), { uid: u.uid, email: u.email || '', name: profile?.name || '', provider: profile?.provider || '', updatedAt: Date.now() }, { merge: true });
     return true;
   };
   window.firebaseLoadUserProfile = async () => {
@@ -314,21 +243,15 @@ window.addEventListener('DOMContentLoaded', () => {
   const host = document.querySelector('.topbar') || document.body;
   const btn = document.createElement('button');
   btn.id = 'logoutBtn';
-  btn.textContent = 'Log out';
-  btn.style.cssText = 'display:none;padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:inherit;font-weight:700;cursor:pointer;';
+  btn.textContent = 'Logout';
+  btn.style.cssText = 'margin-left:10px;padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:inherit;font-weight:700;cursor:pointer;';
   btn.onclick = async () => { if (window.firebaseSignOut) await window.firebaseSignOut(); };
   host.appendChild(btn);
-  function bindWhenReady(attempts){
-    if (window.firebaseOnAuthStateChanged && window.firebaseAuth) {
-      var p = window.firebaseGetRedirectResult ? window.firebaseGetRedirectResult() : Promise.resolve(null);
-      p.catch(function(){}).finally(function(){
-        window.firebaseOnAuthStateChanged(window.firebaseAuth, window._onFirebaseAuthChanged || function(){});
-      });
-      return;
-    }
-    if (attempts < 80) setTimeout(function(){ bindWhenReady(attempts + 1); }, 50);
+  if (window.firebaseOnAuthStateChanged && window.firebaseAuth) {
+    window.firebaseOnAuthStateChanged(window.firebaseAuth, (user) => {
+      btn.style.display = user ? 'inline-block' : 'none';
+    });
   }
-  bindWhenReady(0);
 });
 </script>
 
@@ -371,32 +294,45 @@ window.safeHeadshot = function(obj){
     <div class="ob-title">Pro Sports Quick Pix</div>
 
     <!-- STEP 1: Age Gate -->
-    <div class="ob-step" id="ob-step1">
+    <div class="ob-step active" id="ob-step1">
       <div class="ob-sub">Free daily HR picks powered by live MLB lineups.<br>You must be 21+ to continue.</div>
       <div class="ob-age-check">
         <input type="checkbox" id="ageCheck" onchange="document.getElementById('ageBtn').disabled=!this.checked">
         <label for="ageCheck">I confirm I am <strong>21 years of age or older</strong> and located in a jurisdiction where sports betting is legal.</label>
       </div>
-      <button class="ob-btn" id="ageBtn" disabled onclick="obAgeContinue()">I Am 21+ &mdash; Continue</button>
+      <button class="ob-btn" id="ageBtn" disabled onclick="obStep(2)">I Am 21+ &mdash; Continue</button>
       <div class="ob-legal">For entertainment purposes only. Not affiliated with MLB. Results are not guaranteed. Please gamble responsibly.</div>
     </div>
 
-    <!-- STEP 2: Sign in / Create account (Firebase) -->
+    <!-- STEP 2: Profile -->
     <div class="ob-step" id="ob-step2">
-      <div class="ob-sub">Sign in to sync picks across devices and unlock your free daily pick.</div>
-      <div class="ob-unlock-badge">🎁 1 Free HR Pick after sign-in</div>
-      <div id="authError" style="color:#f87171;font-size:.82rem;min-height:20px;margin-bottom:6px;text-align:left"></div>
-      <button type="button" class="ob-btn" id="authGoogleBtn" onclick="authGoogle()">Continue with Google</button>
-      <div style="margin:14px 0;color:var(--muted);font-size:.85rem">or email</div>
-      <input class="ob-input" type="text" id="ob-name" placeholder="Display name (for new accounts)" maxlength="32" oninput="authFormValidate()" autocomplete="name">
-      <input class="ob-input" type="email" id="ob-email" placeholder="Email" oninput="authFormValidate()" autocomplete="username">
-      <input class="ob-input" type="password" id="ob-password" placeholder="Password (6+ characters)" oninput="authFormValidate()" autocomplete="current-password">
-      <div class="btnrow" style="margin-top:10px">
-        <button type="button" class="ob-btn" style="flex:1;min-width:120px" id="authSignInBtn" disabled onclick="authEmailSignIn()">Sign in</button>
-        <button type="button" class="ob-btn btn2" style="flex:1;min-width:120px;border:1px solid var(--line);background:rgba(255,255,255,.08);color:var(--text)" id="authSignUpBtn" disabled onclick="authEmailSignUp()">Create account</button>
+      <div class="ob-sub">Create your free profile to unlock your first pick.</div>
+      <div class="ob-unlock-badge">🎁 1 Free HR Pick Unlocked After Sign-Up</div>
+      <input class="ob-input" type="text" id="ob-name" placeholder="First Name" maxlength="32" oninput="obValidate()">
+      <input class="ob-input" type="email" id="ob-email" placeholder="Email Address" oninput="obValidate()">
+      <button class="ob-btn" id="profileBtn" disabled onclick="obSendCode()">Send Verification Code 📧</button>
+      <div class="ob-legal">Your email is used for account access only. We never share or sell your data.</div>
+    </div>
+
+    <!-- STEP 2b: Email Verification -->
+    <div class="ob-step" id="ob-step2b">
+      <div class="ob-sub">We sent a 6-digit code to<br><strong id="ob-email-display" style="color:#6ee7ff"></strong></div>
+      <input class="ob-input" type="text" id="ob-code" placeholder="Enter 6-digit code" maxlength="6" inputmode="numeric" oninput="obCodeValidate()" autocomplete="one-time-code">
+      <div id="ob-code-error" style="color:#f87171;font-size:.82rem;min-height:18px;margin-bottom:4px"></div>
+      <button class="ob-btn" id="verifyBtn" disabled onclick="obVerifyCode()">Verify & Unlock Pick 🔓</button>
+      <button onclick="obComplete()" style="margin-top:10px;background:none;border:none;color:#56627a;font-size:.78rem;cursor:pointer;text-decoration:underline">Skip verification (preview only)</button>
+      <div style="margin-top:14px;font-size:.83rem;color:#9fb0d0">
+        Didn't get it? <button id="resendBtn" onclick="obResendCode()" style="background:none;border:none;color:#6ee7ff;cursor:pointer;font-size:.83rem;text-decoration:underline">Resend code</button>
+        <span id="resendTimer" style="color:#56627a;display:none"></span>
       </div>
-      <button type="button" onclick="authForgotPassword()" style="margin-top:12px;background:none;border:none;color:#6ee7ff;font-size:.8rem;cursor:pointer;text-decoration:underline">Forgot password?</button>
-      <div class="ob-legal" style="margin-top:14px">By continuing you agree to our terms and confirm you meet the age requirement above.<br><br>Your 21+ confirmation is remembered on this device. For now, sign-in lasts until you close the browser; dedicated apps will add longer sessions later.</div>
+      <div class="ob-legal">Check your spam folder if you don't see it within 30 seconds.</div>
+    </div>
+
+    <!-- STEP 3: Welcome -->
+    <div class="ob-step" id="ob-step3">
+      <div class="ob-sub" id="ob-welcome"></div>
+      <div class="ob-unlock-badge">🏆 1 Free HR Pick is ready &mdash; select "1 Batter" and hit Pick Lucky Hitter!</div>
+      <button class="ob-btn" onclick="obDismiss()">Let's Go! ⚾</button>
     </div>
   </div>
 </div>
@@ -407,20 +343,16 @@ window.safeHeadshot = function(obj){
       <div class="title">Pro Sports Quick Pix</div>
       <div class="subtitle">Daily HR picks powered by live MLB lineups. <span id="devTrigger" onclick="_devTriggerClick()" style="cursor:default">Free</span>. Fast. Sharp.</div>
     </div>
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <span id="userEmailChip" class="muted" style="display:none;font-size:12px;font-weight:700;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
-      <button id="themeToggle" class="badge" onclick="toggleTheme()" style="cursor:pointer;border:0">🌙 Night</button>
-      <div class="badge" id="sportHintBadge">Choose a sport tab</div>
-    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><button id="themeToggle" class="badge" onclick="toggleTheme()" style="cursor:pointer;border:0">🌙 Night</button><div class="badge" id="sportHintBadge">Choose a sport tab</div></div>
   </div>
 
   <div class="trust-banner">
     <div class="trust-row">
       <div class="trust-badge">21+ ONLY</div>
-      <div class="trust-text" id="trustRegionText">Use only where legal in your state or region. Results are not guaranteed. For entertainment only.</div>
+      <div class="trust-text">Tennessee only where legal. Results are not guaranteed. For entertainment only.</div>
     </div>
     <div class="trust-links">
-      <a href="#" onclick="return openAgeGate()">Age Check</a>
+      <a href="#" onclick="openAgeGate()">Age Check</a>
       <a href="#" onclick="document.getElementById('rgModal').style.display='block';return false;">Responsible Gaming</a>
       <a href="#" onclick="document.getElementById('termsModal').style.display='block';return false;">Terms</a>
       <a href="#" onclick="document.getElementById('privacyModal').style.display='block';return false;">Privacy</a>
@@ -465,55 +397,6 @@ var _lhMem=(function(){
     clear:function(){try{if(_ls){_ls.clear();return;}}catch(e){}s={};}
   };
 })();
-
-var _LH_GEO_TRUST = 'lhGeoTrustLine';
-function _trustLineSuffix(){
-  return ' Results are not guaranteed. For entertainment only.';
-}
-function applyTrustRegionCopy(fullLine){
-  var el = document.getElementById('trustRegionText');
-  if(el) el.textContent = fullLine;
-}
-/** Sets trust-banner line from cached IP geolocation (approximate; VPNs show VPN area). */
-function refreshTrustRegionCopy(){
-  var suf = _trustLineSuffix();
-  var fallback = 'Use only where legal in your state or region.' + suf;
-  try{
-    var raw = _lhMem.getItem(_LH_GEO_TRUST);
-    if(raw){
-      var o = JSON.parse(raw);
-      if(o && o.regionLine && o.ts && (Date.now() - o.ts < 7 * 86400000)){
-        applyTrustRegionCopy(o.regionLine + suf);
-        return;
-      }
-    }
-  }catch(_e){}
-  applyTrustRegionCopy(fallback);
-  if(typeof fetch !== 'function') return;
-  fetch('https://ipapi.co/json/', { credentials: 'omit' })
-    .then(function(r){ if(!r.ok) throw new Error('geo'); return r.json(); })
-    .then(function(j){
-      if(!j || j.error || j.reason) throw new Error('geo');
-      var cc = String(j.country_code || '').toUpperCase();
-      var cname = String(j.country_name || '').trim();
-      var stName = String(j.region || '').trim();
-      var stCode = String(j.region_code || '').trim();
-      var label = stName || stCode;
-      var regionLine;
-      if(cc === 'US' && label){
-        regionLine = 'In ' + label + ', only where legal for you.';
-      }else if(label && (cname || cc)){
-        regionLine = 'In ' + label + ' (' + (cname || cc) + '), only where legal for you.';
-      }else if(cname || cc){
-        regionLine = 'In your area (' + (cname || cc) + '), only where legal for you.';
-      }else{
-        regionLine = 'Only where legal in your location.';
-      }
-      applyTrustRegionCopy(regionLine + suf);
-      try{ _lhMem.setItem(_LH_GEO_TRUST, JSON.stringify({ regionLine: regionLine, ts: Date.now() })); }catch(_e){}
-    })
-    .catch(function(){ applyTrustRegionCopy(fallback); });
-}
 
 // ── DEV MODE ──────────────────────────────────────────────────────────────────
 var _devMode = false;
@@ -641,42 +524,6 @@ const todayStr = (()=>{const d=new Date();return `${d.getFullYear()}-${String(d.
 function trackEvent(name, params){
   try{ if(typeof gtag==='function') gtag('event', name, params||{}); }catch(e){}
 }
-/** Keep #pickCountRow selection + locked state aligned with the active sport/option (not always MLB pickCount). */
-function syncPickCountRowStyles(){
-  const row=document.getElementById('pickCountRow');
-  if(!row)return;
-  const buttons=row.querySelectorAll('button');
-  if(!buttons.length)return;
-  const _paywalled=_freePickUsed&&!_devMode;
-  let c=0;
-  if(current==='MLB'){
-    if(currentOption==='Ks')c=ksPickCount;
-    else if(currentOption==='Hits')c=hitsPickCount;
-    else if(currentOption==='Total Bases')c=basesPickCount;
-    else if(currentOption==='RBI')c=rbiPickCount;
-    else c=pickCount;
-  }else if(current==='NBA')c=nbaPickCount;
-  else if(current==='NHL')c=nhlPickCount;
-  else if(current==='Soccer')c=soccerPickCount;
-  else if(current==='NFL')c=nflPickCount;
-  else return;
-  const rowLocked=!!pickLocked||!!_paywalled;
-  buttons.forEach(function(b){
-    const n=parseInt(b.textContent.trim(),10);
-    if(isNaN(n)||n<1||n>3)return;
-    const isSel=c>=1&&c<=3&&n===c;
-    b.classList.toggle('btn2',!isSel);
-    b.classList.toggle('pick-active',isSel);
-    b.classList.toggle('locked',rowLocked);
-    b.disabled=!!pickLocked;
-    b.setAttribute('aria-pressed',isSel?'true':'false');
-    if(isSel){
-      b.title=rowLocked?'Your pick (locked)':'Your pick';
-    }else{
-      b.title=rowLocked?'Not selected':('Choose '+n);
-    }
-  });
-}
 // Session time tracking
 var _sessionStart = Date.now();
 var _sectionTimes = {}; // sport -> ms spent
@@ -760,149 +607,31 @@ function renderSport(){
     document.getElementById('options').innerHTML='';
     renderPicks([]);
   }
-  syncPickCountRowStyles();
 }
 function setOption(o){currentOption=o;renderTabs();renderSport();}
-function setCount(n){
-  if(pickLocked) return;
-  if(!_devMode&&(_freePickUsed||n>1)){
-    trackEvent('paywall_hit',{sport:'MLB',option:'HR',attempted_count:n});
-    showUpgradeWall({ attemptedPickCount: n });
-    return;
-  }
-  pickCount=n;renderSport();
-}
+function setCount(n){if(pickLocked) return; if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'HR',attempted_count:n});showUpgradeWall();return;} pickCount=n;renderSport();}
 function renderPicks(list){document.getElementById('picksTitle').textContent='Quick Picks';document.getElementById('picks').innerHTML=list.length?list.map(p=>`<div class='item'><span>${p}</span><span class='muted'>${currentOption}</span></div>`).join(''):'<div class="muted">No picks available yet.</div>';}
-function _publicAppUrl(){
-  try{
-    if(typeof location==='undefined') return '';
-    if(location.protocol==='file:'||location.protocol==='blob:') return '';
-    var u=new URL(location.href);
-    u.hash='';
-    return (u.origin+u.pathname).replace(/\/$/,'')||u.origin;
-  }catch(e){ return ''; }
-}
-function _shareFooter(){
-  var link=_publicAppUrl();
-  var legal='\n\nFor entertainment only. 21+ only.';
-  if(link) return `\n\n\uD83C\uDFAF Get your free picks: ${link}${legal}`;
-  return `\n\n\uD83C\uDFAF Pro Sports Quick Pix \u2014 open this page from the same link you used to launch the app.${legal}`;
-}
-function _buildMlbHrShareText(){
-  if(!mlbPicks.length) return '';
+function copyPicks(){
+  if(!mlbPicks.length) return;
+  const today=todayStr;
   const lines=mlbPicks.map((p,i)=>`${i+1}. ${p.player} (${p.teamAbbr||p.team}) \u2014 ${p.hr} HR`);
   const sharer = _userName ? `${_userName} is` : 'Someone is';
-  return `\uD83D\uDD34 ${sharer} using Pro Sports Quick Pix for today's HR picks!\n\n${lines.join('\n')}${_shareFooter()}`;
-}
-function _linesFromStatPicks(arr){
-  return arr.map(function(p,i){
-    const lab=p.statLabel||currentOption;
-    if(String(lab)==='TDs' && p.td!==undefined && p.td!==null){
-      return `${i+1}. ${p.player} (${p.teamAbbr||''}) \u2014 ${p.td} TDs`;
-    }
-    if(p.dir!==undefined && p.line!==undefined){
-      return `${i+1}. ${p.player} (${p.teamAbbr||''}) \u2014 ${p.dir} ${p.line} ${lab}`;
-    }
-    return `${i+1}. ${p.player} (${p.teamAbbr||''})`;
-  });
-}
-function _buildOverlayShareText(){
-  const sharer = _userName ? `${_userName} is` : 'Someone is';
-  const ft = _shareFooter();
-  if(current==='MLB' && currentOption==='HR' && mlbPicks.length){
-    const lines=mlbPicks.map((p,i)=>`${i+1}. ${p.player} (${p.teamAbbr||p.team}) \u2014 ${p.hr} HR`);
-    return `\uD83D\uDD34 ${sharer} using Pro Sports Quick Pix for today's HR picks!\n\n${lines.join('\n')}${ft}`;
-  }
-  if(current==='MLB' && currentOption==='Ks' && ksPicks.length){
-    const lines=ksPicks.map((p,i)=>`${i+1}. ${p.player} (${p.teamAbbr||''}) \u2014 ${p.dir||'Over'} ${p.kLine} Ks`);
-    return `\uD83D\uDD34 ${sharer} using Pro Sports Quick Pix for MLB K props.\n\n${lines.join('\n')}${ft}`;
-  }
-  if(current==='MLB' && currentOption==='Hits' && hitsPicks.length){
-    const lines=hitsPicks.map((p,i)=>`${i+1}. ${p.player} (${p.teamAbbr||''}) \u2014 ${p.dir} ${p.line} Hits`);
-    return `\uD83D\uDD34 ${sharer} using Pro Sports Quick Pix for MLB hits props.\n\n${lines.join('\n')}${ft}`;
-  }
-  if(current==='MLB' && currentOption==='Total Bases' && basesPicks.length){
-    const lines=basesPicks.map((p,i)=>`${i+1}. ${p.player} (${p.teamAbbr||''}) \u2014 ${p.dir} ${p.line} TB`);
-    return `\uD83D\uDD34 ${sharer} using Pro Sports Quick Pix for MLB total bases props.\n\n${lines.join('\n')}${ft}`;
-  }
-  if(current==='MLB' && currentOption==='RBI' && rbiPicks.length){
-    const lines=rbiPicks.map((p,i)=>`${i+1}. ${p.player} (${p.teamAbbr||''}) \u2014 ${p.dir} ${p.line} RBI`);
-    return `\uD83D\uDD34 ${sharer} using Pro Sports Quick Pix for MLB RBI props.\n\n${lines.join('\n')}${ft}`;
-  }
-  if(current==='NFL' && nflPicks.length){
-    return `\uD83D\uDD34 ${sharer} using Pro Sports Quick Pix for NFL ${currentOption} picks.\n\n${_linesFromStatPicks(nflPicks).join('\n')}${ft}`;
-  }
-  if(current==='NBA' && nbaPicks.length){
-    return `\uD83D\uDD34 ${sharer} using Pro Sports Quick Pix for NBA ${currentOption} picks.\n\n${_linesFromStatPicks(nbaPicks).join('\n')}${ft}`;
-  }
-  if(current==='NHL' && nhlPicks.length){
-    return `\uD83D\uDD34 ${sharer} using Pro Sports Quick Pix for NHL ${currentOption} picks.\n\n${_linesFromStatPicks(nhlPicks).join('\n')}${ft}`;
-  }
-  if(current==='Soccer' && soccerPicks.length){
-    return `\uD83D\uDD34 ${sharer} using Pro Sports Quick Pix for soccer ${currentOption} picks.\n\n${_linesFromStatPicks(soccerPicks).join('\n')}${ft}`;
-  }
-  return '';
-}
-function _flashCopyButton(btn){
-  if(!btn) return;
-  const orig=btn.textContent;
-  btn.textContent='\u2713 Copied!';
-  btn.style.color='#34d399';
-  if(btn.id==='shareBtn') btn.style.borderColor='rgba(52,211,153,.4)';
-  setTimeout(function(){
-    btn.textContent=orig;
-    if(btn.id==='shareBtn'){ btn.style.color='#6ee7ff'; btn.style.borderColor='rgba(110,231,255,.3)'; }
-    else { btn.style.color='#07111f'; }
-  },2000);
-}
-function _copyViaTextarea(text,done){
-  try{
-    const ta=document.createElement('textarea');
-    ta.value=text;
-    ta.style.position='fixed';
-    ta.style.left='0';
-    ta.style.top='0';
-    ta.style.opacity='0';
-    document.body.appendChild(ta);
-    ta.focus();
-    ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
-    if(done) done();
-  }catch(e){ if(done) done(); }
-}
-function _copyShareTextToClipboard(text,btn){
-  function flash(){ _flashCopyButton(btn); }
-  function tryClipboard(){
-    if(navigator.clipboard && window.isSecureContext){
-      return navigator.clipboard.writeText(text).then(flash).catch(function(){ _copyViaTextarea(text,flash); });
-    }
-    _copyViaTextarea(text,flash);
-    return Promise.resolve();
-  }
-  const isMobile=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent||'');
-  const ov=document.getElementById('pickOverlay');
-  const overlayOpen=ov && ov.classList.contains('open');
-  function overlayPassthrough(on){
-    if(!overlayOpen||!ov) return;
-    ov.style.pointerEvents=on?'none':'';
-  }
+  const text=`\uD83D\uDD34 ${sharer} using Pro Sports Quick Pix for today's HR picks!\n\n${lines.join('\n')}\n\n\uD83C\uDFAF Get your free picks: https://www.perplexity.ai/computer/a/multisportsqp-C.3phRMSQlW0imvW1u4uXw\n\nFor entertainment only. 21+ only.`;
+  const isMobile=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  function flashCopied(){const btn=document.getElementById('shareBtn');if(btn){const orig=btn.textContent;btn.textContent='\u2713 Copied!';btn.style.color='#34d399';btn.style.borderColor='rgba(52,211,153,.4)';setTimeout(()=>{btn.textContent=orig;btn.style.color='#6ee7ff';btn.style.borderColor='rgba(110,231,255,.3)';},2000);}}
   if(isMobile && navigator.share){
-    overlayPassthrough(true);
-    navigator.share({title:'Pro Sports Quick Pix Picks',text:text})
-      .catch(function(){ return tryClipboard(); })
-      .finally(function(){ overlayPassthrough(false); });
+    navigator.share({title:'Pro Sports Quick Pix Picks',text}).catch(()=>{});
+  } else if(navigator.clipboard){
+    navigator.clipboard.writeText(text).then(flashCopied).catch(()=>{
+      // fallback: execCommand
+      const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);flashCopied();
+    });
   } else {
-    tryClipboard();
+    const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);flashCopied();
   }
-}
-function copyPicks(){
-  const text=_buildMlbHrShareText();
-  if(!text) return;
-  _copyShareTextToClipboard(text,document.getElementById('shareBtn'));
 }
 function clearMLB(){mlbToken++;mlbLoaded=false;mlbLoading=false;mlbPicks=[];mlbTeamsUsed=[];mlbHitterUsed=new Set();mlbLivePool=[];pickLocked=false;pickCount=0;currentOption='HR';renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Click Pick Lucky Hitter.</div>';}
-function setKsCount(n){if(pickLocked) return; if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'Ks',attempted_count:n});showUpgradeWall({ attemptedPickCount: n });return;} ksPickCount=n; renderSport();}
+function setKsCount(n){if(pickLocked) return; if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'Ks',attempted_count:n});showUpgradeWall();return;} ksPickCount=n; renderSport();}
 function renderKsPicks(){
   document.getElementById('picksTitle').textContent='⚾ Lucky Pitchers';
   if(ksLoading){
@@ -916,14 +645,13 @@ function renderKsPicks(){
   }
   const loadBtn=document.getElementById('ksLoadBtn');
   if(loadBtn) loadBtn.disabled=!(!pickLocked);
-  syncPickCountRowStyles();
 }
 function clearKs(){ksToken++;ksLoaded=false;ksLoading=false;ksPicks=[];ksPitcherUsed=new Set();ksLivePool=[];pickLocked=false;ksPickCount=0;renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Choose a count and click Pick Lucky Pitcher.</div>';}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MLB HITS
 // ─────────────────────────────────────────────────────────────────────────────
-function setHitsCount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'Hits',attempted_count:n});showUpgradeWall({ attemptedPickCount: n });return;}hitsPickCount=n;renderSport();}
+function setHitsCount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'Hits',attempted_count:n});showUpgradeWall();return;}hitsPickCount=n;renderSport();}
 function renderHitsPicks(){
   document.getElementById('picksTitle').textContent='💥 Hits Picks';
   if(hitsLoading){
@@ -937,7 +665,6 @@ function renderHitsPicks(){
   }
   const btn=document.getElementById('hitsLoadBtn');
   if(btn) btn.disabled=!!pickLocked;
-  syncPickCountRowStyles();
 }
 function clearHits(){hitsToken++;hitsLoaded=false;hitsLoading=false;hitsPicks=[];hitsUsed=new Set();hitsLivePool=[];pickLocked=false;hitsPickCount=0;renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet.</div>';}
 function poRevealHitsCard(p,idx){
@@ -1026,7 +753,7 @@ async function startHitsLoad(){
 // ─────────────────────────────────────────────────────────────────────────────
 // MLB TOTAL BASES
 // ─────────────────────────────────────────────────────────────────────────────
-function setBasesCount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'Total Bases',attempted_count:n});showUpgradeWall({ attemptedPickCount: n });return;}basesPickCount=n;renderSport();}
+function setBasesCount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'Total Bases',attempted_count:n});showUpgradeWall();return;}basesPickCount=n;renderSport();}
 function renderBasesPicks(){
   document.getElementById('picksTitle').textContent='🎯 Total Bases Picks';
   if(basesLoading){
@@ -1040,7 +767,6 @@ function renderBasesPicks(){
   }
   const btn=document.getElementById('basesLoadBtn');
   if(btn) btn.disabled=!!pickLocked;
-  syncPickCountRowStyles();
 }
 function clearBases(){basesToken++;basesLoaded=false;basesLoading=false;basesPicks=[];basesUsed=new Set();basesLivePool=[];pickLocked=false;basesPickCount=0;renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet.</div>';}
 function poRevealBasesCard(p,idx){
@@ -1129,7 +855,7 @@ async function startBasesLoad(){
 // ─────────────────────────────────────────────────────────────────────────────
 // MLB RBI
 // ─────────────────────────────────────────────────────────────────────────────
-function setRBICount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'RBI',attempted_count:n});showUpgradeWall({ attemptedPickCount: n });return;}rbiPickCount=n;renderSport();}
+function setRBICount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'RBI',attempted_count:n});showUpgradeWall();return;}rbiPickCount=n;renderSport();}
 function renderRBIPicks(){
   document.getElementById('picksTitle').textContent='💪 RBI Picks';
   if(rbiLoading){
@@ -1143,7 +869,6 @@ function renderRBIPicks(){
   }
   const btn=document.getElementById('rbiLoadBtn');
   if(btn) btn.disabled=!!pickLocked;
-  syncPickCountRowStyles();
 }
 function clearRBI(){rbiToken++;rbiLoaded=false;rbiLoading=false;rbiPicks=[];rbiUsed=new Set();rbiLivePool=[];pickLocked=false;rbiPickCount=0;renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet.</div>';}
 function poRevealRBICard(p,idx){
@@ -1250,7 +975,6 @@ function renderNFLPicks(){
   }
   const btn=document.getElementById('nflLoadBtn');
   if(btn) btn.disabled=!!pickLocked;
-  syncPickCountRowStyles();
 }
 function clearNFL(){nflToken++;nflLoaded=false;nflLoading=false;nflPicks=[];nflUsed=new Set();nflLivePool=[];pickLocked=false;nflPickCount=1;renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Choose a count and click Pick Lucky Player.</div>';}
 async function getTodaysNFLPlayers(option){
@@ -1408,7 +1132,7 @@ async function startNFLLoad(){
 // ─────────────────────────────────────────────────────────────────────────────
 // NBA
 // ─────────────────────────────────────────────────────────────────────────────
-function setNBACount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'NBA',option:currentOption,attempted_count:n});showUpgradeWall({ attemptedPickCount: n });return;}nbaPickCount=n;renderSport();}
+function setNBACount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'NBA',option:currentOption,attempted_count:n});showUpgradeWall();return;}nbaPickCount=n;renderSport();}
 function renderNBAPicks(){
   document.getElementById('picksTitle').textContent='🏀 NBA Picks';
   if(nbaLoading){
@@ -1425,7 +1149,6 @@ function renderNBAPicks(){
   }
   const btn=document.getElementById('nbaLoadBtn');
   if(btn) btn.disabled=!!pickLocked;
-  syncPickCountRowStyles();
 }
 function clearNBA(){nbaToken++;nbaLoaded=false;nbaLoading=false;nbaPicks=[];nbaUsed=new Set();nbaLivePool=[];pickLocked=false;nbaPickCount=0;renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Choose a count and click Pick Lucky Player.</div>';}
 async function getTodaysNBAPlayers(option){
@@ -1563,7 +1286,7 @@ async function startNBALoad(){
 // ─────────────────────────────────────────────────────────────────────────────
 // NHL
 // ─────────────────────────────────────────────────────────────────────────────
-function setNHLCount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'NHL',option:currentOption,attempted_count:n});showUpgradeWall({ attemptedPickCount: n });return;}nhlPickCount=n;renderSport();}
+function setNHLCount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'NHL',option:currentOption,attempted_count:n});showUpgradeWall();return;}nhlPickCount=n;renderSport();}
 function renderNHLPicks(){
   document.getElementById('picksTitle').textContent='🏒 NHL Picks';
   if(nhlLoading){
@@ -1580,7 +1303,6 @@ function renderNHLPicks(){
   }
   const btn=document.getElementById('nhlLoadBtn');
   if(btn) btn.disabled=!!pickLocked;
-  syncPickCountRowStyles();
 }
 function clearNHL(){nhlToken++;nhlLoaded=false;nhlLoading=false;nhlPicks=[];nhlUsed=new Set();nhlLivePool=[];pickLocked=false;nhlPickCount=0;renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Choose a count and click Pick Lucky Player.</div>';}
 async function getTodaysNHLPlayers(option){
@@ -1734,7 +1456,7 @@ async function startNHLLoad(){
 // ─────────────────────────────────────────────────────────────────────────────
 // SOCCER (MLS)
 // ─────────────────────────────────────────────────────────────────────────────
-function setSoccerCount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'Soccer',option:currentOption,attempted_count:n});showUpgradeWall({ attemptedPickCount: n });return;}soccerPickCount=n;renderSport();}
+function setSoccerCount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'Soccer',option:currentOption,attempted_count:n});showUpgradeWall();return;}soccerPickCount=n;renderSport();}
 function renderSoccerPicks(){
   document.getElementById('picksTitle').textContent='⚽ Soccer Picks';
   if(soccerLoading){
@@ -1751,7 +1473,6 @@ function renderSoccerPicks(){
   }
   const btn=document.getElementById('soccerLoadBtn');
   if(btn) btn.disabled=!!pickLocked;
-  syncPickCountRowStyles();
 }
 function clearSoccer(){soccerToken++;soccerLoaded=false;soccerLoading=false;soccerPicks=[];soccerUsed=new Set();soccerLivePool=[];pickLocked=false;soccerPickCount=0;renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Choose a count and click Pick Lucky Player.</div>';}
 async function getTodaysSoccerPlayers(option){
@@ -1973,7 +1694,8 @@ function renderMLB(){
   }
   const shareBtn=document.getElementById('shareBtn');
   if(shareBtn) shareBtn.style.display=mlbPicks.length>0?'inline-block':'none';
-  syncPickCountRowStyles();
+  const row=document.getElementById('pickCountRow');
+  if(row){row.querySelectorAll('button').forEach(b=>{const isSelected=pickCount>=1&&pickCount<=3&&b.textContent.trim().startsWith(String(pickCount)+' ');b.classList.toggle('btn2',isSelected);b.classList.toggle('locked',pickLocked);b.disabled=pickLocked;});}
   const loadBtn=document.getElementById('mlbLoadBtn');
   if(loadBtn) loadBtn.disabled=!(pickCount>=1&&pickCount<=3)||pickLocked;
 }
@@ -2142,13 +1864,7 @@ function toggleTheme(){
   if(btn) btn.textContent = isLight ? '☀️ Day' : '🌙 Night';
 }
 
-function openAgeGate(){
-  try{ _lhMem.removeItem(_LH_AGE_KEY); }catch(e){}
-  if(window.firebaseSignOut) window.firebaseSignOut().catch(function(){});
-  showOverlay();
-  obStep(1);
-  return false;
-}
+function openAgeGate(){alert('You must be 21+ to continue.');}
 function shuffleArray(arr){return arr.slice().sort(()=>Math.random()-0.5)}
 function startNameShuffle(pool, token, getActiveToken){
   // getActiveToken: fn that returns the current token for this sport
@@ -2241,190 +1957,30 @@ function stopMoneyTransformButton(){
 let _userName = '';
 let _userEmail = '';
 let _freePickUsed = false;
-var _LH_AGE_KEY = 'lhAgeVerified';
 
 renderTabs();renderSport();
 
-function obAgeContinue(){
-  try{ _lhMem.setItem(_LH_AGE_KEY, '1'); }catch(e){}
-  obStep(2);
-  var u = window.firebaseAuth && window.firebaseAuth.currentUser;
-  if(u && window._onFirebaseAuthChanged) window._onFirebaseAuthChanged(u);
-}
-
 function obInit(){
-  const ageOk = _lhMem.getItem(_LH_AGE_KEY) === '1';
-  showOverlay();
-  obStep(ageOk ? 2 : 1);
-}
-
-function _authPreferGoogleRedirect(){
-  const ua = navigator.userAgent || '';
-  return /iPhone|iPad|iPod|Android/i.test(ua);
-}
-
-function clearAuthError(){
-  const el = document.getElementById('authError');
-  if(el) el.textContent = '';
-}
-
-function setAuthError(msg){
-  const el = document.getElementById('authError');
-  if(el) el.textContent = msg || '';
-}
-
-function authFormValidate(){
-  const name = document.getElementById('ob-name').value.trim();
-  const email = document.getElementById('ob-email').value.trim();
-  const pass = document.getElementById('ob-password').value;
-  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const nameEl = document.getElementById('ob-name');
-  const emailEl = document.getElementById('ob-email');
-  const passEl = document.getElementById('ob-password');
-  if(nameEl) nameEl.classList.toggle('error', name.length>0 && name.length<2);
-  if(emailEl) emailEl.classList.toggle('error', email.length>0 && !emailOk);
-  if(passEl) passEl.classList.toggle('error', pass.length>0 && pass.length<6);
-  const passOk = pass.length >= 6;
-  const signInOk = emailOk && passOk;
-  const signUpOk = name.length >= 2 && signInOk;
-  const si = document.getElementById('authSignInBtn');
-  const su = document.getElementById('authSignUpBtn');
-  if(si) si.disabled = !signInOk;
-  if(su) su.disabled = !signUpOk;
-}
-
-async function authGoogle(){
-  clearAuthError();
-  const g = document.getElementById('authGoogleBtn');
-  if(g){ g.disabled = true; g.textContent = 'Connecting…'; }
-  try{
-    if(_authPreferGoogleRedirect() && window.firebaseSignInWithGoogleRedirect){
-      await window.firebaseSignInWithGoogleRedirect();
-      return;
-    }
-    if(!window.firebaseSignInWithGooglePopup) throw new Error('Google sign-in unavailable');
-    await window.firebaseSignInWithGooglePopup();
-  }catch(e){
-    setAuthError((e && e.message) || 'Google sign-in failed.');
-  }
-  if(g){ g.disabled = false; g.textContent = 'Continue with Google'; }
-}
-
-async function authEmailSignIn(){
-  clearAuthError();
-  const email = document.getElementById('ob-email').value.trim();
-  const pass = document.getElementById('ob-password').value;
-  try{
-    await window.firebaseSignInEmailUser(email, pass);
-  }catch(e){
-    setAuthError((e && e.message) || 'Sign-in failed.');
+  const profile = _lhMem.getItem('lhProfile');
+  if(profile){
+    try{
+      const d = JSON.parse(profile);
+      _userName = d.name || '';
+      _userEmail = d.email || '';
+      const _todayStr = new Date().toISOString().slice(0,10);
+      _freePickUsed = (d.freePickUsed && d.freePickDate === _todayStr) ? true : false;
+      if(!_freePickUsed && d.freePickUsed && d.freePickDate !== _todayStr){
+        d.freePickUsed = false; d.freePickDate = null;
+        try{ _lhMem.setItem('lhProfile', JSON.stringify(d)); }catch(e){}
+      }
+      document.getElementById('onboardOverlay').style.display='none';
+      const _isPro = d.isPro || false;
+      if(_isPro){ renderSport(); } else if(!_freePickUsed){ showFreeBadge(); } else { setTimeout(showUpgradeWall, 300); }
+    }catch(e){ showOverlay(); }
+  } else {
+    showOverlay();
   }
 }
-
-async function authEmailSignUp(){
-  clearAuthError();
-  const name = document.getElementById('ob-name').value.trim();
-  const email = document.getElementById('ob-email').value.trim();
-  const pass = document.getElementById('ob-password').value;
-  if(name.length < 2){ setAuthError('Enter a display name (2+ characters).'); return; }
-  try{
-    const cred = await window.firebaseCreateEmailUser(email, pass);
-    if(window.firebaseUpdateDisplayName) await window.firebaseUpdateDisplayName(name);
-    if(cred && cred.user && window.firebaseSaveUserProfile){
-      await window.firebaseSaveUserProfile({ name: name, provider: 'password' });
-    }
-  }catch(e){
-    setAuthError((e && e.message) || 'Could not create account.');
-  }
-}
-
-function authForgotPassword(){
-  clearAuthError();
-  if(!window.firebaseSendPasswordReset){
-    setAuthError('Password reset is not available right now.');
-    return;
-  }
-  const email = document.getElementById('ob-email').value.trim();
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
-    setAuthError('Enter your email above, then tap Forgot password again.');
-    return;
-  }
-  window.firebaseSendPasswordReset(email).then(function(){
-    alert('If an account exists for that email, a reset link is on the way. Check your inbox.');
-  }).catch(function(e){
-    setAuthError((e && e.message) || 'Reset request failed.');
-  });
-}
-
-async function applyFirestoreSession(user){
-  let fd = {};
-  try{
-    const loaded = await window.firebaseLoadUserProfile();
-    if(loaded) fd = loaded;
-  }catch(e){}
-  const _todayStr = new Date().toISOString().slice(0,10);
-  let freePickUsed = !!(fd.freePickUsed && fd.freePickDate === _todayStr);
-  if(fd.freePickUsed && fd.freePickDate && fd.freePickDate !== _todayStr){
-    fd.freePickUsed = false;
-    fd.freePickDate = null;
-    await window.firebaseSaveUserProfile({ freePickUsed: false, freePickDate: null, name: fd.name || user.displayName || '', provider: fd.provider || '' });
-  }
-  _userName = fd.name || user.displayName || (user.email && user.email.split('@')[0]) || '';
-  _userEmail = user.email || '';
-  _freePickUsed = freePickUsed;
-  const isPro = !!fd.isPro;
-  const provider = (user.providerData && user.providerData[0] && user.providerData[0].providerId) || fd.provider || '';
-  try{
-    _lhMem.setItem('lhProfile', JSON.stringify({
-      name: _userName, email: _userEmail, freePickUsed: _freePickUsed,
-      freePickDate: _freePickUsed ? _todayStr : (fd.freePickDate || null), isPro: isPro, provider: provider
-    }));
-  }catch(e){}
-  if(!fd.name && user.displayName){
-    await window.firebaseSaveUserProfile({ name: user.displayName, provider: provider || 'google.com' });
-  } else if(Object.keys(fd).length === 0){
-    await window.firebaseSaveUserProfile({ name: _userName, provider: provider || 'password' });
-  }
-  document.getElementById('onboardOverlay').style.display = 'none';
-  const logoutBtn = document.getElementById('logoutBtn');
-  if(logoutBtn) logoutBtn.style.display = 'inline-block';
-  const chip = document.getElementById('userEmailChip');
-  if(chip){
-    chip.style.display = _userEmail ? 'inline-block' : 'none';
-    chip.textContent = _userEmail && _userEmail.length > 24 ? _userEmail.slice(0,22) + '…' : (_userEmail || '');
-  }
-  if(isPro){ renderSport(); }
-  else if(!_freePickUsed){ showFreeBadge(); }
-  else { setTimeout(showUpgradeWall, 300); }
-}
-
-window._onFirebaseAuthChanged = async function(user){
-  const ageOk = _lhMem.getItem(_LH_AGE_KEY) === '1';
-  if(!ageOk) return;
-  const logoutBtn = document.getElementById('logoutBtn');
-  const chip = document.getElementById('userEmailChip');
-  if(user){
-    try{ await applyFirestoreSession(user); }
-    catch(e){
-      setAuthError('Could not load your profile. Check your connection.');
-      showOverlay();
-      obStep(2);
-    }
-    return;
-  }
-  _userName = '';
-  _userEmail = '';
-  _freePickUsed = false;
-  try{ _lhMem.removeItem('lhProfile'); }catch(e){}
-  if(logoutBtn) logoutBtn.style.display = 'none';
-  if(chip){ chip.style.display = 'none'; chip.textContent = ''; }
-  showOverlay();
-  obStep(2);
-  clearAuthError();
-  authFormValidate();
-  pickCount = 1;
-  renderSport();
-};
 
 function showOverlay(){
   document.getElementById('onboardOverlay').style.display='flex';
@@ -2435,6 +1991,117 @@ function obStep(n){
   const s = document.getElementById('ob-step'+n);
   if(s) s.classList.add('active');
   else console.warn('obStep: no element ob-step'+n);
+}
+
+function obValidate(){
+  const name = document.getElementById('ob-name').value.trim();
+  const email = document.getElementById('ob-email').value.trim();
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const nameEl = document.getElementById('ob-name');
+  const emailEl = document.getElementById('ob-email');
+  nameEl.classList.toggle('error', name.length>0 && name.length<2);
+  emailEl.classList.toggle('error', email.length>0 && !emailOk);
+  document.getElementById('profileBtn').disabled = !(name.length>=2 && emailOk);
+}
+
+// ── Email verification state ──
+let _verifyCode = '';
+let _verifyExpiry = 0;
+let _resendTimeout = null;
+
+function obSendCode(){
+  const name = document.getElementById('ob-name').value.trim();
+  const email = document.getElementById('ob-email').value.trim();
+  // Generate 6-digit code
+  _verifyCode = String(Math.floor(100000 + Math.random() * 900000));
+  _verifyExpiry = Date.now() + 10 * 60 * 1000; // 10 min
+  // Show verify step
+  document.getElementById('ob-email-display').textContent = email;
+  document.getElementById('ob-code').value = '';
+  document.getElementById('ob-code-error').textContent = '';
+  document.getElementById('verifyBtn').disabled = true;
+  obStep('2b');
+  // Send via EmailJS
+  emailjs.send('service_ymxyo11', 'template_rncb4ek', {
+    to_name: name,
+    to_email: email,
+    code: _verifyCode
+  }).then(()=>{
+    obStartResendTimer(30);
+  }).catch(err=>{
+    document.getElementById('ob-code-error').textContent = 'Email delivery failed — use the skip link below to continue.';
+  });
+}
+
+function obCodeValidate(){
+  const val = document.getElementById('ob-code').value.replace(/\D/g,'');
+  document.getElementById('ob-code').value = val;
+  document.getElementById('verifyBtn').disabled = val.length !== 6;
+  document.getElementById('ob-code-error').textContent = '';
+}
+
+function obVerifyCode(){
+  const entered = document.getElementById('ob-code').value.trim();
+  if(Date.now() > _verifyExpiry){
+    document.getElementById('ob-code-error').textContent = 'Code expired. Please request a new one.';
+    document.getElementById('verifyBtn').disabled = true;
+    return;
+  }
+  if(entered !== _verifyCode){
+    document.getElementById('ob-code-error').textContent = 'Incorrect code. Please try again.';
+    document.getElementById('ob-code').value = '';
+    document.getElementById('verifyBtn').disabled = true;
+    return;
+  }
+  // Verified!
+  obComplete();
+}
+
+function obComplete(){
+  const name = document.getElementById('ob-name').value.trim();
+  const email = document.getElementById('ob-email').value.trim();
+  _userName = name;
+  _userEmail = email;
+  _freePickUsed = false;
+  _lhMem.setItem('lhProfile', JSON.stringify({name, email, freePickUsed:false}));
+  document.getElementById('ob-welcome').innerHTML =
+    `Welcome, <strong style="color:#6ee7ff">${name}</strong>! 🎉<br><span style="color:#9fb0d0;font-size:.88rem">Your free HR pick is unlocked.</span>`;
+  // Auto-select 1 Batter so Pick Lucky Hitter is enabled on first arrival
+  pickCount = 1;
+  obStep(3);
+  renderSport();
+}
+
+function obResendCode(){
+  if(_resendTimeout) return;
+  document.getElementById('ob-code-error').textContent = '';
+  obSendCode();
+}
+
+function obStartResendTimer(secs){
+  const btn = document.getElementById('resendBtn');
+  const timer = document.getElementById('resendTimer');
+  if(!btn || !timer) return;
+  btn.style.display = 'none';
+  timer.style.display = 'inline';
+  let remaining = secs;
+  timer.textContent = `Resend in ${remaining}s`;
+  _resendTimeout = setInterval(()=>{
+    remaining--;
+    if(remaining <= 0){
+      clearInterval(_resendTimeout);
+      _resendTimeout = null;
+      timer.style.display = 'none';
+      btn.style.display = 'inline';
+    } else {
+      timer.textContent = `Resend in ${remaining}s`;
+    }
+  }, 1000);
+}
+
+function obDismiss(){
+  document.getElementById('onboardOverlay').style.display='none';
+  showFreeBadge();
 }
 
 function showFreeBadge(){
@@ -2451,59 +2118,19 @@ function markFreePickUsed(){
   _freePickUsed = true;
   const badge = document.getElementById('freeBadge');
   if(badge) badge.style.display='none';
-  const today = new Date().toISOString().slice(0,10);
-  var d = {};
   try{
-    d = JSON.parse(_lhMem.getItem('lhProfile')||'{}');
+    const d = JSON.parse(_lhMem.getItem('lhProfile')||'{}');
     d.freePickUsed = true;
-    d.freePickDate = today;
+    d.freePickDate = new Date().toISOString().slice(0,10);
     _lhMem.setItem('lhProfile', JSON.stringify(d));
   }catch(e){}
-  if(window.firebaseAuth && window.firebaseAuth.currentUser && window.firebaseSaveUserProfile){
-    window.firebaseSaveUserProfile({
-      freePickUsed: true,
-      freePickDate: today,
-      name: d.name || _userName || '',
-      provider: d.provider || ''
-    }).catch(function(){});
-  }
-  // Brief beat after picks finish, then same full-screen surface: slide up paywall sheet in overlay + sync main panel
-  setTimeout(function(){
-    showUpgradeWall();
-  }, 1100);
+  setTimeout(showUpgradeWall, 4000);
 }
 
-function showUpgradeWall(opts){
-  opts = opts || {};
+function showUpgradeWall(){
   // Lock batter buttons and Pick button, show upgrade message
   pickLocked = false; // allow renderSport to run
-  var ap = opts.attemptedPickCount;
-  if(typeof ap === 'number' && ap >= 1 && ap <= 3){
-    if(current==='MLB'){
-      if(currentOption==='Ks') ksPickCount = ap;
-      else if(currentOption==='Hits') hitsPickCount = ap;
-      else if(currentOption==='Total Bases') basesPickCount = ap;
-      else if(currentOption==='RBI') rbiPickCount = ap;
-      else pickCount = ap;
-    }else if(current==='NBA') nbaPickCount = ap;
-    else if(current==='NHL') nhlPickCount = ap;
-    else if(current==='Soccer') soccerPickCount = ap;
-    else if(current==='NFL') nflPickCount = ap;
-  }else{
-    pickCount = 0;
-    if(_freePickUsed){
-      if(current==='MLB'){
-        if(currentOption==='Ks') ksPickCount = Math.max(ksPickCount, 1);
-        else if(currentOption==='Hits') hitsPickCount = Math.max(hitsPickCount, 1);
-        else if(currentOption==='Total Bases') basesPickCount = Math.max(basesPickCount, 1);
-        else if(currentOption==='RBI') rbiPickCount = Math.max(rbiPickCount, 1);
-        else pickCount = Math.max(pickCount, 1);
-      } else if(current==='NBA') nbaPickCount = Math.max(nbaPickCount, 1);
-      else if(current==='NHL') nhlPickCount = Math.max(nhlPickCount, 1);
-      else if(current==='Soccer') soccerPickCount = Math.max(soccerPickCount, 1);
-      else if(current==='NFL') nflPickCount = Math.max(nflPickCount, 1);
-    }
-  }
+  pickCount = 0;
   renderSport();
   // Disable all count buttons
   const row = document.getElementById('pickCountRow');
@@ -2512,13 +2139,16 @@ function showUpgradeWall(opts){
   const loadBtnInfo = _getLoadBtnInfo();
   const loadBtn = document.getElementById(loadBtnInfo.id);
   if(loadBtn) loadBtn.disabled = true;
-  // Same full-screen slide as pick runs — primary Upgrade lives in #pickOverlay
+  // Show upgrade notice in picks panel
   const picks = document.getElementById('picks');
-  if(picks){
-    picks.innerHTML = '<div class="muted" style="text-align:center;padding:22px 14px;line-height:1.55">The upgrade prompt uses the same full-screen slide as your picks run. Close it with ✕; reload the page if you need to open it again.</div>';
-  }
-  var wallKind = _freePickUsed ? 'free' : 'upgrade';
-  showPaywallOverlaySlide(wallKind);
+  if(picks) picks.innerHTML = `
+    <div style="text-align:center;padding:24px 16px">
+      <div style="font-size:1.6rem;margin-bottom:10px">🔒</div>
+      <div style="font-weight:900;font-size:1rem;color:#eef3ff;margin-bottom:8px">Free Pick Used!</div>
+      <div style="color:#9fb0d0;font-size:.88rem;line-height:1.5;margin-bottom:18px">You’ve used your 1 free daily pick.<br>Upgrade to unlock unlimited picks, all batter counts, and more.</div>
+      <button onclick="showUpgradeModal()" style="padding:12px 24px;border-radius:14px;border:0;background:linear-gradient(90deg,#6ee7ff,#8b5cf6);color:#07111f;font-weight:900;font-size:.95rem;cursor:pointer">Upgrade 🚀</button>
+      <div style="margin-top:12px;font-size:.78rem;color:#56627a">Resets daily. Come back tomorrow for another free pick.</div>
+    </div>`;
 }
 
 // ── Stripe Payment Link ──
@@ -2552,9 +2182,6 @@ function startCheckout(){
       d.isPro = true;
       d.freePickUsed = false;
       _lhMem.setItem('lhProfile', JSON.stringify(d));
-      if(window.firebaseAuth && window.firebaseAuth.currentUser && window.firebaseSaveUserProfile){
-        window.firebaseSaveUserProfile({ isPro: true, freePickUsed: false, name: d.name || _userName || '', provider: d.provider || '' }).catch(function(){});
-      }
     } catch(e){}
     // Clean URL
     history.replaceState({}, '', window.location.pathname);
@@ -2571,7 +2198,6 @@ function startCheckout(){
 
 // Run onboarding check on load
 obInit();
-refreshTrustRegionCopy();
 
 // ── RHYTHM (random each run: slot or buildup) ────────────────────────────────
 const _rhythmCurves = {
@@ -2735,8 +2361,6 @@ function _getOverlayTitle(){
 }
 function openPickOverlay(){
   const ov = document.getElementById('pickOverlay');
-  const oldHost = document.getElementById('poFreeUsedHost');
-  if(oldHost) oldHost.remove();
   ov.classList.remove('closing');
   ov.classList.add('open');
   _poOpen = true;
@@ -2746,69 +2370,7 @@ function openPickOverlay(){
   document.getElementById('poTitle').textContent = _getOverlayTitle();
 }
 
-function _freePickUsedOverlayHtml(){
-  return (
-    '<div class="po-paywall-panel">'+
-      '<div class="po-pw-icon">🔒</div>'+
-      '<div class="po-pw-title">Free pick used</div>'+
-      '<div class="po-pw-text">You\u2019ve used your 1 free daily pick. Upgrade for unlimited picks, every count option, and more.</div>'+
-      '<div class="po-pw-actions">'+
-        '<button type="button" class="po-pw-btn" onclick="showUpgradeModal()">Upgrade \uD83D\uDE80</button>'+
-        '<button type="button" class="po-pw-btn po-pw-secondary" onclick="closePickOverlay()">Close</button>'+
-      '</div>'+
-      '<div class="po-pw-hint">Resets daily. Come back tomorrow for another free pick.</div>'+
-    '</div>'
-  );
-}
-
-function _upgradeTeaserOverlayHtml(){
-  return (
-    '<div class="po-paywall-panel">'+
-      '<div class="po-pw-icon">🎁</div>'+
-      '<div class="po-pw-title">Unlock full picks</div>'+
-      '<div class="po-pw-text">More than one pick per run, every sport, and all count options are included with upgrade.</div>'+
-      '<div class="po-pw-actions">'+
-        '<button type="button" class="po-pw-btn" onclick="showUpgradeModal()">Upgrade \uD83D\uDE80</button>'+
-        '<button type="button" class="po-pw-btn po-pw-secondary" onclick="closePickOverlay()">Close</button>'+
-      '</div>'+
-      '<div class="po-pw-hint">Free tier includes 1 pick per day. Close this screen to keep browsing.</div>'+
-    '</div>'
-  );
-}
-
-/** Full-screen paywall in #pickOverlay — same slide-up as homerun run (close + reopen if already open). */
-function openPaywallOverlayFull(kind){
-  const ov = document.getElementById('pickOverlay');
-  if(!ov) return;
-  const oldHost = document.getElementById('poFreeUsedHost');
-  if(oldHost) oldHost.remove();
-  ov.classList.remove('closing');
-  ov.classList.add('open');
-  _poOpen = true;
-  document.getElementById('poShareBtn').style.display = 'none';
-  if(kind === 'free'){
-    document.getElementById('poTitle').textContent = '🎁 Free pick used';
-    document.getElementById('poCards').innerHTML = _freePickUsedOverlayHtml();
-  }else{
-    document.getElementById('poTitle').textContent = '🔒 Upgrade';
-    document.getElementById('poCards').innerHTML = _upgradeTeaserOverlayHtml();
-  }
-}
-
-function showPaywallOverlaySlide(kind){
-  const ov = document.getElementById('pickOverlay');
-  if(!ov) return;
-  if(ov.classList.contains('open')){
-    closePickOverlay();
-    setTimeout(function(){ openPaywallOverlayFull(kind); }, 420);
-  }else{
-    openPaywallOverlayFull(kind);
-  }
-}
-
 function closePickOverlay(){
-  const host = document.getElementById('poFreeUsedHost');
-  if(host) host.remove();
   const ov = document.getElementById('pickOverlay');
   ov.classList.add('closing');
   setTimeout(()=>{ ov.classList.remove('open','closing'); _poOpen=false; }, 400);
@@ -2860,10 +2422,13 @@ function poSetError(msg){
 }
 
 function copyPicksFromOverlay(){
-  const text=_buildOverlayShareText();
-  if(!text) return;
-  _copyShareTextToClipboard(text,document.getElementById('poShareBtn'));
   trackEvent('picks_shared',{sport:current,option:currentOption});
+  const sharer = _userName || 'Someone';
+  const lines = mlbPicks.map((p,i)=>`${i+1}. ${p.player} (${p.teamAbbr||p.team}) — ${p.hr} HR`);
+  const text = `🔴 ${sharer} using Pro Sports Quick Pix for today's HR picks!\n\n${lines.join('\n')}\n\n🎯 Get your free picks: https://www.perplexity.ai/computer/a/multisportsqp-C.3phRMSQlW0imvW1u4uXw\n\nFor entertainment only. 21+ only.`;
+  navigator.clipboard.writeText(text).catch(()=>{});
+  const btn = document.getElementById('poShareBtn');
+  if(btn){ const orig=btn.textContent; btn.textContent='✓ Copied!'; setTimeout(()=>btn.textContent=orig,2000); }
 }
 
 // ── Swipe-down to close ───────────────────────────────────────────────────────
@@ -3008,9 +2573,6 @@ function copyPicksFromOverlay(){
 #fbSendBtn{width:100%;padding:10px;border-radius:10px;border:none;
   background:var(--accent);color:#07111f;font-weight:700;font-size:14px;cursor:pointer;transition:opacity .2s;}
 #fbSendBtn:disabled{opacity:.5;cursor:default;}
-#fbMailtoBtn{width:100%;margin-top:10px;padding:9px 10px;border-radius:10px;border:1px solid var(--line);
-  background:rgba(255,255,255,.06);color:var(--text);font-weight:600;font-size:13px;cursor:pointer;font-family:inherit;}
-#fbMailtoBtn:hover{opacity:.92;}
 #fbThanks{display:none;text-align:center;padding:18px 0;font-size:15px;color:var(--accent);font-weight:600;}
 #fbClose{position:absolute;top:12px;right:14px;background:none;border:none;color:var(--muted);
   font-size:18px;cursor:pointer;line-height:1;}
@@ -3040,8 +2602,6 @@ function copyPicksFromOverlay(){
   </div>
   <textarea id="fbComment" rows="3" placeholder="Optional comment..."></textarea>
   <button id="fbSendBtn" onclick="fbSubmit()">Send Feedback</button>
-  <button type="button" id="fbMailtoBtn" onclick="fbMailtoSubmit()">Use Mail app instead</button>
-  <div class="muted" style="font-size:11px;margin-top:8px;line-height:1.35">If Send fails (blockers or EmailJS setup), use Mail app — opens a draft in the same tap.</div>
   <div id="fbThanks">Thanks for your feedback! &#127775;</div>
 </div>
 
@@ -3058,12 +2618,14 @@ function fbSetStar(n){
   document.querySelectorAll('.fb-star').forEach(s=>s.classList.toggle('on',parseInt(s.dataset.v)<=n));
 }
 function fbToggleTag(el){ el.classList.toggle('on'); }
-function fbFeedbackParams(){
+function fbSubmit(){
   const stars=_fbStar;
   const tags=[...document.querySelectorAll('.fb-tag.on')].map(t=>t.textContent).join(', ');
   const comment=document.getElementById('fbComment').value.trim();
-  if(!stars) return null;
-  return{
+  if(!stars){ fbSetStar(1); return; }
+  const btn=document.getElementById('fbSendBtn');
+  btn.disabled=true; btn.textContent='Sending...';
+  const params={
     to_email:'digitaldr@gmail.com',
     subject:'Pro Sports Quick Pix — User Feedback',
     rating: stars+' / 5 stars',
@@ -3073,31 +2635,7 @@ function fbFeedbackParams(){
     sub_option: currentOption||'—',
     timestamp: new Date().toLocaleString()
   };
-}
-function fbMailtoSubmit(){
-  const p=fbFeedbackParams();
-  if(!p){ fbSetStar(1); return; }
-  var body='Rating: '+p.rating+'\nTags: '+p.tags+'\nSport: '+p.sport+'\nOption: '+p.sub_option+'\nComment: '+p.comment+'\nTime: '+p.timestamp;
-  var url='mailto:'+p.to_email+'?subject='+encodeURIComponent(p.subject)+'&body='+encodeURIComponent(body);
-  if(url.length>2000){
-    body='Rating: '+p.rating+'\nSport: '+p.sport+'\nOption: '+p.sub_option+'\nTime: '+p.timestamp+'\n(Comment omitted here — URL limit; add details in Mail.)';
-    url='mailto:'+p.to_email+'?subject='+encodeURIComponent(p.subject)+'&body='+encodeURIComponent(body);
-  }
-  trackEvent('feedback_mailto',{rating:_fbStar});
-  window.location.href=url;
-}
-function fbSubmit(){
-  const params=fbFeedbackParams();
-  if(!params){ fbSetStar(1); return; }
-  const btn=document.getElementById('fbSendBtn');
-  btn.disabled=true; btn.textContent='Sending...';
-  if(typeof emailjs==='undefined'){
-    btn.disabled=false; btn.textContent='Send Feedback';
-    alert('Automatic send isn\u2019t available (email script blocked or offline). Tap \u201cUse Mail app instead\u201d below.');
-    return;
-  }
-  try{ emailjs.init('YcyxPL19ITeg2I5ed'); }catch(_e){}
-  trackEvent('feedback_submit',{rating:_fbStar,tags:params.tags});
+  trackEvent('feedback_submit',{rating:stars,tags:tags});
   emailjs.send('service_ymxyo11','template_feedback',params)
     .then(()=>{
       document.getElementById('fbSendBtn').style.display='none';
@@ -3115,17 +2653,9 @@ function fbSubmit(){
         document.getElementById('fbThanks').style.display='none';
       },2500);
     })
-    .catch(function(err){
-      try{ console.error('EmailJS feedback failed', err); }catch(_e){}
+    .catch(()=>{
       btn.disabled=false; btn.textContent='Send Feedback';
-      var hint=(err&&err.text)||(err&&err.message)||'';
-      if(/domain|origin|not allowed|restricted/i.test(String(hint))){
-        alert('Could not send feedback: this site\u2019s URL is not allowed in your EmailJS account yet. In EmailJS go to Account \u2192 Email Services / Security and add your exact page origin (e.g. your GitHub Pages domain), then try again.\n\nOr tap \u201cUse Mail app instead\u201d below.');
-      } else if(hint){
-        alert('Could not send feedback: '+hint+'\n\nCheck EmailJS template ID, service ID, and blockers — or tap \u201cUse Mail app instead\u201d below.');
-      } else {
-        alert('Could not send feedback right now. Common causes: EmailJS domain allowlist, template/service IDs, or api.emailjs.com blocked.\n\nTap \u201cUse Mail app instead\u201d below to send from your phone\u2019s Mail app.');
-      }
+      alert('Could not send feedback right now. Please try again.');
     });
 }
 </script>
