@@ -28,6 +28,8 @@
 <audio id="chingSfx_1982" src="https://assets.mixkit.co/active_storage/sfx/1982/1982-preview.mp3" preload="auto" crossorigin="anonymous"></audio>
 <audio id="chingSfx_2021" src="https://assets.mixkit.co/active_storage/sfx/2021/2021-preview.mp3" preload="auto" crossorigin="anonymous"></audio>
 <audio id="chingSfx_1935" src="https://assets.mixkit.co/active_storage/sfx/1935/1935-preview.mp3" preload="auto" crossorigin="anonymous"></audio>
+<audio id="pickTickSfx"     src="https://assets.mixkit.co/active_storage/sfx/1114/1114-preview.mp3" preload="auto" crossorigin="anonymous"></audio>
+<audio id="pickJackpotSfx" src="https://assets.mixkit.co/active_storage/sfx/2006/2006-preview.mp3" preload="auto" crossorigin="anonymous"></audio>
 
 <style>
 :root{--bg:#07111f;--card:#111c33;--card2:#182747;--text:#eef3ff;--muted:#9fb0d0;--line:#26355f;--accent:#6ee7ff}
@@ -494,10 +496,29 @@ function playChingSfx(isFirst, isLast) {
     _lastSfxIdx = idx;
     const [id, cutMs] = _sfxPool[idx];
     const el = document.getElementById(id);
-    el.pause(); el.currentTime = 0; el.playbackRate = 0.75;
+    el.pause(); el.currentTime = 0;
+    if (isLast) {
+      el.volume = 1;
+      el.playbackRate = 0.82;
+    } else {
+      el.volume = 0.9;
+      el.playbackRate = 0.75;
+    }
     const p = el.play();
     if (p && typeof p.catch === 'function') p.catch(() => {});
-    setTimeout(() => { try { el.pause(); } catch(_){} }, cutMs);
+    setTimeout(() => { try { el.pause(); el.volume = 0.9; } catch(_){} }, cutMs);
+    if (isLast) {
+      setTimeout(() => {
+        try {
+          const j = document.getElementById('pickJackpotSfx');
+          if (!j) return;
+          j.pause(); j.currentTime = 0; j.volume = 0.24; j.playbackRate = 1;
+          const pj = j.play();
+          if (pj && typeof pj.catch === 'function') pj.catch(() => {});
+          setTimeout(() => { try { j.pause(); } catch(_){} }, 380);
+        } catch (_) {}
+      }, 85);
+    }
   } catch (_) {}
 }
 
@@ -509,7 +530,7 @@ let _pickSfxAudioPrimed = false;
 function unlockPickSfxFromGesture(){
   if(_pickSfxAudioPrimed) return;
   _pickSfxAudioPrimed = true;
-  const ids = ['chingSfx','chingSfx_1982','chingSfx_2021','chingSfx_1935'];
+  const ids = ['chingSfx','chingSfx_1982','chingSfx_2021','chingSfx_1935','pickTickSfx','pickJackpotSfx'];
   for(let i = 0; i < ids.length; i++){
     const el = document.getElementById(ids[i]);
     if(!el) continue;
@@ -1941,6 +1962,20 @@ function startNameShuffle(pool, token, getActiveToken){
       timers.push(d);
     }
   });
+  const tickEl = document.getElementById('pickTickSfx');
+  if (tickEl) {
+    const tickT = setInterval(() => {
+      if (token !== activeToken()) { clearInterval(tickT); return; }
+      try {
+        tickEl.pause(); tickEl.currentTime = 0;
+        tickEl.volume = 0.07;
+        tickEl.playbackRate = 1.12;
+        const pt = tickEl.play();
+        if (pt && typeof pt.catch === 'function') pt.catch(() => {});
+      } catch (_) {}
+    }, 135);
+    timers.push(tickT);
+  }
   return { _timers: timers, [Symbol.toPrimitive](){ return 0; } };
 }
 
