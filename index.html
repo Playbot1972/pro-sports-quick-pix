@@ -365,7 +365,7 @@ window.safeHeadshot = function(obj){
     </div>
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
       <button type="button" id="logoutBtn" onclick="logoutSession()" style="display:none;padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:inherit;font-weight:700;font-size:12px;cursor:pointer">Log out</button>
-      <button id="themeToggle" class="badge" onclick="toggleTheme()" style="cursor:pointer;border:0">🌙 Night</button>
+      <button type="button" id="themeToggle" class="badge" onclick="toggleTheme()" aria-label="Switch to light mode" style="cursor:pointer;border:0">☀️ Light mode</button>
       <div class="badge" id="sportHintBadge">Choose a sport tab</div>
     </div>
   </div>
@@ -2225,7 +2225,15 @@ function toggleTheme(){
   document.body.classList.toggle('light');
   const isLight = document.body.classList.contains('light');
   const btn = document.getElementById('themeToggle');
-  if(btn) btn.textContent = isLight ? '☀️ Day' : '🌙 Night';
+  if(btn){
+    if(isLight){
+      btn.textContent = '🌙 Dark mode';
+      btn.setAttribute('aria-label', 'Switch to dark mode');
+    }else{
+      btn.textContent = '☀️ Light mode';
+      btn.setAttribute('aria-label', 'Switch to light mode');
+    }
+  }
 }
 
 function openAgeGate(){
@@ -2374,6 +2382,12 @@ function _paywallBypassActive(){
   try{ return !!document.getElementById('disablePaywall')?.checked; }catch(_){ return false; }
 }
 
+/** Local calendar YYYY-MM-DD (not UTC) — matches lineup "today" and user expectations at local midnight. */
+function _localCalendarDay(){
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
 /**
  * Sync _isPro / _freePickUsed from lhProfile + apply daily reset rules.
  * - Free pick is consumed only for the calendar day stored in freePickDate.
@@ -2381,7 +2395,7 @@ function _paywallBypassActive(){
  */
 function _refreshFreePickConsumedState(d){
   if(!d || typeof d !== 'object') return;
-  const day = new Date().toISOString().slice(0,10);
+  const day = _localCalendarDay();
   let dirty = false;
   if(d.freePickUsed && d.freePickDate && d.freePickDate !== day){
     d.freePickUsed = false;
@@ -2593,7 +2607,7 @@ function markFreePickUsed(){
   try{
     const d = JSON.parse(_lhMem.getItem('lhProfile')||'{}');
     d.freePickUsed = true;
-    d.freePickDate = new Date().toISOString().slice(0,10);
+    d.freePickDate = _localCalendarDay();
     _lhMem.setItem('lhProfile', JSON.stringify(d));
   }catch(e){}
   setTimeout(showUpgradeWall, 4000);
