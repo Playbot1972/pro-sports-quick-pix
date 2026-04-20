@@ -17,7 +17,7 @@
 <!-- Google Analytics 4 — replace G-XXXXXXXXXX with your real Measurement ID -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
 <script>
-  const APP_VERSION = 'v1.07';
+  const APP_VERSION = 'v1.08';
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
@@ -3026,6 +3026,56 @@ async function getTodaysMlbHitters(){
       collect(box?.teams?.away, 'away');
     }catch(e){}
   }
+  // Safety fallback: if we only got one game worth of hitters, backfill from
+  // each scheduled team's active roster so all teams playing today are represented.
+  {
+    const teamsSeen=new Set(pools.map(p=>String(p.teamAbbr||'')));
+    const scheduledTeams=[];
+    const seenTeamIds=new Set();
+    for(const g of games){
+      const home=g?.teams?.home?.team||{};
+      const away=g?.teams?.away?.team||{};
+      const gObj=gameMap[String(g.gamePk)]||null;
+      const hId=home.id!=null?String(home.id):'';
+      const aId=away.id!=null?String(away.id):'';
+      const hAbbr=home.abbreviation||'';
+      const aAbbr=away.abbreviation||'';
+      if(hId && !seenTeamIds.has(hId)){ seenTeamIds.add(hId); scheduledTeams.push({id:hId,abbr:hAbbr,name:home.name||hAbbr,opp:aAbbr,game:gObj,gamePk:g.gamePk}); }
+      if(aId && !seenTeamIds.has(aId)){ seenTeamIds.add(aId); scheduledTeams.push({id:aId,abbr:aAbbr,name:away.name||aAbbr,opp:hAbbr,game:gObj,gamePk:g.gamePk}); }
+    }
+    if(scheduledTeams.length>=4 && teamsSeen.size<=2){
+      for(const t of scheduledTeams){
+        let r;
+        try{
+          r=await fetchJson('https://statsapi.mlb.com/api/v1/teams/'+encodeURIComponent(t.id)+'/roster?rosterType=active');
+        }catch(_){ continue; }
+        const roster=(r&&r.roster)||[];
+        let added=0;
+        for(const rp of roster){
+          const person=rp&&rp.person||{};
+          const pos=rp&&rp.position&&rp.position.abbreviation||'';
+          const name=normalizeName(person.fullName||'');
+          if(!name||isPitcher(pos)) continue;
+          pools.push({
+            player:name,
+            playerId: person.id!=null?Number(person.id):NaN,
+            team:t.name,
+            teamAbbr:t.abbr,
+            oppTeamAbbr:t.opp||'',
+            teamId:Number(t.id),
+            order:99,
+            gamePk:t.gamePk,
+            game:t.game,
+            hr:'–',
+            avg:'.---',
+            pos
+          });
+          added++;
+          if(added>=12) break;
+        }
+      }
+    }
+  }
   const unique=new Map();
   pools.forEach(x=>{
     const k=`${x.player}::${x.team}`;
@@ -4462,7 +4512,7 @@ document.addEventListener('click',function(e){const item=e.target.closest('.item
 initLegalModalStyling();
 syncAppVersionBadge();
 </script>
-<div class="app-version" id="appVersion">v1.07</div>
+<div class="app-version" id="appVersion">v1.08</div>
 <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 <div class="toast-stack center" id="toastStackCenter" aria-live="polite" aria-atomic="true"></div>
 </body>
