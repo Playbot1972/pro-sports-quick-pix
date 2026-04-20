@@ -2586,17 +2586,70 @@ function poSetError(msg){
   document.getElementById('poCards').innerHTML = '<div class="muted" style="padding:20px 0;text-align:center">'+msg+'</div>';
 }
 
+function _picksShareFooter(){
+  return '\n\n🎯 Get your free picks: https://www.perplexity.ai/computer/a/multisportsqp-C.3phRMSQlW0imvW1u4uXw\n\nFor entertainment only. 21+ only.';
+}
+/** Build share text for whichever sport/option the overlay just revealed (not only MLB HR). */
+function buildPicksShareTextForOverlay(){
+  const who = _userName ? `${_userName} is` : 'Someone is';
+  const ou = (i, p, label) => `${i + 1}. ${p.player} (${p.teamAbbr || p.team || '?'}) — ${p.dir || 'Over'} ${p.line} ${label}`;
+  let headline = '';
+  const lines = [];
+  if(current === 'MLB'){
+    if(currentOption === 'HR' && mlbPicks.length){
+      headline = `${who} using Pro Sports Quick Pix for today's HR picks!`;
+      mlbPicks.forEach((p, i) => { lines.push(`${i + 1}. ${p.player} (${p.teamAbbr || p.team}) — ${p.hr} HR`); });
+    } else if(currentOption === 'Ks' && ksPicks.length){
+      headline = `${who} using Pro Sports Quick Pix for today's strikeout prop picks!`;
+      ksPicks.forEach((p, i) => { lines.push(`${i + 1}. ${p.player} (${p.teamAbbr || p.team}) — ${p.dir || 'Over'} ${p.kLine} Ks`); });
+    } else if(currentOption === 'Hits' && hitsPicks.length){
+      headline = `${who} using Pro Sports Quick Pix for today's Hits picks!`;
+      hitsPicks.forEach((p, i) => { lines.push(ou(i, p, 'Hits')); });
+    } else if(currentOption === 'Total Bases' && basesPicks.length){
+      headline = `${who} using Pro Sports Quick Pix for today's Total Bases picks!`;
+      basesPicks.forEach((p, i) => { lines.push(ou(i, p, 'Total Bases')); });
+    } else if(currentOption === 'RBI' && rbiPicks.length){
+      headline = `${who} using Pro Sports Quick Pix for today's RBI picks!`;
+      rbiPicks.forEach((p, i) => { lines.push(ou(i, p, 'RBI')); });
+    }
+  } else if(current === 'NFL' && nflPicks.length){
+    const lab = nflPicks[0].statLabel || currentOption || 'props';
+    headline = `${who} using Pro Sports Quick Pix for today's NFL ${lab} picks!`;
+    nflPicks.forEach((p, i) => {
+      const sl = p.statLabel || currentOption;
+      if(sl === 'TDs') lines.push(`${i + 1}. ${p.player} (${p.teamAbbr || p.team}) — ${p.td} TDs`);
+      else lines.push(ou(i, p, sl));
+    });
+  } else if(current === 'NBA' && nbaPicks.length){
+    const lab = nbaPicks[0].statLabel || currentOption;
+    headline = `${who} using Pro Sports Quick Pix for today's NBA ${lab} picks!`;
+    nbaPicks.forEach((p, i) => { lines.push(ou(i, p, p.statLabel || currentOption)); });
+  } else if(current === 'NHL' && nhlPicks.length){
+    const lab = nhlPicks[0].statLabel || currentOption;
+    headline = `${who} using Pro Sports Quick Pix for today's NHL ${lab} picks!`;
+    nhlPicks.forEach((p, i) => { lines.push(ou(i, p, p.statLabel || currentOption)); });
+  } else if(current === 'Soccer' && soccerPicks.length){
+    const lab = soccerPicks[0].statLabel || currentOption;
+    headline = `${who} using Pro Sports Quick Pix for today's Soccer ${lab} picks!`;
+    soccerPicks.forEach((p, i) => { lines.push(ou(i, p, p.statLabel || currentOption)); });
+  }
+  if(!lines.length) return '';
+  return `🔴 ${headline}\n\n${lines.join('\n')}${_picksShareFooter()}`;
+}
 function copyPicksFromOverlay(){
   trackEvent('picks_shared',{sport:current,option:currentOption});
-  if(!mlbPicks.length) return;
-  const sharer = _userName || 'Someone';
-  const lines = mlbPicks.map((p,i)=>`${i+1}. ${p.player} (${p.teamAbbr||p.team}) — ${p.hr} HR`);
-  const text = `🔴 ${sharer} using Pro Sports Quick Pix for today's HR picks!\n\n${lines.join('\n')}\n\n🎯 Get your free picks: https://www.perplexity.ai/computer/a/multisportsqp-C.3phRMSQlW0imvW1u4uXw\n\nFor entertainment only. 21+ only.`;
+  const text = buildPicksShareTextForOverlay();
+  if(!text) return;
   function flashPoCopied(){
     const btn = document.getElementById('poShareBtn');
     if(btn){ const orig = btn.textContent; btn.textContent = '✓ Copied!'; setTimeout(()=>{ btn.textContent = orig; }, 2000); }
   }
-  copyTextRobust(text).then(flashPoCopied);
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  if(isMobile && navigator.share){
+    navigator.share({ title:'Pro Sports Quick Pix Picks', text }).catch(() => copyTextRobust(text).then(flashPoCopied));
+  } else {
+    copyTextRobust(text).then(flashPoCopied);
+  }
 }
 
 // ── Swipe-down to close ───────────────────────────────────────────────────────
