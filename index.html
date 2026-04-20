@@ -17,7 +17,7 @@
 <!-- Google Analytics 4 — replace G-XXXXXXXXXX with your real Measurement ID -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
 <script>
-  const APP_VERSION = 'v1.26';
+  const APP_VERSION = 'v1.32';
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
@@ -161,17 +161,22 @@ body.light .tabs{
   -webkit-mask-composite:xor;
   mask-composite:exclude;
   pointer-events:none;
+  animation:orbitDashedRing 10s linear infinite;
 }
 .random-spin::after{
   content:'';
   position:absolute;
-  inset:-2px;
+  inset:-3px;
   border-radius:inherit;
+  padding:1.2px;
   pointer-events:none;
-  background:
-    radial-gradient(circle at 50% 0%, rgba(37,201,255,.95) 0 3px, transparent 4px),
-    radial-gradient(circle at 50% 100%, rgba(37,201,255,.75) 0 2.5px, transparent 3.5px);
-  animation:orbitDashedRing 9s linear infinite;
+  background:repeating-conic-gradient(from 0deg, rgba(37,201,255,.55) 0 8deg, transparent 8deg 20deg);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;
+  mask-composite:exclude;
+  animation:orbitDashedRing 7.2s linear infinite reverse;
 }
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .panel{padding:14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
@@ -515,11 +520,17 @@ body.light .po-paywall-panel{
 .po-title{font-weight:900;font-size:1.1rem;color:var(--text);}
 .po-close{
   border:0;border-radius:50%;width:36px;height:36px;
-  background:rgba(255,255,255,.1);color:var(--text);
+  background:rgba(255,255,255,.18);color:#f5f9ff;
   font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;
-  transition:background .2s;
+  border:1px solid rgba(110,231,255,.38);
+  box-shadow:0 0 0 1px rgba(255,255,255,.06) inset,0 6px 16px rgba(0,0,0,.28);
+  transition:background .2s,border-color .2s,transform .15s;
 }
-.po-close:hover{background:rgba(255,255,255,.2);}
+.po-close:hover{
+  background:rgba(110,231,255,.22);
+  border-color:rgba(110,231,255,.7);
+  transform:translateY(-1px);
+}
 .po-body{padding:16px 18px 40px;flex:1;}
 .po-cards{display:flex;flex-direction:column;gap:10px;margin-top:4px;}
 .po-skeleton{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:16px;padding:14px 16px;}
@@ -528,9 +539,10 @@ body.light .po-paywall-panel{
 .po-skel-stat{height:12px;width:30%;}
 @keyframes skelShim{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .po-card{
-  background:linear-gradient(180deg,var(--card),var(--card2));
-  border:1px solid var(--line);border-radius:16px;
+  background:linear-gradient(180deg,#152544,#101c35);
+  border:1px solid rgba(129,160,214,.36);border-radius:16px;
   padding:14px 16px;
+  box-shadow:0 10px 24px rgba(0,0,0,.2);
   animation:poCardIn .35s cubic-bezier(.32,1,.36,1) both;
 }
 @keyframes poCardIn{
@@ -538,8 +550,35 @@ body.light .po-paywall-panel{
   to{opacity:1;transform:none;}
 }
 .po-card .rowtop{display:flex;align-items:center;justify-content:space-between;font-weight:700;}
-.po-card .details{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);display:none;}
-.po-card .details .muted{font-size:.82rem;margin-bottom:3px;}
+.po-card .details{
+  margin-top:8px;
+  padding:10px 10px 2px;
+  border-top:1px solid rgba(129,160,214,.35);
+  background:rgba(7,17,31,.34);
+  border-radius:10px;
+  display:none;
+}
+.po-card .details .muted{font-size:.84rem;margin-bottom:4px;color:#d6e4ff}
+body.light .po-close{
+  background:#eef3ff;
+  color:#1d2b46;
+  border-color:#c9d5ec;
+  box-shadow:0 6px 16px rgba(20,33,61,.12);
+}
+body.light .po-close:hover{
+  background:#e1ebff;
+  border-color:#9db3df;
+}
+body.light .po-card{
+  background:linear-gradient(180deg,#ffffff,#f3f7ff);
+  border-color:#d2dced;
+  box-shadow:0 10px 22px rgba(20,33,61,.08);
+}
+body.light .po-card .details{
+  background:#f6f9ff;
+  border-top-color:#d6e0f2;
+}
+body.light .po-card .details .muted{color:#3e4f72}
 .po-share{
   margin-top:18px;width:100%;padding:13px;border-radius:14px;border:0;
   background:linear-gradient(90deg,#6ee7ff,#8b5cf6);
@@ -1163,6 +1202,7 @@ function randomSport(){
   currentOption = sports[s].options[0];
   renderTabs();
   renderSport();
+  if(current!=='Soccer' && current!=='NHL') _snapActiveMarketTabLeft();
 }
 function randomSubOption(){
   const opts = sports[current].options;
@@ -1171,8 +1211,23 @@ function randomSubOption(){
   let n = 0;
   while(opts.length>1 && o===currentOption && n++<20) o = opts[Math.floor(Math.random()*opts.length)];
   setOption(o);
+  if(current!=='Soccer' && current!=='NHL') _snapActiveMarketTabLeft();
 }
 function setSport(s){_trackSectionSwitch(s);current=s;currentOption=sports[s].options[0];renderTabs();renderSport();}
+function _snapActiveMarketTabLeft(){
+  const tabsEl = document.getElementById('tabs');
+  if(!tabsEl) return;
+  const active = tabsEl.querySelector('.tab.active');
+  if(!active) return;
+  requestAnimationFrame(function(){
+    try{
+      active.scrollIntoView({behavior:'smooth', inline:'start', block:'nearest'});
+    }catch(_){
+      const left = active.offsetLeft - 8;
+      tabsEl.scrollLeft = left>0 ? left : 0;
+    }
+  });
+}
 function renderSport(){
   const _paywalled = _freePickUsed && !_devMode && !_isPro;
   const data=sports[current];document.getElementById('sportTitle').textContent=current;document.getElementById('sportDesc').textContent=data.desc;document.getElementById('sportHintBadge').textContent=current+' Live Lineups';
@@ -3963,7 +4018,7 @@ document.addEventListener('click',function(e){const item=e.target.closest('.item
 initLegalModalStyling();
 syncAppVersionBadge();
 </script>
-<div class="app-version" id="appVersion">v1.26</div>
+<div class="app-version" id="appVersion">v1.32</div>
 <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 <div class="toast-stack center" id="toastStackCenter" aria-live="polite" aria-atomic="true"></div>
 </body>
