@@ -63,7 +63,7 @@ body.light{--card:#ffffff;--card2:#eef2ff;--text:#14213d;--muted:#56627a;--line:
 .item .rowtop{display:flex;justify-content:space-between;gap:10px;align-items:center;width:100%}
 .rowtop-left{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
 .rowtop-name{min-width:0;font-weight:700}
-.mlb-headshot,.nba-headshot,.nhl-headshot{width:38px;height:38px;border-radius:10px;object-fit:cover;flex-shrink:0;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.22)}
+.mlb-headshot,.nba-headshot,.nhl-headshot,.nfl-headshot{width:38px;height:38px;border-radius:10px;object-fit:cover;flex-shrink:0;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.22)}
 .chev{font-size:14px;color:var(--muted)}
 .muted{font-size:13px;color:var(--muted)}
 .team-pill{display:inline-flex;align-items:center;justify-content:center;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:900;margin-left:8px;line-height:1;color:#fff;vertical-align:middle;white-space:nowrap}
@@ -1127,8 +1127,8 @@ function renderNFLPicks(){
   } else if(nflPicks.length>0){
     document.getElementById('picks').innerHTML=nflPicks.map((p)=>{
       const statLabel=p.statLabel||currentOption;
-      if(statLabel==='TDs') return `<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'><span>${p.player} ${teamPill(p.teamAbbr)} <span class='chev'>▾</span></span><span class='muted'><span style='font-weight:700;color:#6ee7ff'>${p.td}</span> <span style='opacity:.6;font-size:11px'>TDs</span></span></div><div class='details'><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>Season TDs: ${p.td}</div></div></div>`;
-      return `<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'><span>${p.player} ${teamPill(p.teamAbbr)} <span class='chev'>▾</span></span><span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>${statLabel}</span></span></div><div class='details'><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>${p.dir} ${p.line} ${statLabel}</div><div class='muted'>Season avg: ${p.seasonAvg}</div></div></div>`;
+      if(statLabel==='TDs') return `<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'>${nflRowTopPlayerHtml(p)}<span class='muted'><span style='font-weight:700;color:#6ee7ff'>${p.td}</span> <span style='opacity:.6;font-size:11px'>TDs</span></span></div><div class='details'><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>Season TDs: ${p.td}</div></div></div>`;
+      return `<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'>${nflRowTopPlayerHtml(p)}<span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>${statLabel}</span></span></div><div class='details'><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>${p.dir} ${p.line} ${statLabel}</div><div class='muted'>Season avg: ${p.seasonAvg}</div></div></div>`;
     }).join('');
   } else if(nflLoaded&&nflPicks.length===0){
     document.getElementById('picks').innerHTML='<div class="muted">No NFL player data available today.</div>';
@@ -1165,14 +1165,15 @@ async function getTodaysNFLPlayers(option){
         for(const athlete of (group.athletes||[])){
           const name=athlete.athlete&&athlete.athlete.displayName||'';
           if(!name) continue;
+          const espnId=athlete.athlete&&athlete.athlete.id!=null?Number(athlete.athlete.id):'';
           const pos=athlete.athlete&&athlete.athlete.position&&athlete.athlete.position.abbreviation||'';
           const vals=athlete.stats||[];
           if(option==='TDs'){
             // Accumulate TDs across rushing/receiving/passing per player
             const tdVal=parseFloat(vals[3]||0);
             const existing=players.find(x=>x.player===name&&x.teamAbbr===teamAbbr);
-            if(existing){ existing.td+=tdVal; existing.seasonAvg=(existing.td)+' TDs'; }
-            else { players.push({player:name,teamAbbr,pos,statLabel:'TDs',td:tdVal,line:0,seasonAvg:tdVal+' TDs'}); }
+            if(existing){ existing.td+=tdVal; existing.seasonAvg=(existing.td)+' TDs'; if(!existing.espnId&&espnId) existing.espnId=espnId; }
+            else { players.push({player:name,espnId,teamAbbr,pos,statLabel:'TDs',td:tdVal,line:0,seasonAvg:tdVal+' TDs'}); }
           } else {
             if(seen.has(name+gname)) continue;
             seen.add(name+gname);
@@ -1183,7 +1184,7 @@ async function getTodaysNFLPlayers(option){
             else if(option==='Pass Yds'){statVal=parseFloat(vals[1]||0);seasonAvg=statVal+' yds';}
             if(statVal===0) continue;
             const line=Math.round(statVal*2)/2||(option==='Pass Yds'?225.5:option==='Rush Yds'?55.5:option==='Rec Yds'?45.5:option==='Receptions'?4.5:0.5);
-            players.push({player:name,teamAbbr,pos,statLabel:option,line,seasonAvg});
+            players.push({player:name,espnId,teamAbbr,pos,statLabel:option,line,seasonAvg});
           }
         }
       }
@@ -1212,7 +1213,7 @@ function poRevealNFLCard(p, idx){
   if(statLabel==='TDs'){
     card.innerHTML=`
     <div class="rowtop" onclick="const d=this.nextElementSibling;d.style.display=d.style.display==='block'?'none':'block'">
-      <span>${p.player} ${teamPill(p.teamAbbr)} <span class="chev">&#9662;</span></span>
+      ${nflRowTopPlayerHtml(p,'<span class="chev">&#9662;</span>')}
       <span class="muted"><span style="font-weight:700;color:#6ee7ff">${p.td}</span> <span style="opacity:.6;font-size:11px">TDs</span></span>
     </div>
     <div class="details">
@@ -1222,7 +1223,7 @@ function poRevealNFLCard(p, idx){
   } else {
     card.innerHTML=`
     <div class="rowtop" onclick="const d=this.nextElementSibling;d.style.display=d.style.display==='block'?'none':'block'">
-      <span>${p.player} ${teamPill(p.teamAbbr)} <span class="chev">&#9662;</span></span>
+      ${nflRowTopPlayerHtml(p,'<span class="chev">&#9662;</span>')}
       <span class="muted"><span style="font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}">${p.dir} ${p.line}</span> <span style="opacity:.6;font-size:11px">${statLabel}</span></span>
     </div>
     <div class="details">
@@ -1844,6 +1845,20 @@ function nhlRowTopPlayerHtml(p, chevHtml){
   const url = nhlHeadshotUrl(p.espnId);
   const img = url
     ? '<img class="nhl-headshot" src="'+url+'" alt="" width="38" height="38" loading="lazy" decoding="async" onerror="this.remove()">'
+    : '';
+  return '<span class="rowtop-left">'+img+'<span class="rowtop-name">'+p.player+' '+teamPill(team)+' '+chev+'</span></span>';
+}
+function nflHeadshotUrl(espnId){
+  const id = Number(espnId);
+  if(!id || id !== id) return '';
+  return 'https://a.espncdn.com/i/headshots/nfl/players/full/'+id+'.png';
+}
+function nflRowTopPlayerHtml(p, chevHtml){
+  const chev = chevHtml != null ? chevHtml : "<span class=\"chev\">▾</span>";
+  const team = p.teamAbbr || '';
+  const url = nflHeadshotUrl(p.espnId);
+  const img = url
+    ? '<img class="nfl-headshot" src="'+url+'" alt="" width="38" height="38" loading="lazy" decoding="async" onerror="this.remove()">'
     : '';
   return '<span class="rowtop-left">'+img+'<span class="rowtop-name">'+p.player+' '+teamPill(team)+' '+chev+'</span></span>';
 }
