@@ -29,8 +29,8 @@
 <audio id="chingSfx_2021" src="https://assets.mixkit.co/active_storage/sfx/2021/2021-preview.mp3" preload="auto" crossorigin="anonymous"></audio>
 <audio id="chingSfx_1935" src="https://assets.mixkit.co/active_storage/sfx/1935/1935-preview.mp3" preload="auto" crossorigin="anonymous"></audio>
 <audio id="pickTickSfx"     src="https://assets.mixkit.co/active_storage/sfx/1114/1114-preview.mp3" preload="auto" crossorigin="anonymous"></audio>
-<!-- Loot-style last-reveal stinger: Mixkit "Video game treasure" #2066 (royalty-free; not ARC Raiders IP). -->
-<audio id="pickJackpotSfx" src="https://assets.mixkit.co/active_storage/sfx/2066/2066-preview.mp3" preload="auto" crossorigin="anonymous"></audio>
+<!-- Loot-style last-reveal stinger: Mixkit "Video game treasure" #2066 (no crossorigin — some CDN objects omit ACAO without Origin, which can break priming). -->
+<audio id="pickJackpotSfx" src="https://assets.mixkit.co/active_storage/sfx/2066/2066-preview.mp3" preload="auto"></audio>
 
 <style>
 :root{--bg:#07111f;--card:#111c33;--card2:#182747;--text:#eef3ff;--muted:#9fb0d0;--line:#26355f;--accent:#6ee7ff}
@@ -497,6 +497,7 @@ function playChingSfx(isFirst, isLast) {
     _lastSfxIdx = idx;
     const [id, cutMs] = _sfxPool[idx];
     const el = document.getElementById(id);
+    if(!el) return;
     el.pause(); el.currentTime = 0;
     if (isLast) {
       el.volume = 1;
@@ -530,18 +531,20 @@ function playChingSfx(isFirst, isLast) {
 let _pickSfxAudioPrimed = false;
 function unlockPickSfxFromGesture(){
   if(_pickSfxAudioPrimed) return;
-  _pickSfxAudioPrimed = true;
   const ids = ['chingSfx','chingSfx_1982','chingSfx_2021','chingSfx_1935','pickTickSfx','pickJackpotSfx'];
   for(let i = 0; i < ids.length; i++){
-    const el = document.getElementById(ids[i]);
-    if(!el) continue;
-    const wasMuted = el.muted;
-    el.muted = true;
-    const p = el.play();
-    const restore = () => { try { el.pause(); el.currentTime = 0; el.muted = wasMuted; } catch(_) { el.muted = wasMuted; } };
-    if(p && typeof p.then === 'function') p.then(restore).catch(() => { el.muted = wasMuted; });
-    else restore();
+    try{
+      const el = document.getElementById(ids[i]);
+      if(!el) continue;
+      const wasMuted = el.muted;
+      el.muted = true;
+      const p = el.play();
+      const restore = () => { try { el.pause(); el.currentTime = 0; el.muted = wasMuted; } catch(_) { el.muted = wasMuted; } };
+      if(p && typeof p.then === 'function') p.then(restore).catch(() => { try{ el.pause(); el.currentTime = 0; }catch(_){ } el.muted = wasMuted; });
+      else restore();
+    }catch(_){}
   }
+  _pickSfxAudioPrimed = true;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
