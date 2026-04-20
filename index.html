@@ -3,10 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Pro Sports Quick Pix: daily sportsbook-style quick picks with live player pools, readable market tabs, and responsible gaming controls.">
+<meta name="theme-color" content="#060b16">
+<meta name="robots" content="index,follow">
+<link rel="dns-prefetch" href="https://www.gstatic.com">
+<link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+<link rel="dns-prefetch" href="https://assets.mixkit.co">
+<link rel="dns-prefetch" href="https://site.api.espn.com">
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preconnect" href="https://assets.mixkit.co" crossorigin>
 <title>Pro Sports Quick Pix</title>
 <!-- Google Analytics 4 — replace G-XXXXXXXXXX with your real Measurement ID -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
 <script>
+  const APP_VERSION = 'v1.17';
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
@@ -114,6 +125,10 @@ body.light{--card:#ffffff;--card2:#f3f6ff;--text:#14213d;--muted:#56627a;--line:
   background:linear-gradient(180deg,rgba(15,23,40,.96),rgba(15,23,40,.82));
   border-bottom:1px solid rgba(255,255,255,.08);
 }
+body.light .tabs{
+  background:linear-gradient(180deg,#ffffff,#eef3ff);
+  border-bottom:1px solid #d7dfef;
+}
 .tab{border:1px solid var(--line);border-radius:999px;padding:9px 12px;background:rgba(255,255,255,.06);color:var(--text);font-weight:800;cursor:pointer;font-size:12px;transition:transform .15s ease, background .2s ease, border-color .2s ease}
 .tab:hover{transform:translateY(-1px)}
 .tab.active{background:linear-gradient(180deg,rgba(37,201,255,.26),rgba(37,201,255,.12));border-color:rgba(37,201,255,.62);color:#dff8ff}
@@ -185,6 +200,57 @@ body.light{--card:#ffffff;--card2:#f3f6ff;--text:#14213d;--muted:#56627a;--line:
   border:0;border-radius:10px;padding:10px 14px;font-weight:800;
   background:#6ee7ff;color:#08101f;cursor:pointer;
 }
+.age-modal-card{
+  background:linear-gradient(160deg,#111c33,#0e1a30);
+  border:1px solid rgba(110,231,255,.22);
+  border-radius:22px;padding:28px 24px;max-width:400px;width:100%;
+  color:#eef3ff;box-shadow:0 24px 80px rgba(0,0,0,.55);text-align:center;
+}
+.paywall-overlay-card{
+  text-align:center;padding:28px 18px 40px;max-width:420px;margin:0 auto;
+}
+.paywall-overlay-title{font-weight:900;font-size:1.1rem;color:#eef3ff;margin-bottom:10px}
+.paywall-overlay-sub{color:#9fb0d0;font-size:.92rem;line-height:1.55;margin-bottom:22px}
+.paywall-overlay-note{margin-top:14px;font-size:.8rem;color:#56627a}
+body.light #stripeModal{
+  background:rgba(234,240,251,.92)!important;
+}
+body.light .stripe-modal-card{
+  background:linear-gradient(160deg,#ffffff,#eef3ff)!important;
+  border-color:#cfd8ea!important;
+  color:#1d2b46!important;
+  box-shadow:0 24px 60px rgba(20,33,61,.14)!important;
+}
+body.light .stripe-modal-title{color:#1d2b46!important}
+body.light .stripe-modal-sub{color:#4b5f84!important}
+body.light .stripe-modal-close{color:#5a6f93!important}
+body.light .stripe-modal-list{
+  background:#f5f8ff!important;
+  border-color:#d6def0!important;
+}
+body.light .stripe-modal-list-head{color:#5a6f93!important}
+body.light .stripe-modal-price{color:#1d2b46!important}
+body.light .stripe-modal-price-sub{color:#5a6f93!important}
+body.light .stripe-modal-note{color:#5a6f93!important}
+body.light .stripe-modal-secure{color:#5a6f93!important}
+body.light .stripe-modal-secure strong{color:#3156c6!important}
+body.light #ageGateModal{background:rgba(234,240,251,.92)!important}
+body.light .age-modal-card{
+  background:linear-gradient(160deg,#ffffff,#eef3ff)!important;
+  border-color:#cfd8ea!important;
+  color:#1d2b46!important;
+  box-shadow:0 24px 60px rgba(20,33,61,.14)!important;
+}
+body.light .age-modal-card .ob-age-q{color:#32466c}
+body.light .age-modal-card .ob-age-q strong{color:#1d2b46}
+body.light .paywall-overlay-card{
+  background:linear-gradient(160deg,#ffffff,#eef3ff);
+  border:1px solid #cfd8ea;
+  border-radius:20px;
+}
+body.light .paywall-overlay-title{color:#1d2b46}
+body.light .paywall-overlay-sub{color:#4f6287}
+body.light .paywall-overlay-note{color:#5a6f93}
 .reel{display:inline-block;min-width:180px;letter-spacing:.08em;font-weight:900;opacity:.9;animation:reelSpin .4s linear infinite}
 @keyframes reelSpin{0%{transform:translateY(0) skewY(0deg)}50%{transform:translateY(-1px) skewY(-2deg)}100%{transform:translateY(0) skewY(0deg)}}
 .item.expandable{cursor:pointer;align-items:flex-start;flex-direction:column}
@@ -938,6 +1004,23 @@ function _oosPicksLine(sportKey){
 function trackEvent(name, params){
   try{ if(typeof gtag==='function') gtag('event', name, params||{}); }catch(e){}
 }
+window.addEventListener('error', function(e){
+  try{
+    trackEvent('client_error', {
+      message: String(e && e.message || 'unknown_error'),
+      source: String(e && e.filename || ''),
+      line: Number(e && e.lineno || 0)
+    });
+  }catch(_){}
+});
+window.addEventListener('unhandledrejection', function(e){
+  try{
+    const reason = e && e.reason;
+    trackEvent('client_rejection', {
+      reason: String((reason && reason.message) || reason || 'unknown_rejection')
+    });
+  }catch(_){}
+});
 // Session time tracking
 var _sessionStart = Date.now();
 var _sectionTimes = {}; // sport -> ms spent
@@ -2608,6 +2691,12 @@ function initLegalModalStyling(){
     if(closeBtn) closeBtn.classList.add('legal-modal-close');
   });
 }
+function syncAppVersionBadge(){
+  const el = document.getElementById('appVersion');
+  if(!el) return;
+  el.textContent = APP_VERSION;
+  el.setAttribute('title', 'Release '+APP_VERSION);
+}
 function ageGateNo(){
   window.location.href = 'https://www.sesamestreet.org/games';
 }
@@ -3160,15 +3249,15 @@ function getRhythmSuspense(i){
 
 <!-- PRO UPGRADE MODAL -->
 <div id="stripeModal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(7,17,31,.96);align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(8px)">
-  <div style="background:linear-gradient(160deg,#111c33,#0e1a30);border:1px solid #26355f;border-radius:22px;padding:32px 28px;max-width:400px;width:100%;color:#eef3ff;position:relative;box-shadow:0 24px 80px rgba(0,0,0,.7)">
-    <button onclick="closeStripeModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:#56627a;font-size:1.3rem;cursor:pointer;line-height:1">✕</button>
+  <div class="stripe-modal-card" style="background:linear-gradient(160deg,#111c33,#0e1a30);border:1px solid #26355f;border-radius:22px;padding:32px 28px;max-width:400px;width:100%;color:#eef3ff;position:relative;box-shadow:0 24px 80px rgba(0,0,0,.7)">
+    <button class="stripe-modal-close" onclick="closeStripeModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:#56627a;font-size:1.3rem;cursor:pointer;line-height:1">✕</button>
     <div style="text-align:center;margin-bottom:8px">
       <div style="font-size:2rem;margin-bottom:6px">🏆</div>
-      <div style="font-size:1.3rem;font-weight:900;color:#eef3ff;margin-bottom:4px">Go Pro</div>
-      <div style="font-size:.88rem;color:#9fb0d0;margin-bottom:22px">Unlock everything in Pro Sports Quick Pix</div>
+      <div class="stripe-modal-title" style="font-size:1.3rem;font-weight:900;color:#eef3ff;margin-bottom:4px">Go Pro</div>
+      <div class="stripe-modal-sub" style="font-size:.88rem;color:#9fb0d0;margin-bottom:22px">Unlock everything in Pro Sports Quick Pix</div>
     </div>
-    <div style="background:rgba(110,231,255,.06);border:1px solid rgba(110,231,255,.15);border-radius:14px;padding:16px 18px;margin-bottom:22px">
-      <div style="font-size:.82rem;color:#9fb0d0;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;font-weight:700">What you get</div>
+    <div class="stripe-modal-list" style="background:rgba(110,231,255,.06);border:1px solid rgba(110,231,255,.15);border-radius:14px;padding:16px 18px;margin-bottom:22px">
+      <div class="stripe-modal-list-head" style="font-size:.82rem;color:#9fb0d0;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;font-weight:700">What you get</div>
       <div style="display:flex;flex-direction:column;gap:9px;font-size:.9rem">
         <div style="display:flex;align-items:center;gap:10px"><span style="color:#6ee7ff;font-size:1rem">✓</span> Unlimited daily HR picks</div>
         <div style="display:flex;align-items:center;gap:10px"><span style="color:#6ee7ff;font-size:1rem">✓</span> All pick counts (1–3) across all sports</div>
@@ -3178,12 +3267,12 @@ function getRhythmSuspense(i){
       </div>
     </div>
     <div style="text-align:center;margin-bottom:6px">
-      <span style="font-size:2rem;font-weight:900;color:#eef3ff">$4.99</span><span style="color:#9fb0d0;font-size:.9rem"> / month</span>
+      <span class="stripe-modal-price" style="font-size:2rem;font-weight:900;color:#eef3ff">$4.99</span><span class="stripe-modal-price-sub" style="color:#9fb0d0;font-size:.9rem"> / month</span>
     </div>
-    <div style="text-align:center;font-size:.78rem;color:#56627a;margin-bottom:18px">Cancel anytime. Billed monthly.</div>
+    <div class="stripe-modal-note" style="text-align:center;font-size:.78rem;color:#56627a;margin-bottom:18px">Cancel anytime. Billed monthly.</div>
     <button id="checkoutBtn" class="btn-cta btn-cta-lg" onclick="startCheckout()" style="width:100%;transition:opacity .2s">Subscribe for $4.99/mo 🚀</button>
     <div id="checkoutError" style="color:#f87171;font-size:.82rem;text-align:center;margin-top:8px;min-height:18px"></div>
-    <div style="text-align:center;margin-top:14px;font-size:.75rem;color:#56627a">Secured by <strong style="color:#9fb0d0">Stripe</strong> · 256-bit SSL encryption</div>
+    <div class="stripe-modal-secure" style="text-align:center;margin-top:14px;font-size:.75rem;color:#56627a">Secured by <strong style="color:#9fb0d0">Stripe</strong> · 256-bit SSL encryption</div>
   </div>
 </div>
 
@@ -3766,8 +3855,9 @@ function fbSubmit(){
 function setPlayerPickSelected(el){try{document.querySelectorAll('.item').forEach(x=>x.classList.remove('selected')); if(el) el.classList.add('selected')}catch(e){}}
 document.addEventListener('click',function(e){const item=e.target.closest('.item'); if(item && item.classList.contains('expandable')) setPlayerPickSelected(item);});
 initLegalModalStyling();
+syncAppVersionBadge();
 </script>
-<div class="app-version" id="appVersion">v1.13</div>
+<div class="app-version" id="appVersion">v1.17</div>
 <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 <div class="toast-stack center" id="toastStackCenter" aria-live="polite" aria-atomic="true"></div>
 </body>
