@@ -587,9 +587,29 @@ function renderTabs(){
   const outOfSeason = ['NFL'];
   const goldLockSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f59e0b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' style='width:13px;height:13px;margin-left:5px;vertical-align:middle;flex-shrink:0'><rect x='3' y='11' width='18' height='11' rx='2' ry='2'/><path d='M7 11V7a5 5 0 0 1 10 0v4'/></svg>`;
   // Bottom nav: always the main sport selector
-  document.getElementById('bottomnav').innerHTML=Object.keys(sports).map(s=>`<div class='navitem ${s===current?'active':''}${outOfSeason.includes(s)?' oos':''}' onclick="setSport('${s}')" style='display:inline-flex;align-items:center;justify-content:center${outOfSeason.includes(s)?';opacity:0.6':''}'><img src='${sports[s].icon}' alt='${s} logo' style='width:18px;height:18px;object-fit:contain;margin-right:6px;flex-shrink:0'>${s}${outOfSeason.includes(s)?goldLockSvg:''}</div>`).join('');
+  document.getElementById('bottomnav').innerHTML=Object.keys(sports).map(s=>`<div class='navitem ${s===current?'active':''}${outOfSeason.includes(s)?' oos':''}' onclick="setSport('${s}')" style='display:inline-flex;align-items:center;justify-content:center${outOfSeason.includes(s)?';opacity:0.6':''}'><img src='${sports[s].icon}' alt='${s} logo' style='width:18px;height:18px;object-fit:contain;margin-right:6px;flex-shrink:0'>${s}${outOfSeason.includes(s)?goldLockSvg:''}</div>`).join('')+`<div class='navitem' onclick="randomSport()" title="Jump to a random sport" style='display:inline-flex;align-items:center;justify-content:center;border-style:dashed;opacity:.92'>🎲 Random</div>`;
   // Top tabs: always show active sport's sub-options
-  document.getElementById('tabs').innerHTML=sports[current].options.map(o=>`<button class='tab ${o===currentOption?'active':''}' style='border-color:${sports[current].color}55' onclick="setOption('${o}')">${o}</button>`).join('');
+  document.getElementById('tabs').innerHTML=sports[current].options.map(o=>`<button type="button" class='tab ${o===currentOption?'active':''}' style='border-color:${sports[current].color}55' onclick="setOption('${o}')">${o}</button>`).join('')+`<button type="button" class="tab" style="border-color:${sports[current].color}55;border-style:dashed" onclick="randomSubOption()" title="Random stat for this sport">🎲 Random</button>`;
+}
+function randomSport(){
+  const keys = Object.keys(sports);
+  if(!keys.length) return;
+  let s = keys[Math.floor(Math.random()*keys.length)];
+  let n = 0;
+  while(keys.length>1 && s===current && n++<20) s = keys[Math.floor(Math.random()*keys.length)];
+  _trackSectionSwitch(s);
+  current = s;
+  currentOption = sports[s].options[0];
+  renderTabs();
+  renderSport();
+}
+function randomSubOption(){
+  const opts = sports[current].options;
+  if(!opts.length) return;
+  let o = opts[Math.floor(Math.random()*opts.length)];
+  let n = 0;
+  while(opts.length>1 && o===currentOption && n++<20) o = opts[Math.floor(Math.random()*opts.length)];
+  setOption(o);
 }
 function setSport(s){_trackSectionSwitch(s);current=s;currentOption=sports[s].options[0];renderTabs();renderSport();}
 function renderSport(){
