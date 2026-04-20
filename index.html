@@ -17,7 +17,7 @@
 <!-- Google Analytics 4 — replace G-XXXXXXXXXX with your real Measurement ID -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
 <script>
-  const APP_VERSION = 'v1.00';
+  const APP_VERSION = 'v1.01';
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
@@ -1737,8 +1737,8 @@ function renderNFLPicks(){
   } else if(nflPicks.length>0){
     document.getElementById('picks').innerHTML=nflPicks.map((p)=>{
       const statLabel=p.statLabel||currentOption;
-      if(statLabel==='TDs') return `<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'>${nflRowTopPlayerHtml(p)}<span class='muted'><span style='font-weight:700;color:#6ee7ff'>${p.td}</span> <span style='opacity:.6;font-size:11px'>TDs</span></span></div><div class='details'><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>Season TDs: ${p.td}</div></div></div>`;
-      return `<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'>${nflRowTopPlayerHtml(p)}<span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>${statLabel}</span></span></div><div class='details'><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>${p.dir} ${p.line} ${statLabel}</div><div class='muted'>Season avg: ${p.seasonAvg}</div></div></div>`;
+      if(statLabel==='TDs') return `<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'>${nflRowTopPlayerHtml(p)}<span class='muted'><span style='font-weight:700;color:#6ee7ff'>${p.td}</span> <span style='opacity:.6;font-size:11px'>TDs</span></span></div><div class='details'><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>Season TDs: ${p.td}</div><div class='muted'>Game status: ${gameStatusText(p.game)}</div><div class='muted'>Start time: ${gameStartText(p.game)||'—'}</div><div class='muted'>Venue: ${gameVenueText(p.game)||'—'}</div></div></div>`;
+      return `<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'>${nflRowTopPlayerHtml(p)}<span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>${statLabel}</span></span></div><div class='details'><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>${p.dir} ${p.line} ${statLabel}</div><div class='muted'>Season avg: ${p.seasonAvg}</div><div class='muted'>Game status: ${gameStatusText(p.game)}</div><div class='muted'>Start time: ${gameStartText(p.game)||'—'}</div><div class='muted'>Venue: ${gameVenueText(p.game)||'—'}</div></div></div>`;
     }).join('');
   } else if(nflLoaded&&nflPicks.length===0){
     document.getElementById('picks').innerHTML='<div class="muted">No NFL player data available today.</div>';
@@ -1781,6 +1781,8 @@ async function getTodaysNFLPlayers(option){
   const players=[];
   const seen=new Set();
   for(const ev of events){
+    const teamGameMap=_eventGameByTeamAbbr(ev);
+    const eventGame=_espnEventGame(ev);
     const sumUrl=`https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=${ev.id}`;
     let sum;
     try{sum=await fetchJson(sumUrl);}catch(e){continue;}
@@ -1814,8 +1816,9 @@ async function getTodaysNFLPlayers(option){
               existing.seasonAvg=(existing.td)+' TDs';
               if(!existing.espnId&&espnId) existing.espnId=espnId;
               if(!existing.headshotUrl&&headshotUrl) existing.headshotUrl=headshotUrl;
+              if(!existing.game) existing.game = teamGameMap[teamAbbr]||eventGame;
             } else {
-              players.push({player:name,espnId,headshotUrl,teamAbbr,pos,statLabel:'TDs',td:tdVal,line:0,seasonAvg:tdVal+' TDs'});
+              players.push({player:name,espnId,headshotUrl,teamAbbr,pos,statLabel:'TDs',td:tdVal,line:0,seasonAvg:tdVal+' TDs',game:teamGameMap[teamAbbr]||eventGame});
             }
           } else {
             if(seen.has(name+gname)) continue;
@@ -1826,7 +1829,7 @@ async function getTodaysNFLPlayers(option){
             else if(option==='Receptions'){statVal=parseFloat(vals[0]||0);seasonAvg=statVal+' rec';}
             else if(option==='Pass Yds'){statVal=parseFloat(vals[1]||0);seasonAvg=statVal+' yds';}
             const line=Math.round(statVal*2)/2||(option==='Pass Yds'?225.5:option==='Rush Yds'?55.5:option==='Rec Yds'?45.5:option==='Receptions'?4.5:0.5);
-            players.push({player:name,espnId,headshotUrl,teamAbbr,pos,statLabel:option,line,seasonAvg});
+            players.push({player:name,espnId,headshotUrl,teamAbbr,pos,statLabel:option,line,seasonAvg,game:teamGameMap[teamAbbr]||eventGame});
           }
         }
       }
@@ -1866,6 +1869,9 @@ function poRevealNFLCard(p, idx){
     <div class="details">
       <div class="muted">Position: ${p.pos||'—'}</div>
       <div class="muted">Season TDs: ${p.td}</div>
+      <div class="muted">Game status: ${gameStatusText(p.game)}</div>
+      <div class="muted">Start time: ${gameStartText(p.game)||'—'}</div>
+      <div class="muted">Venue: ${gameVenueText(p.game)||'—'}</div>
     </div>`;
   } else {
     card.innerHTML=`
@@ -1877,6 +1883,9 @@ function poRevealNFLCard(p, idx){
       <div class="muted">Position: ${p.pos||'—'}</div>
       <div class="muted">${p.dir} ${p.line} ${statLabel}</div>
       <div class="muted">Season avg: ${p.seasonAvg}</div>
+      <div class="muted">Game status: ${gameStatusText(p.game)}</div>
+      <div class="muted">Start time: ${gameStartText(p.game)||'—'}</div>
+      <div class="muted">Venue: ${gameVenueText(p.game)||'—'}</div>
     </div>`;
   }
   if(!sk) document.getElementById('poCards').appendChild(card);
@@ -1956,7 +1965,7 @@ function renderNBAPicks(){
   } else if(nbaPicks.length>0){
     document.getElementById('picks').innerHTML=nbaPicks.map((p)=>{
       const statLabel=p.statLabel||currentOption;
-      return `<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'>${nbaRowTopPlayerHtml(p)}<span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>${statLabel}</span></span></div><div class='details'><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>${p.dir} ${p.line} ${statLabel}</div><div class='muted'>Season avg: ${p.seasonAvg}</div></div></div>`;
+      return `<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'>${nbaRowTopPlayerHtml(p)}<span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>${statLabel}</span></span></div><div class='details'><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>${p.dir} ${p.line} ${statLabel}</div><div class='muted'>Season avg: ${p.seasonAvg}</div><div class='muted'>Game status: ${gameStatusText(p.game)}</div><div class='muted'>Start time: ${gameStartText(p.game)||'—'}</div><div class='muted'>Venue: ${gameVenueText(p.game)||'—'}</div></div></div>`;
     }).join('');
   } else if(nbaLoaded&&nbaPicks.length===0){
     document.getElementById('picks').innerHTML='<div class="muted">No NBA player data available today.</div>';
@@ -1999,6 +2008,8 @@ async function getTodaysNBAPlayers(option){
   const players=[];
   const seen=new Set();
   for(const ev of events){
+    const teamGameMap=_eventGameByTeamAbbr(ev);
+    const eventGame=_espnEventGame(ev);
     const sumUrl=`https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=${ev.id}`;
     let sum;
     try{sum=await fetchJson(sumUrl);}catch(e){continue;}
@@ -2032,7 +2043,7 @@ async function getTodaysNBAPlayers(option){
           else{statVal=pts;line=14.5;seasonAvg=statVal+' pts';}
           const espnId=athleteObj.id!=null?String(athleteObj.id):'';
           const headshotUrl = athleteObj.headshot && athleteObj.headshot.href ? String(athleteObj.headshot.href) : '';
-          players.push({player:name,espnId,headshotUrl,teamAbbr,pos:nbaPos,statLabel:option,line,seasonAvg});
+          players.push({player:name,espnId,headshotUrl,teamAbbr,pos:nbaPos,statLabel:option,line,seasonAvg,game:teamGameMap[teamAbbr]||eventGame});
         }
       }
     }
@@ -2071,6 +2082,9 @@ function poRevealNBACard(p, idx){
       <div class="muted">Position: ${p.pos||'—'}</div>
       <div class="muted">${p.dir} ${p.line} ${statLabel}</div>
       <div class="muted">Season avg: ${p.seasonAvg}</div>
+      <div class="muted">Game status: ${gameStatusText(p.game)}</div>
+      <div class="muted">Start time: ${gameStartText(p.game)||'—'}</div>
+      <div class="muted">Venue: ${gameVenueText(p.game)||'—'}</div>
     </div>`;
   if(!sk) document.getElementById('poCards').appendChild(card);
 }
@@ -2149,7 +2163,7 @@ function renderNHLPicks(){
   } else if(nhlPicks.length>0){
     document.getElementById('picks').innerHTML=nhlPicks.map((p)=>{
       const statLabel=p.statLabel||currentOption;
-      return `<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'>${nhlRowTopPlayerHtml(p)}<span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>${statLabel}</span></span></div><div class='details'><div class='muted'>${p.dir} ${p.line} ${statLabel}</div><div class='muted'>Season avg: ${p.seasonAvg}</div><div class='muted'>Position: ${p.pos||'—'}</div></div></div>`;
+      return `<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'>${nhlRowTopPlayerHtml(p)}<span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>${statLabel}</span></span></div><div class='details'><div class='muted'>${p.dir} ${p.line} ${statLabel}</div><div class='muted'>Season avg: ${p.seasonAvg}</div><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>Game status: ${gameStatusText(p.game)}</div><div class='muted'>Start time: ${gameStartText(p.game)||'—'}</div><div class='muted'>Venue: ${gameVenueText(p.game)||'—'}</div></div></div>`;
     }).join('');
   } else if(nhlLoaded&&nhlPicks.length===0){
     document.getElementById('picks').innerHTML='<div class="muted">No NHL player data available today.</div>';
@@ -2192,6 +2206,8 @@ async function getTodaysNHLPlayers(option){
   const players=[];
   const seen=new Set();
   for(const ev of events){
+    const teamGameMap=_eventGameByTeamAbbr(ev);
+    const eventGame=_espnEventGame(ev);
     const sumUrl=`https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/summary?event=${ev.id}`;
     let sum;
     try{sum=await fetchJson(sumUrl);}catch(e){continue;}
@@ -2241,7 +2257,7 @@ async function getTodaysNHLPlayers(option){
           } else {continue;}
           const espnId=athleteObj.id!=null?String(athleteObj.id):'';
           const headshotUrl = athleteObj.headshot && athleteObj.headshot.href ? String(athleteObj.headshot.href) : '';
-          players.push({player:name,espnId,headshotUrl,teamAbbr,pos,statLabel:option,line,seasonAvg});
+          players.push({player:name,espnId,headshotUrl,teamAbbr,pos,statLabel:option,line,seasonAvg,game:teamGameMap[teamAbbr]||eventGame});
         }
       }
     }
@@ -2280,6 +2296,9 @@ function poRevealNHLCard(p, idx){
       <div class="muted">${p.dir} ${p.line} ${statLabel}</div>
       <div class="muted">Season avg: ${p.seasonAvg}</div>
       <div class="muted">Position: ${p.pos||'—'}</div>
+      <div class="muted">Game status: ${gameStatusText(p.game)}</div>
+      <div class="muted">Start time: ${gameStartText(p.game)||'—'}</div>
+      <div class="muted">Venue: ${gameVenueText(p.game)||'—'}</div>
     </div>`;
   if(!sk) document.getElementById('poCards').appendChild(card);
 }
@@ -2358,7 +2377,7 @@ function renderSoccerPicks(){
   } else if(soccerPicks.length>0){
     document.getElementById('picks').innerHTML=soccerPicks.map((p)=>{
       const statLabel=p.statLabel||currentOption;
-      return `<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'>${soccerRowTopPlayerHtml(p)}<span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>${statLabel}</span></span></div><div class='details'><div class='muted'>${p.dir} ${p.line} ${statLabel}</div><div class='muted'>Season avg: ${p.seasonAvg}</div><div class='muted'>Position: ${p.pos||'—'}</div></div></div>`;
+      return `<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'>${soccerRowTopPlayerHtml(p)}<span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>${statLabel}</span></span></div><div class='details'><div class='muted'>${p.dir} ${p.line} ${statLabel}</div><div class='muted'>Season avg: ${p.seasonAvg}</div><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>Game status: ${gameStatusText(p.game)}</div><div class='muted'>Start time: ${gameStartText(p.game)||'—'}</div><div class='muted'>Venue: ${gameVenueText(p.game)||'—'}</div></div></div>`;
     }).join('');
   } else if(soccerLoaded&&soccerPicks.length===0){
     document.getElementById('picks').innerHTML='<div class="muted">No Soccer player data available today.</div>';
@@ -2401,6 +2420,8 @@ async function getTodaysSoccerPlayers(option){
   const players=[];
   const seen=new Set();
   for(const ev of events){
+    const teamGameMap=_eventGameByTeamAbbr(ev);
+    const eventGame=_espnEventGame(ev);
     const sumUrl=`https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=${ev.id}`;
     let sum;
     try{sum=await fetchJson(sumUrl);}catch(e){continue;}
@@ -2446,7 +2467,7 @@ async function getTodaysSoccerPlayers(option){
           line=statVal>0?Math.round(statVal*2)/2:0.5;
           seasonAvg=statVal+' SOT';
         } else {continue;}
-        players.push({player:name,espnId,teamAbbr,pos,statLabel:option,line,seasonAvg});
+        players.push({player:name,espnId,teamAbbr,pos,statLabel:option,line,seasonAvg,game:teamGameMap[teamAbbr]||eventGame});
       }
     }
     // Fallback: try boxscore.players if rosters empty
@@ -2460,7 +2481,7 @@ async function getTodaysSoccerPlayers(option){
             const espnId=athlete.athlete&&athlete.athlete.id!=null?Number(athlete.athlete.id):'';
             if(!name||seen.has(name))continue;
             seen.add(name);
-            players.push({player:name,espnId,teamAbbr,pos:'',statLabel:option,line:0.5,seasonAvg:'—'});
+            players.push({player:name,espnId,teamAbbr,pos:'',statLabel:option,line:0.5,seasonAvg:'—',game:teamGameMap[teamAbbr]||eventGame});
           }
         }
       }
@@ -2501,6 +2522,9 @@ function poRevealSoccerCard(p, idx){
       <div class="muted">${p.dir} ${p.line} ${statLabel}</div>
       <div class="muted">Season avg: ${p.seasonAvg}</div>
       <div class="muted">Position: ${p.pos||'—'}</div>
+      <div class="muted">Game status: ${gameStatusText(p.game)}</div>
+      <div class="muted">Start time: ${gameStartText(p.game)||'—'}</div>
+      <div class="muted">Venue: ${gameVenueText(p.game)||'—'}</div>
     </div>`;
   if(!sk) document.getElementById('poCards').appendChild(card);
 }
@@ -2708,6 +2732,24 @@ async function getScoreboardEventsNearby(baseUrl, backDays, aheadDays){
   }
   return events;
 }
+function _espnEventGame(ev){
+  const comp = ev && ev.competitions && ev.competitions[0] || {};
+  return {
+    gameDate: ev && ev.date || comp && comp.date || '',
+    status: ev && ev.status || comp && comp.status || {},
+    venue: { name: comp && comp.venue && (comp.venue.fullName || comp.venue.name) || '' }
+  };
+}
+function _eventGameByTeamAbbr(ev){
+  const out={};
+  const g=_espnEventGame(ev);
+  const comp = ev && ev.competitions && ev.competitions[0] || {};
+  for(const c of (comp.competitors||[])){
+    const abbr = c && c.team && c.team.abbreviation || '';
+    if(abbr) out[abbr]=g;
+  }
+  return out;
+}
 function _eventTeamRefs(events){
   const out=[];
   const seen=new Set();
@@ -2721,7 +2763,8 @@ function _eventTeamRefs(events){
       out.push({
         id,
         abbr: c.team && c.team.abbreviation || '',
-        name: c.team && (c.team.displayName || c.team.name) || ''
+        name: c.team && (c.team.displayName || c.team.name) || '',
+        game: _espnEventGame(ev)
       });
     }
   }
@@ -2772,7 +2815,8 @@ async function _buildRosterFallbackPlayers(sportPath, events, option, defaults){
         pos:a.pos||'',
         statLabel:option,
         line:defaults && defaults[option] != null ? defaults[option] : 0.5,
-        seasonAvg:'—'
+        seasonAvg:'—',
+        game:t.game||null
       });
     }
   }
@@ -4199,7 +4243,7 @@ document.addEventListener('click',function(e){const item=e.target.closest('.item
 initLegalModalStyling();
 syncAppVersionBadge();
 </script>
-<div class="app-version" id="appVersion">v1.00</div>
+<div class="app-version" id="appVersion">v1.01</div>
 <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 <div class="toast-stack center" id="toastStackCenter" aria-live="polite" aria-atomic="true"></div>
 </body>
