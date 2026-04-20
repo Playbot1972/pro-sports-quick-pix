@@ -29,8 +29,6 @@
 <audio id="chingSfx_2021" src="https://assets.mixkit.co/active_storage/sfx/2021/2021-preview.mp3" preload="auto" crossorigin="anonymous"></audio>
 <audio id="chingSfx_1935" src="https://assets.mixkit.co/active_storage/sfx/1935/1935-preview.mp3" preload="auto" crossorigin="anonymous"></audio>
 <audio id="pickTickSfx"     src="https://assets.mixkit.co/active_storage/sfx/1114/1114-preview.mp3" preload="auto" crossorigin="anonymous"></audio>
-<!-- Loot-style last-reveal stinger: Mixkit "Video game treasure" #2066 (no crossorigin — some CDN objects omit ACAO without Origin, which can break priming). -->
-<audio id="pickJackpotSfx" src="https://assets.mixkit.co/active_storage/sfx/2066/2066-preview.mp3" preload="auto"></audio>
 
 <style>
 :root{--bg:#07111f;--card:#111c33;--card2:#182747;--text:#eef3ff;--muted:#9fb0d0;--line:#26355f;--accent:#6ee7ff}
@@ -475,6 +473,79 @@ function _pickRandomSfxIdx(excludeIdx) {
 // firstSfxIdx: pass the index used for pick #0 so the last pick avoids it
 let _firstSfxIdx = -1;
 
+// Last-pick “epic loot” layer: original Web Audio (timpani-ish + brassy + bells)—not a copy of any game asset.
+let _lootCtx = null;
+function _ensureLootAudioCtx(){
+  try{
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return null;
+    if(!_lootCtx) _lootCtx = new AC();
+    if(_lootCtx.state === 'suspended') _lootCtx.resume();
+    return _lootCtx;
+  }catch(_){ return null; }
+}
+function playOrchestralLootStinger(){
+  const ctx = _ensureLootAudioCtx();
+  if(!ctx) return;
+  const t0 = ctx.currentTime + 0.02;
+  const master = ctx.createGain();
+  master.gain.value = 0.26;
+  master.connect(ctx.destination);
+  function linFade(g, tA, peak, tEnd){
+    g.gain.setValueAtTime(0, tA);
+    g.gain.linearRampToValueAtTime(peak, tA + 0.02);
+    g.gain.linearRampToValueAtTime(0.0001, tEnd);
+  }
+  function lowHit(freq, t, peak, endT){
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(freq, t);
+    linFade(g, t, peak, endT);
+    o.connect(g); g.connect(master);
+    o.start(t); o.stop(endT + 0.04);
+  }
+  lowHit(73.42, t0, 0.9, t0 + 0.34);
+  lowHit(98, t0 + 0.09, 0.55, t0 + 0.3);
+  function brassHit(freq, t, len){
+    for(let k = 0; k < 3; k++){
+      const o = ctx.createOscillator();
+      o.type = 'sawtooth';
+      const det = 1 + (k - 1) * 0.0045;
+      o.frequency.setValueAtTime(freq * det, t);
+      const lp = ctx.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.Q.value = 0.7;
+      lp.frequency.setValueAtTime(2800, t);
+      lp.frequency.linearRampToValueAtTime(380, t + len * 0.7);
+      const g = ctx.createGain();
+      const pk = 0.045 / (k + 1);
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(pk, t + 0.035);
+      g.gain.linearRampToValueAtTime(0.0001, t + len);
+      o.connect(lp); lp.connect(g); g.connect(master);
+      o.start(t); o.stop(t + len + 0.05);
+    }
+  }
+  brassHit(174.61, t0 + 0.04, 0.4);
+  brassHit(220, t0 + 0.15, 0.44);
+  brassHit(293.66, t0 + 0.26, 0.36);
+  function bell(f, t, dur, peak){
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(f, t);
+    linFade(g, t, peak, t + dur);
+    o.connect(g); g.connect(master);
+    o.start(t); o.stop(t + dur + 0.05);
+  }
+  bell(1318.51, t0 + 0.22, 0.52, 0.07);
+  bell(1760, t0 + 0.28, 0.48, 0.055);
+  bell(2093, t0 + 0.33, 0.42, 0.045);
+  bell(2793.83, t0 + 0.38, 0.55, 0.04);
+  setTimeout(() => { try { master.disconnect(); } catch (_) {} }, 1300);
+}
+
 function playChingSfx(isFirst, isLast) {
   try {
     let idx;
@@ -509,18 +580,7 @@ function playChingSfx(isFirst, isLast) {
     const p = el.play();
     if (p && typeof p.catch === 'function') p.catch(() => {});
     setTimeout(() => { try { el.pause(); el.volume = 0.88; } catch(_){} }, cutMs);
-    if (isLast) {
-      setTimeout(() => {
-        try {
-          const j = document.getElementById('pickJackpotSfx');
-          if (!j) return;
-          j.pause(); j.currentTime = 0; j.volume = 0.4; j.playbackRate = 1;
-          const pj = j.play();
-          if (pj && typeof pj.catch === 'function') pj.catch(() => {});
-          setTimeout(() => { try { j.pause(); } catch(_){} }, 900);
-        } catch (_) {}
-      }, 55);
-    }
+    if (isLast) setTimeout(() => { try { playOrchestralLootStinger(); } catch (_) {} }, 55);
   } catch (_) {}
 }
 
@@ -531,7 +591,7 @@ function playChingSfx(isFirst, isLast) {
 let _pickSfxAudioPrimed = false;
 function unlockPickSfxFromGesture(){
   if(_pickSfxAudioPrimed) return;
-  const ids = ['chingSfx','chingSfx_1982','chingSfx_2021','chingSfx_1935','pickTickSfx','pickJackpotSfx'];
+  const ids = ['chingSfx','chingSfx_1982','chingSfx_2021','chingSfx_1935','pickTickSfx'];
   for(let i = 0; i < ids.length; i++){
     try{
       const el = document.getElementById(ids[i]);
@@ -544,6 +604,7 @@ function unlockPickSfxFromGesture(){
       else restore();
     }catch(_){}
   }
+  try{ _ensureLootAudioCtx(); }catch(_){}
   _pickSfxAudioPrimed = true;
 }
 
