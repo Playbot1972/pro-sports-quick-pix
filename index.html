@@ -165,8 +165,9 @@ body.light{--card:#ffffff;--card2:#f3f6ff;--text:#14213d;--muted:#56627a;--line:
 .toast-stack.center{
   right:auto;
   left:50%;
-  transform:translateX(-50%);
-  bottom:84px;
+  top:50%;
+  bottom:auto;
+  transform:translate(-50%,-50%);
   justify-items:center;
 }
 .toast{
@@ -215,6 +216,62 @@ body.light{--card:#ffffff;--card2:#f3f6ff;--text:#14213d;--muted:#56627a;--line:
 .trust-links{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;}
 .trust-links a{color:#b8ddff;text-decoration:none;font-size:13px;font-weight:700;opacity:.95;}
 .trust-links a:hover{text-decoration:underline;opacity:1;}
+body.light .trust-banner{
+  background:linear-gradient(180deg,#ffffff,#f4f7ff);
+  border-color:#d5def0;
+  box-shadow:0 8px 20px rgba(20,33,61,.08);
+  color:#14213d;
+}
+body.light .trust-text{color:#24324f}
+body.light .trust-links a{color:#3156c6}
+body.light .trust-badge{
+  background:linear-gradient(90deg,#5b7cff,#7d5bff);
+  color:#ffffff;
+}
+body.light .navitem{
+  background:rgba(20,33,61,.04);
+  border-color:#cfd8ea;
+  color:#1c2b45;
+}
+body.light .navitem.active{
+  background:linear-gradient(180deg,#5b7cff,#7d5bff);
+  border-color:#5b7cff;
+  color:#ffffff;
+}
+body.light .tab{
+  background:#f4f7ff;
+  border-color:#cfd8ea;
+  color:#1c2b45;
+}
+body.light .tab.active{
+  background:linear-gradient(180deg,#5b7cff,#7d5bff);
+  border-color:#5b7cff;
+  color:#ffffff;
+}
+body.light .btn{
+  background:linear-gradient(180deg,#5b7cff,#4a67d8);
+  border-color:#4a67d8;
+  color:#ffffff;
+}
+body.light .btn2{
+  background:#eef2ff;
+  border-color:#cfd8ea;
+  color:#24324f;
+}
+body.light .slip-actions{
+  background:linear-gradient(180deg,#ffffff,#eef3ff);
+  border-color:#cfd8ea;
+}
+body.light .slip-btn{
+  background:#f2f6ff;
+  border-color:#cfd8ea;
+  color:#1c2b45;
+}
+body.light .slip-btn.primary{
+  background:linear-gradient(180deg,#5b7cff,#4a67d8);
+  border-color:#4a67d8;
+  color:#ffffff;
+}
 @media (max-width:900px){
   .grid{grid-template-columns:1fr}
   .title{font-size:22px}
@@ -3705,7 +3762,7 @@ function setPlayerPickSelected(el){try{document.querySelectorAll('.item').forEac
 document.addEventListener('click',function(e){const item=e.target.closest('.item'); if(item && item.classList.contains('expandable')) setPlayerPickSelected(item);});
 initLegalModalStyling();
 </script>
-<div class="app-version" id="appVersion">v1.10</div>
+<div class="app-version" id="appVersion">v1.12</div>
 <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 <div class="toast-stack center" id="toastStackCenter" aria-live="polite" aria-atomic="true"></div>
 </body>
