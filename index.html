@@ -17,7 +17,7 @@
 <!-- Google Analytics 4 — replace G-XXXXXXXXXX with your real Measurement ID -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
 <script>
-  const APP_VERSION = 'v1.10';
+  const APP_VERSION = 'v1.11';
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
@@ -1490,7 +1490,12 @@ async function startHitsLoad(){
   let shuffler=null;
   const stopShuffle=()=>{if(shuffler)shuffler._timers?.forEach(t=>{clearTimeout(t);clearInterval(t);});shuffler=null;};
   try{
-    const pool=await getTodaysMlbHitters();
+    const poolRaw=await getTodaysMlbHitters();
+    const knownHr=poolRaw.filter(function(x){
+      const v=parseFloat(x && x.hr);
+      return !Number.isNaN(v);
+    });
+    const pool=knownHr.length?knownHr:poolRaw;
     if(token!==hitsToken)return;
     // Annotate each player with a prop line based on season hits
     const annotated=_withOppTeamFromPool(pool).map(p=>{
@@ -3079,7 +3084,7 @@ async function getTodaysMlbHitters(){
             order:99,
             gamePk:t.gamePk,
             game:t.game,
-            hr:'–',
+            hr:0,
             avg:'.---',
             pos
           });
@@ -3140,7 +3145,7 @@ function renderMLB(){
   if(mlbLoading){
     document.getElementById('picks').innerHTML='<div class="muted">Loading MLB picks...</div>';
   } else if(mlbPicks.length>0){
-    document.getElementById('picks').innerHTML=mlbPicks.map((p,i)=>`<div class='item expandable' onclick="const d=this.querySelector('.details'); d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'>${mlbRowTopPlayerHtml(p)}<span class='muted'><span style='font-weight:700;color:#6ee7ff'>${p.hr}</span> <span style='opacity:.6;font-size:11px'>HR</span></span></div><div class='details'>${p.pos?`<div class='muted'>Position: ${p.pos}</div>`:''}<div class='muted'>Season AVG: ${p.avg}</div><div class='muted'>Game status: ${gameStatusText(p.game)}</div><div class='muted'>Start time: ${gameStartText(p.game)}</div><div class='muted'>Venue: ${gameVenueText(p.game)}</div></div></div>`).join('');
+    document.getElementById('picks').innerHTML=mlbPicks.map((p,i)=>`<div class='item expandable' onclick="const d=this.querySelector('.details'); d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'>${mlbRowTopPlayerHtml(p)}<span class='muted'><span style='font-weight:700;color:#6ee7ff'>${(p.hr==null||p.hr==='–')?0:p.hr}</span> <span style='opacity:.6;font-size:11px'>HR</span></span></div><div class='details'>${p.pos?`<div class='muted'>Position: ${p.pos}</div>`:''}<div class='muted'>Season AVG: ${p.avg}</div><div class='muted'>Game status: ${gameStatusText(p.game)}</div><div class='muted'>Start time: ${gameStartText(p.game)}</div><div class='muted'>Venue: ${gameVenueText(p.game)}</div></div></div>`).join('');
   } else if(mlbLoaded&&mlbPicks.length===0){
     document.getElementById('picks').innerHTML='<div class="muted">No available picks.</div>';
   } else if(!mlbLoaded&&!mlbLoading&&mlbPicks.length===0){
@@ -4112,7 +4117,7 @@ function poRevealCard(p, idx){
   card.innerHTML = `
     <div class="rowtop" onclick="const d=this.nextElementSibling;d.style.display=d.style.display==='block'?'none':'block'">
       ${mlbRowTopPlayerHtml(p,'<span class="chev">▾</span>')}
-      <span class="muted"><span style="font-weight:700;color:#6ee7ff">${p.hr}</span> <span style="opacity:.6;font-size:11px">HR</span></span>
+      <span class="muted"><span style="font-weight:700;color:#6ee7ff">${(p.hr==null||p.hr==='–')?0:p.hr}</span> <span style="opacity:.6;font-size:11px">HR</span></span>
     </div>
     <div class="details">
       <div class="muted">Position: ${p.pos||'—'}</div>
@@ -4525,7 +4530,7 @@ document.addEventListener('click',function(e){const item=e.target.closest('.item
 initLegalModalStyling();
 syncAppVersionBadge();
 </script>
-<div class="app-version" id="appVersion">v1.10</div>
+<div class="app-version" id="appVersion">v1.11</div>
 <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 <div class="toast-stack center" id="toastStackCenter" aria-live="polite" aria-atomic="true"></div>
 </body>
