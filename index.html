@@ -902,7 +902,7 @@ function copyPicks(){
   _copyShareTextToClipboard(text,document.getElementById('shareBtn'));
 }
 function clearMLB(){mlbToken++;mlbLoaded=false;mlbLoading=false;mlbPicks=[];mlbTeamsUsed=[];mlbHitterUsed=new Set();mlbLivePool=[];pickLocked=false;pickCount=0;currentOption='HR';renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Click Pick Lucky Hitter.</div>';}
-function setKsCount(n){if(pickLocked) return; if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'Ks',attempted_count:n});showUpgradeWall();return;} ksPickCount=n; renderSport();}
+function setKsCount(n){if(pickLocked) return; if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'Ks',attempted_count:n});showUpgradeWall({ attemptedPickCount: n });return;} ksPickCount=n; renderSport();}
 function renderKsPicks(){
   document.getElementById('picksTitle').textContent='⚾ Lucky Pitchers';
   if(ksLoading){
@@ -923,7 +923,7 @@ function clearKs(){ksToken++;ksLoaded=false;ksLoading=false;ksPicks=[];ksPitcher
 // ─────────────────────────────────────────────────────────────────────────────
 // MLB HITS
 // ─────────────────────────────────────────────────────────────────────────────
-function setHitsCount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'Hits',attempted_count:n});showUpgradeWall();return;}hitsPickCount=n;renderSport();}
+function setHitsCount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'Hits',attempted_count:n});showUpgradeWall({ attemptedPickCount: n });return;}hitsPickCount=n;renderSport();}
 function renderHitsPicks(){
   document.getElementById('picksTitle').textContent='💥 Hits Picks';
   if(hitsLoading){
@@ -1026,7 +1026,7 @@ async function startHitsLoad(){
 // ─────────────────────────────────────────────────────────────────────────────
 // MLB TOTAL BASES
 // ─────────────────────────────────────────────────────────────────────────────
-function setBasesCount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'Total Bases',attempted_count:n});showUpgradeWall();return;}basesPickCount=n;renderSport();}
+function setBasesCount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'Total Bases',attempted_count:n});showUpgradeWall({ attemptedPickCount: n });return;}basesPickCount=n;renderSport();}
 function renderBasesPicks(){
   document.getElementById('picksTitle').textContent='🎯 Total Bases Picks';
   if(basesLoading){
@@ -1129,7 +1129,7 @@ async function startBasesLoad(){
 // ─────────────────────────────────────────────────────────────────────────────
 // MLB RBI
 // ─────────────────────────────────────────────────────────────────────────────
-function setRBICount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'RBI',attempted_count:n});showUpgradeWall();return;}rbiPickCount=n;renderSport();}
+function setRBICount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'RBI',attempted_count:n});showUpgradeWall({ attemptedPickCount: n });return;}rbiPickCount=n;renderSport();}
 function renderRBIPicks(){
   document.getElementById('picksTitle').textContent='💪 RBI Picks';
   if(rbiLoading){
@@ -1408,7 +1408,7 @@ async function startNFLLoad(){
 // ─────────────────────────────────────────────────────────────────────────────
 // NBA
 // ─────────────────────────────────────────────────────────────────────────────
-function setNBACount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'NBA',option:currentOption,attempted_count:n});showUpgradeWall();return;}nbaPickCount=n;renderSport();}
+function setNBACount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'NBA',option:currentOption,attempted_count:n});showUpgradeWall({ attemptedPickCount: n });return;}nbaPickCount=n;renderSport();}
 function renderNBAPicks(){
   document.getElementById('picksTitle').textContent='🏀 NBA Picks';
   if(nbaLoading){
@@ -1563,7 +1563,7 @@ async function startNBALoad(){
 // ─────────────────────────────────────────────────────────────────────────────
 // NHL
 // ─────────────────────────────────────────────────────────────────────────────
-function setNHLCount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'NHL',option:currentOption,attempted_count:n});showUpgradeWall();return;}nhlPickCount=n;renderSport();}
+function setNHLCount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'NHL',option:currentOption,attempted_count:n});showUpgradeWall({ attemptedPickCount: n });return;}nhlPickCount=n;renderSport();}
 function renderNHLPicks(){
   document.getElementById('picksTitle').textContent='🏒 NHL Picks';
   if(nhlLoading){
@@ -1734,7 +1734,7 @@ async function startNHLLoad(){
 // ─────────────────────────────────────────────────────────────────────────────
 // SOCCER (MLS)
 // ─────────────────────────────────────────────────────────────────────────────
-function setSoccerCount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'Soccer',option:currentOption,attempted_count:n});showUpgradeWall();return;}soccerPickCount=n;renderSport();}
+function setSoccerCount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'Soccer',option:currentOption,attempted_count:n});showUpgradeWall({ attemptedPickCount: n });return;}soccerPickCount=n;renderSport();}
 function renderSoccerPicks(){
   document.getElementById('picksTitle').textContent='⚽ Soccer Picks';
   if(soccerLoading){
@@ -2478,21 +2478,32 @@ function showUpgradeWall(opts){
   opts = opts || {};
   // Lock batter buttons and Pick button, show upgrade message
   pickLocked = false; // allow renderSport to run
-  pickCount = 0;
-  // HR: show whichever count they tapped (2 or 3 before paywall, or 1 after free run) — same for free-used taps
-  if(opts.attemptedPickCount >= 1 && opts.attemptedPickCount <= 3 && current === 'MLB' && currentOption === 'HR'){
-    pickCount = opts.attemptedPickCount;
-  }else if(_freePickUsed){
+  var ap = opts.attemptedPickCount;
+  if(typeof ap === 'number' && ap >= 1 && ap <= 3){
     if(current==='MLB'){
-      if(currentOption==='Ks') ksPickCount = Math.max(ksPickCount, 1);
-      else if(currentOption==='Hits') hitsPickCount = Math.max(hitsPickCount, 1);
-      else if(currentOption==='Total Bases') basesPickCount = Math.max(basesPickCount, 1);
-      else if(currentOption==='RBI') rbiPickCount = Math.max(rbiPickCount, 1);
-      else pickCount = Math.max(pickCount, 1);
-    } else if(current==='NBA') nbaPickCount = Math.max(nbaPickCount, 1);
-    else if(current==='NHL') nhlPickCount = Math.max(nhlPickCount, 1);
-    else if(current==='Soccer') soccerPickCount = Math.max(soccerPickCount, 1);
-    else if(current==='NFL') nflPickCount = Math.max(nflPickCount, 1);
+      if(currentOption==='Ks') ksPickCount = ap;
+      else if(currentOption==='Hits') hitsPickCount = ap;
+      else if(currentOption==='Total Bases') basesPickCount = ap;
+      else if(currentOption==='RBI') rbiPickCount = ap;
+      else pickCount = ap;
+    }else if(current==='NBA') nbaPickCount = ap;
+    else if(current==='NHL') nhlPickCount = ap;
+    else if(current==='Soccer') soccerPickCount = ap;
+    else if(current==='NFL') nflPickCount = ap;
+  }else{
+    pickCount = 0;
+    if(_freePickUsed){
+      if(current==='MLB'){
+        if(currentOption==='Ks') ksPickCount = Math.max(ksPickCount, 1);
+        else if(currentOption==='Hits') hitsPickCount = Math.max(hitsPickCount, 1);
+        else if(currentOption==='Total Bases') basesPickCount = Math.max(basesPickCount, 1);
+        else if(currentOption==='RBI') rbiPickCount = Math.max(rbiPickCount, 1);
+        else pickCount = Math.max(pickCount, 1);
+      } else if(current==='NBA') nbaPickCount = Math.max(nbaPickCount, 1);
+      else if(current==='NHL') nhlPickCount = Math.max(nhlPickCount, 1);
+      else if(current==='Soccer') soccerPickCount = Math.max(soccerPickCount, 1);
+      else if(current==='NFL') nflPickCount = Math.max(nflPickCount, 1);
+    }
   }
   renderSport();
   // Disable all count buttons
