@@ -139,6 +139,12 @@ body.light{--card:#ffffff;--card2:#eef2ff;--text:#14213d;--muted:#56627a;--line:
 }
 #pickOverlay.open{transform:translateY(0);}
 #pickOverlay.closing{transform:translateY(100%);transition:transform .38s cubic-bezier(.55,0,.45,1);}
+.po-paywall-panel{
+  border-radius:20px;
+  border:1px solid rgba(110,231,255,.2);
+  background:linear-gradient(165deg,rgba(17,28,51,.92),rgba(24,39,71,.88));
+  box-shadow:0 18px 48px rgba(0,0,0,.35);
+}
 .po-header{
   display:flex;align-items:center;justify-content:space-between;
   padding:18px 18px 10px;
@@ -609,7 +615,7 @@ function renderSport(){
   }
 }
 function setOption(o){currentOption=o;renderTabs();renderSport();}
-function setCount(n){if(pickLocked) return; if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'HR',attempted_count:n});showUpgradeWall();return;} pickCount=n;renderSport();}
+function setCount(n){if(pickLocked) return; if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'HR',attempted_count:n});showUpgradeWall({attemptedHR:n});return;} pickCount=n;renderSport();}
 function renderPicks(list){document.getElementById('picksTitle').textContent='Quick Picks';document.getElementById('picks').innerHTML=list.length?list.map(p=>`<div class='item'><span>${p}</span><span class='muted'>${currentOption}</span></div>`).join(''):'<div class="muted">No picks available yet.</div>';}
 /** Sync fallback when Clipboard API is missing, insecure (e.g. file://), or rejects. */
 function _copyTextExecCommand(text){
@@ -646,7 +652,7 @@ function copyPicks(){
   }
 }
 function clearMLB(){mlbToken++;mlbLoaded=false;mlbLoading=false;mlbPicks=[];mlbTeamsUsed=[];mlbHitterUsed=new Set();mlbLivePool=[];pickLocked=false;pickCount=0;currentOption='HR';renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Click Pick Lucky Hitter.</div>';}
-function setKsCount(n){if(pickLocked) return; if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'Ks',attempted_count:n});showUpgradeWall();return;} ksPickCount=n; renderSport();}
+function setKsCount(n){if(pickLocked) return; if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'Ks',attempted_count:n});showUpgradeWall({attemptedKs:n});return;} ksPickCount=n; renderSport();}
 function renderKsPicks(){
   document.getElementById('picksTitle').textContent='⚾ Lucky Pitchers';
   if(ksLoading){
@@ -666,7 +672,7 @@ function clearKs(){ksToken++;ksLoaded=false;ksLoading=false;ksPicks=[];ksPitcher
 // ─────────────────────────────────────────────────────────────────────────────
 // MLB HITS
 // ─────────────────────────────────────────────────────────────────────────────
-function setHitsCount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'Hits',attempted_count:n});showUpgradeWall();return;}hitsPickCount=n;renderSport();}
+function setHitsCount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'Hits',attempted_count:n});showUpgradeWall({attemptedHits:n});return;}hitsPickCount=n;renderSport();}
 function renderHitsPicks(){
   document.getElementById('picksTitle').textContent='💥 Hits Picks';
   if(hitsLoading){
@@ -768,7 +774,7 @@ async function startHitsLoad(){
 // ─────────────────────────────────────────────────────────────────────────────
 // MLB TOTAL BASES
 // ─────────────────────────────────────────────────────────────────────────────
-function setBasesCount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'Total Bases',attempted_count:n});showUpgradeWall();return;}basesPickCount=n;renderSport();}
+function setBasesCount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'Total Bases',attempted_count:n});showUpgradeWall({attemptedBases:n});return;}basesPickCount=n;renderSport();}
 function renderBasesPicks(){
   document.getElementById('picksTitle').textContent='🎯 Total Bases Picks';
   if(basesLoading){
@@ -870,7 +876,7 @@ async function startBasesLoad(){
 // ─────────────────────────────────────────────────────────────────────────────
 // MLB RBI
 // ─────────────────────────────────────────────────────────────────────────────
-function setRBICount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'RBI',attempted_count:n});showUpgradeWall();return;}rbiPickCount=n;renderSport();}
+function setRBICount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'RBI',attempted_count:n});showUpgradeWall({attemptedRBI:n});return;}rbiPickCount=n;renderSport();}
 function renderRBIPicks(){
   document.getElementById('picksTitle').textContent='💪 RBI Picks';
   if(rbiLoading){
@@ -1147,7 +1153,7 @@ async function startNFLLoad(){
 // ─────────────────────────────────────────────────────────────────────────────
 // NBA
 // ─────────────────────────────────────────────────────────────────────────────
-function setNBACount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'NBA',option:currentOption,attempted_count:n});showUpgradeWall();return;}nbaPickCount=n;renderSport();}
+function setNBACount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'NBA',option:currentOption,attempted_count:n});showUpgradeWall({attemptedNBA:n});return;}nbaPickCount=n;renderSport();}
 function renderNBAPicks(){
   document.getElementById('picksTitle').textContent='🏀 NBA Picks';
   if(nbaLoading){
@@ -1301,7 +1307,7 @@ async function startNBALoad(){
 // ─────────────────────────────────────────────────────────────────────────────
 // NHL
 // ─────────────────────────────────────────────────────────────────────────────
-function setNHLCount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'NHL',option:currentOption,attempted_count:n});showUpgradeWall();return;}nhlPickCount=n;renderSport();}
+function setNHLCount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'NHL',option:currentOption,attempted_count:n});showUpgradeWall({attemptedNHL:n});return;}nhlPickCount=n;renderSport();}
 function renderNHLPicks(){
   document.getElementById('picksTitle').textContent='🏒 NHL Picks';
   if(nhlLoading){
@@ -1471,7 +1477,7 @@ async function startNHLLoad(){
 // ─────────────────────────────────────────────────────────────────────────────
 // SOCCER (MLS)
 // ─────────────────────────────────────────────────────────────────────────────
-function setSoccerCount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'Soccer',option:currentOption,attempted_count:n});showUpgradeWall();return;}soccerPickCount=n;renderSport();}
+function setSoccerCount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'Soccer',option:currentOption,attempted_count:n});showUpgradeWall({attemptedSoccer:n});return;}soccerPickCount=n;renderSport();}
 function renderSoccerPicks(){
   document.getElementById('picksTitle').textContent='⚽ Soccer Picks';
   if(soccerLoading){
@@ -1710,7 +1716,7 @@ function renderMLB(){
   const shareBtn=document.getElementById('shareBtn');
   if(shareBtn) shareBtn.style.display=mlbPicks.length>0?'inline-block':'none';
   const row=document.getElementById('pickCountRow');
-  if(row){row.querySelectorAll('button').forEach(b=>{const isSelected=pickCount>=1&&pickCount<=3&&b.textContent.trim().startsWith(String(pickCount)+' ');b.classList.toggle('btn2',isSelected);b.classList.toggle('locked',pickLocked);b.disabled=pickLocked;});}
+  if(row){row.querySelectorAll('button').forEach(b=>{const isSelected=pickCount>=1&&pickCount<=3&&b.textContent.trim().startsWith(String(pickCount)+' ');b.classList.toggle('btn2',!isSelected);b.classList.toggle('locked',pickLocked);b.disabled=pickLocked;});}
   const loadBtn=document.getElementById('mlbLoadBtn');
   if(loadBtn) loadBtn.disabled=!(pickCount>=1&&pickCount<=3)||pickLocked;
 }
@@ -2142,19 +2148,89 @@ function markFreePickUsed(){
   setTimeout(showUpgradeWall, 4000);
 }
 
-function showUpgradeWall(){
-  // Lock batter buttons and Pick button, show upgrade message
-  pickLocked = false; // allow renderSport to run
-  pickCount = 0;
+function _buildPaywallOverlayHTML(){
+  return `<div id="poPaywallRoot" class="po-paywall-panel" style="text-align:center;padding:28px 18px 40px;max-width:420px;margin:0 auto">
+      <div style="font-size:2.2rem;margin-bottom:12px">🔒</div>
+      <div style="font-weight:900;font-size:1.1rem;color:#eef3ff;margin-bottom:10px">Unlock unlimited picks</div>
+      <div style="color:#9fb0d0;font-size:.92rem;line-height:1.55;margin-bottom:22px">You’ve used your free daily pick or this count needs Pro.<br>Upgrade for unlimited picks, every count option, and more.</div>
+      <button onclick="showUpgradeModal()" style="padding:13px 26px;border-radius:14px;border:0;background:linear-gradient(90deg,#6ee7ff,#8b5cf6);color:#07111f;font-weight:900;font-size:.98rem;cursor:pointer">Upgrade 🚀</button>
+      <div style="margin-top:14px;font-size:.8rem;color:#56627a">Free pick resets daily. Swipe down or tap ✕ to close.</div>
+    </div>`;
+}
+function isPaywallOverlayOpen(){
+  const ov = document.getElementById('pickOverlay');
+  const root = document.getElementById('poPaywallRoot');
+  if(!ov || !root || !ov.contains(root)) return false;
+  if(ov.classList.contains('closing')) return false;
+  return ov.classList.contains('open');
+}
+function openPaywallOverlayFull(){
+  const ov = document.getElementById('pickOverlay');
+  if(!ov) return;
+  ov.style.transform = '';
+  ov.style.transition = '';
+  ov.classList.remove('closing');
+  openPickOverlay();
+  document.getElementById('poTitle').textContent = '🔒 Upgrade — Pro Sports Quick Pix';
+  document.getElementById('poCards').innerHTML = _buildPaywallOverlayHTML();
+  document.getElementById('poShareBtn').style.display = 'none';
+}
+function showPaywallOverlayIfNeeded(){
+  if(isPaywallOverlayOpen()) return;
+  const hasPaywallDom = !!document.getElementById('poPaywallRoot');
+  const pickRunOpen = _poOpen && !hasPaywallDom;
+  if(pickRunOpen){
+    closePickOverlay();
+    setTimeout(openPaywallOverlayFull, 420);
+  } else {
+    openPaywallOverlayFull();
+  }
+}
+function showUpgradeWall(opts){
+  opts = opts || {};
+  pickLocked = false;
+  if(opts.attemptedHR != null) pickCount = opts.attemptedHR;
+  else if(opts.attemptedKs != null) ksPickCount = opts.attemptedKs;
+  else if(opts.attemptedHits != null) hitsPickCount = opts.attemptedHits;
+  else if(opts.attemptedBases != null) basesPickCount = opts.attemptedBases;
+  else if(opts.attemptedRBI != null) rbiPickCount = opts.attemptedRBI;
+  else if(opts.attemptedNBA != null) nbaPickCount = opts.attemptedNBA;
+  else if(opts.attemptedNHL != null) nhlPickCount = opts.attemptedNHL;
+  else if(opts.attemptedSoccer != null) soccerPickCount = opts.attemptedSoccer;
+  else {
+    pickCount = 0;
+    ksPickCount = 0;
+    hitsPickCount = 0;
+    basesPickCount = 0;
+    rbiPickCount = 0;
+    nbaPickCount = 0;
+    nhlPickCount = 0;
+    soccerPickCount = 0;
+  }
   renderSport();
-  // Disable all count buttons
   const row = document.getElementById('pickCountRow');
-  if(row) row.querySelectorAll('button').forEach(b=>{ b.disabled=true; b.classList.add('locked'); });
-  // Disable the active sport's load button
+  if(row){
+    let sel = 0;
+    if(current === 'MLB'){
+      if(currentOption === 'HR') sel = pickCount;
+      else if(currentOption === 'Ks') sel = ksPickCount;
+      else if(currentOption === 'Hits') sel = hitsPickCount;
+      else if(currentOption === 'Total Bases') sel = basesPickCount;
+      else if(currentOption === 'RBI') sel = rbiPickCount;
+    } else if(current === 'NBA') sel = nbaPickCount;
+    else if(current === 'NHL') sel = nhlPickCount;
+    else if(current === 'Soccer') sel = soccerPickCount;
+    row.querySelectorAll('button').forEach(b=>{
+      b.disabled = true;
+      const num = parseInt(b.textContent.trim(), 10) || 0;
+      const isSel = sel >= 1 && sel <= 3 && num === sel;
+      b.classList.toggle('btn2', !isSel);
+      b.classList.toggle('locked', !isSel);
+    });
+  }
   const loadBtnInfo = _getLoadBtnInfo();
   const loadBtn = document.getElementById(loadBtnInfo.id);
   if(loadBtn) loadBtn.disabled = true;
-  // Show upgrade notice in picks panel
   const picks = document.getElementById('picks');
   if(picks) picks.innerHTML = `
     <div style="text-align:center;padding:24px 16px">
@@ -2164,6 +2240,7 @@ function showUpgradeWall(){
       <button onclick="showUpgradeModal()" style="padding:12px 24px;border-radius:14px;border:0;background:linear-gradient(90deg,#6ee7ff,#8b5cf6);color:#07111f;font-weight:900;font-size:.95rem;cursor:pointer">Upgrade 🚀</button>
       <div style="margin-top:12px;font-size:.78rem;color:#56627a">Resets daily. Come back tomorrow for another free pick.</div>
     </div>`;
+  showPaywallOverlayIfNeeded();
 }
 
 // ── Stripe Payment Link ──
@@ -2376,6 +2453,7 @@ function _getOverlayTitle(){
 }
 function openPickOverlay(){
   const ov = document.getElementById('pickOverlay');
+  if(!ov) return;
   ov.classList.remove('closing');
   ov.classList.add('open');
   _poOpen = true;
@@ -2387,6 +2465,7 @@ function openPickOverlay(){
 
 function closePickOverlay(){
   const ov = document.getElementById('pickOverlay');
+  if(!ov) return;
   ov.classList.add('closing');
   setTimeout(()=>{ ov.classList.remove('open','closing'); _poOpen=false; }, 400);
 }
@@ -2452,6 +2531,7 @@ function copyPicksFromOverlay(){
 // ── Swipe-down to close ───────────────────────────────────────────────────────
 (function(){
   const ov = document.getElementById('pickOverlay');
+  if(!ov) return;
   ov.addEventListener('touchstart', e=>{
     _poSwipeStartY = e.touches[0].clientY;
     _poSwipeDelta = 0;
