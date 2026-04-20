@@ -17,7 +17,7 @@
 <!-- Google Analytics 4 — replace G-XXXXXXXXXX with your real Measurement ID -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
 <script>
-  const APP_VERSION = 'v1.14';
+  const APP_VERSION = 'v1.15';
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
@@ -3444,6 +3444,16 @@ function syncAppVersionBadge(){
   el.textContent = APP_VERSION;
   el.setAttribute('title', 'Release '+APP_VERSION);
 }
+/** #appVersion may appear after this script; run sync once the node exists. */
+function scheduleSyncAppVersionBadge(){
+  const run=function(){ syncAppVersionBadge(); };
+  if(document.getElementById('appVersion')){ run(); return; }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded', run, {once:true});
+  }else{
+    setTimeout(run, 0);
+  }
+}
 function ageGateNo(){
   window.location.href = 'https://www.sesamestreet.org/games';
 }
@@ -4621,9 +4631,9 @@ function updateLegalStateLine(){
 }
 updateLegalStateLine();
 initLegalModalStyling();
-syncAppVersionBadge();
+scheduleSyncAppVersionBadge();
 </script>
-<div class="app-version" id="appVersion">v1.12</div>
+<div class="app-version" id="appVersion">v1.15</div>
 <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 <div class="toast-stack center" id="toastStackCenter" aria-live="polite" aria-atomic="true"></div>
 </body>
