@@ -29,7 +29,8 @@
 <audio id="chingSfx_2021" src="https://assets.mixkit.co/active_storage/sfx/2021/2021-preview.mp3" preload="auto" crossorigin="anonymous"></audio>
 <audio id="chingSfx_1935" src="https://assets.mixkit.co/active_storage/sfx/1935/1935-preview.mp3" preload="auto" crossorigin="anonymous"></audio>
 <audio id="pickTickSfx"     src="https://assets.mixkit.co/active_storage/sfx/1114/1114-preview.mp3" preload="auto" crossorigin="anonymous"></audio>
-<audio id="pickJackpotSfx" src="https://assets.mixkit.co/active_storage/sfx/2006/2006-preview.mp3" preload="auto" crossorigin="anonymous"></audio>
+<!-- Loot-style last-reveal stinger: Mixkit "Video game treasure" #2066 (royalty-free; not ARC Raiders IP). -->
+<audio id="pickJackpotSfx" src="https://assets.mixkit.co/active_storage/sfx/2066/2066-preview.mp3" preload="auto" crossorigin="anonymous"></audio>
 
 <style>
 :root{--bg:#07111f;--card:#111c33;--card2:#182747;--text:#eef3ff;--muted:#9fb0d0;--line:#26355f;--accent:#6ee7ff}
@@ -499,25 +500,25 @@ function playChingSfx(isFirst, isLast) {
     el.pause(); el.currentTime = 0;
     if (isLast) {
       el.volume = 1;
-      el.playbackRate = 0.82;
+      el.playbackRate = 0.88;
     } else {
-      el.volume = 0.9;
-      el.playbackRate = 0.75;
+      el.volume = 0.88;
+      el.playbackRate = 0.72 + Math.random() * 0.06;
     }
     const p = el.play();
     if (p && typeof p.catch === 'function') p.catch(() => {});
-    setTimeout(() => { try { el.pause(); el.volume = 0.9; } catch(_){} }, cutMs);
+    setTimeout(() => { try { el.pause(); el.volume = 0.88; } catch(_){} }, cutMs);
     if (isLast) {
       setTimeout(() => {
         try {
           const j = document.getElementById('pickJackpotSfx');
           if (!j) return;
-          j.pause(); j.currentTime = 0; j.volume = 0.24; j.playbackRate = 1;
+          j.pause(); j.currentTime = 0; j.volume = 0.4; j.playbackRate = 1;
           const pj = j.play();
           if (pj && typeof pj.catch === 'function') pj.catch(() => {});
-          setTimeout(() => { try { j.pause(); } catch(_){} }, 380);
+          setTimeout(() => { try { j.pause(); } catch(_){} }, 900);
         } catch (_) {}
-      }, 85);
+      }, 55);
     }
   } catch (_) {}
 }
@@ -689,11 +690,32 @@ function copyTextRobust(text){
   _copyTextExecCommand(text);
   return Promise.resolve();
 }
+// Set when you deploy (e.g. 'https://yoursite.com/propix/'). If empty, share uses this page's URL on http/https (not file://).
+const PICKS_SHARE_LINK = '';
+function _picksShareUrl(){
+  const manual = typeof PICKS_SHARE_LINK === 'string' && PICKS_SHARE_LINK.trim();
+  if(manual) return PICKS_SHARE_LINK.trim();
+  try{
+    const p = location.protocol;
+    if(p === 'https:' || p === 'http:'){
+      const u = new URL(location.href);
+      u.hash = '';
+      u.search = '';
+      return u.toString();
+    }
+  }catch(_){}
+  return '';
+}
+function _picksShareFooter(){
+  const u = _picksShareUrl();
+  if(!u) return '\n\nFor entertainment only. 21+ only.';
+  return '\n\n🎯 Pro Sports Quick Pix: '+u+'\n\nFor entertainment only. 21+ only.';
+}
 function copyPicks(){
   if(!mlbPicks.length) return;
   const lines=mlbPicks.map((p,i)=>`${i+1}. ${p.player} (${p.teamAbbr||p.team}) \u2014 ${p.hr} HR`);
   const sharer = _userName ? `${_userName} is` : 'Someone is';
-  const text=`\uD83D\uDD34 ${sharer} using Pro Sports Quick Pix for today's HR picks!\n\n${lines.join('\n')}\n\n\uD83C\uDFAF Get your free picks: https://www.perplexity.ai/computer/a/multisportsqp-C.3phRMSQlW0imvW1u4uXw\n\nFor entertainment only. 21+ only.`;
+  const text=`\uD83D\uDD34 ${sharer} using Pro Sports Quick Pix for today's HR picks!\n\n${lines.join('\n')}${_picksShareFooter()}`;
   const isMobile=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   function flashCopied(){const btn=document.getElementById('shareBtn');if(btn){const orig=btn.textContent;btn.textContent='\u2713 Copied!';btn.style.color='#34d399';btn.style.borderColor='rgba(52,211,153,.4)';setTimeout(()=>{btn.textContent=orig;btn.style.color='#6ee7ff';btn.style.borderColor='rgba(110,231,255,.3)';},2000);}}
   if(isMobile && navigator.share){
@@ -1988,8 +2010,8 @@ function startNameShuffle(pool, token, getActiveToken){
       if (token !== activeToken()) { clearInterval(tickT); return; }
       try {
         tickEl.pause(); tickEl.currentTime = 0;
-        tickEl.volume = 0.07;
-        tickEl.playbackRate = 1.12;
+        tickEl.volume = 0.13;
+        tickEl.playbackRate = 1.08 + Math.random() * 0.12;
         const pt = tickEl.play();
         if (pt && typeof pt.catch === 'function') pt.catch(() => {});
       } catch (_) {}
@@ -2641,9 +2663,6 @@ function poSetError(msg){
   document.getElementById('poCards').innerHTML = '<div class="muted" style="padding:20px 0;text-align:center">'+msg+'</div>';
 }
 
-function _picksShareFooter(){
-  return '\n\n🎯 Get your free picks: https://www.perplexity.ai/computer/a/multisportsqp-C.3phRMSQlW0imvW1u4uXw\n\nFor entertainment only. 21+ only.';
-}
 /** Build share text for whichever sport/option the overlay just revealed (not only MLB HR). */
 function buildPicksShareTextForOverlay(){
   const who = _userName ? `${_userName} is` : 'Someone is';
