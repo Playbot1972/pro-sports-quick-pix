@@ -16,7 +16,13 @@
 <script>
   // Initialize EmailJS ONCE here — do NOT call emailjs.init() inside obSendCode()
   document.addEventListener('DOMContentLoaded', function() {
-    if (typeof emailjs !== 'undefined') emailjs.init('YcyxPL19ITeg2I5ed');
+    if (typeof emailjs !== 'undefined'){
+      try{
+        emailjs.init({ publicKey: 'YcyxPL19ITeg2I5ed' });
+      }catch(e){
+        try{ emailjs.init('YcyxPL19ITeg2I5ed'); }catch(_){}
+      }
+    }
   });
 </script>
 
@@ -2823,8 +2829,7 @@ function getRhythmSuspense(i){
 
 <!-- AGE CHECK (trust banner link) -->
 <div id="ageGateModal" style="display:none;position:fixed;inset:0;z-index:10002;background:rgba(7,17,31,.96);align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(8px)">
-  <div style="background:linear-gradient(160deg,#111c33,#0e1a30);border:1px solid rgba(110,231,255,.22);border-radius:22px;padding:28px 24px;max-width:400px;width:100%;color:#eef3ff;position:relative;box-shadow:0 24px 80px rgba(0,0,0,.55);text-align:center">
-    <button type="button" onclick="closeAgeGateModal()" style="position:absolute;top:14px;right:14px;background:none;border:none;color:#56627a;font-size:1.25rem;cursor:pointer;line-height:1" title="Close">✕</button>
+  <div style="background:linear-gradient(160deg,#111c33,#0e1a30);border:1px solid rgba(110,231,255,.22);border-radius:22px;padding:28px 24px;max-width:400px;width:100%;color:#eef3ff;box-shadow:0 24px 80px rgba(0,0,0,.55);text-align:center">
     <div style="font-size:2rem;margin-bottom:10px">🔞</div>
     <div style="font-size:1.15rem;font-weight:900;color:#eef3ff;margin-bottom:10px">Age check</div>
     <p class="ob-age-q">Are you <strong>21 or older</strong> and using this app only where it is legal for you?</p>
@@ -3242,7 +3247,7 @@ function copyPicksFromOverlay(){
   </div>
   <textarea id="fbComment" rows="3" placeholder="Optional comment..."></textarea>
   <button id="fbSendBtn" onclick="fbSubmit()">Send Feedback</button>
-  <div id="fbThanks">Thanks for your feedback! &#127775;</div>
+  <div id="fbThanks">Thank You for your feedback!</div>
 </div>
 
 <script>
@@ -3264,7 +3269,11 @@ function fbSubmit(){
   const comment=document.getElementById('fbComment').value.trim();
   if(!stars){ fbSetStar(1); return; }
   const btn=document.getElementById('fbSendBtn');
-  btn.disabled=true; btn.textContent='Sending...';
+  const thanks=document.getElementById('fbThanks');
+  const closeDelayMs = 1400;
+  btn.disabled=true;
+  btn.style.display='none';
+  thanks.style.display='block';
   const params={
     to_email:'digitaldr@gmail.com',
     subject:'Pro Sports Quick Pix — User Feedback',
@@ -3275,28 +3284,30 @@ function fbSubmit(){
     sub_option: currentOption||'—',
     timestamp: new Date().toLocaleString()
   };
+  function finishFeedbackFlow(){
+    setTimeout(()=>{
+      if(_fbPanelOpen) toggleFeedback();
+      _fbStar=0;
+      document.querySelectorAll('.fb-star').forEach(s=>s.classList.remove('on'));
+      document.querySelectorAll('.fb-tag').forEach(t=>t.classList.remove('on'));
+      document.getElementById('fbComment').value='';
+      btn.style.display='block';
+      btn.disabled=false;
+      btn.textContent='Send Feedback';
+      thanks.style.display='none';
+    }, closeDelayMs);
+  }
   trackEvent('feedback_submit',{rating:stars,tags:tags});
-  emailjs.send('service_ymxyo11','template_feedback',params)
-    .then(()=>{
-      document.getElementById('fbSendBtn').style.display='none';
-      document.getElementById('fbThanks').style.display='block';
-      setTimeout(()=>{
-        toggleFeedback();
-        // Reset
-        _fbStar=0;
-        document.querySelectorAll('.fb-star').forEach(s=>s.classList.remove('on'));
-        document.querySelectorAll('.fb-tag').forEach(t=>t.classList.remove('on'));
-        document.getElementById('fbComment').value='';
-        document.getElementById('fbSendBtn').style.display='block';
-        document.getElementById('fbSendBtn').disabled=false;
-        document.getElementById('fbSendBtn').textContent='Send Feedback';
-        document.getElementById('fbThanks').style.display='none';
-      },2500);
-    })
-    .catch(()=>{
-      btn.disabled=false; btn.textContent='Send Feedback';
-      alert('Could not send feedback right now. Please try again.');
+  if(typeof emailjs !== 'undefined' && typeof emailjs.send === 'function'){
+    emailjs.send('service_ymxyo11','template_feedback',params).catch(function(err){
+      console.error('EmailJS feedback error:', err);
+      var hint = (err && (err.text || err.message)) ? String(err.text || err.message) : '';
+      if(hint) console.error('Detail:', hint);
     });
+  } else {
+    console.warn('EmailJS feedback service unavailable in this session.');
+  }
+  finishFeedbackFlow();
 }
 </script>
 <script data-pplx-inline-edit>
