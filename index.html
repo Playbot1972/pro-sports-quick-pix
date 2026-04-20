@@ -245,24 +245,6 @@ body::after{right:0;border-left:1px solid rgba(52,211,153,.22);}
 
 
 <script>
-window.addEventListener('DOMContentLoaded', () => {
-  const host = document.querySelector('.topbar') || document.body;
-  const btn = document.createElement('button');
-  btn.id = 'logoutBtn';
-  btn.textContent = 'Logout';
-  btn.style.cssText = 'margin-left:10px;padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:inherit;font-weight:700;cursor:pointer;';
-  btn.onclick = async () => { if (window.firebaseSignOut) await window.firebaseSignOut(); };
-  host.appendChild(btn);
-  if (window.firebaseOnAuthStateChanged && window.firebaseAuth) {
-    window.firebaseOnAuthStateChanged(window.firebaseAuth, (user) => {
-      btn.style.display = user ? 'inline-block' : 'none';
-    });
-  }
-});
-</script>
-
-
-<script>
 window.espnPlayerHeadshot = function(a){
   const id = a && (a.id || a.athleteId || a.playerId || a.athlete && a.athlete.id);
   return id ? `https://a.espncdn.com/i/headshots/nba/players/full/${id}.png` : '';
@@ -347,9 +329,13 @@ window.safeHeadshot = function(obj){
   <div class="topbar">
     <div>
       <div class="title">Pro Sports Quick Pix</div>
-      <div class="subtitle">Daily HR picks powered by live MLB lineups. <span id="devTrigger" onclick="_devTriggerClick()" style="cursor:default">Free</span>. Fast. Sharp.</div>
+      <div class="subtitle">Daily Sports picks powered by professional sports line ups. <span id="devTrigger" onclick="_devTriggerClick()" style="cursor:default">Free</span> Fast Sharp.</div>
     </div>
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><button id="themeToggle" class="badge" onclick="toggleTheme()" style="cursor:pointer;border:0">🌙 Night</button><div class="badge" id="sportHintBadge">Choose a sport tab</div></div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <button type="button" id="logoutBtn" onclick="logoutSession()" style="display:none;padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:inherit;font-weight:700;font-size:12px;cursor:pointer">Log out</button>
+      <button id="themeToggle" class="badge" onclick="toggleTheme()" style="cursor:pointer;border:0">🌙 Night</button>
+      <div class="badge" id="sportHintBadge">Choose a sport tab</div>
+    </div>
   </div>
 
   <div class="trust-banner">
@@ -1981,6 +1967,33 @@ let _freePickUsed = false;
 
 renderTabs();renderSport();
 
+function hasLocalProfile(){
+  try{
+    const p = _lhMem.getItem('lhProfile');
+    if(!p) return false;
+    const d = JSON.parse(p);
+    return !!(d && (d.name || d.email));
+  }catch(e){ return false; }
+}
+function syncLogoutButton(){
+  const btn = document.getElementById('logoutBtn');
+  if(!btn) return;
+  const fbUser = window.firebaseAuth && window.firebaseAuth.currentUser;
+  btn.style.display = (hasLocalProfile() || fbUser) ? 'inline-block' : 'none';
+}
+function logoutSession(){
+  if(!confirm('Sign out and clear this profile on this device?')) return;
+  (async()=>{
+    try{
+      if(window.firebaseAuth && window.firebaseAuth.currentUser && window.firebaseSignOut){
+        await window.firebaseSignOut();
+      }
+    }catch(e){}
+    try{ _lhMem.removeItem('lhProfile'); }catch(e){}
+    location.reload();
+  })();
+}
+
 function obInit(){
   const profile = _lhMem.getItem('lhProfile');
   if(profile){
@@ -1997,9 +2010,11 @@ function obInit(){
       document.getElementById('onboardOverlay').style.display='none';
       const _isPro = d.isPro || false;
       if(_isPro){ renderSport(); } else if(!_freePickUsed){ showFreeBadge(); } else { setTimeout(showUpgradeWall, 300); }
-    }catch(e){ showOverlay(); }
+      syncLogoutButton();
+    }catch(e){ showOverlay(); syncLogoutButton(); }
   } else {
     showOverlay();
+    syncLogoutButton();
   }
 }
 
@@ -2091,6 +2106,7 @@ function obComplete(){
   pickCount = 1;
   obStep(3);
   renderSport();
+  syncLogoutButton();
 }
 
 function obResendCode(){
@@ -2290,6 +2306,12 @@ function startCheckout(){
 
 // Run onboarding check on load
 obInit();
+document.addEventListener('DOMContentLoaded', ()=>{
+  syncLogoutButton();
+  if(window.firebaseOnAuthStateChanged && window.firebaseAuth){
+    window.firebaseOnAuthStateChanged(window.firebaseAuth, syncLogoutButton);
+  }
+});
 
 // ── RHYTHM (random each run: slot or buildup) ────────────────────────────────
 const _rhythmCurves = {
