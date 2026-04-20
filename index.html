@@ -17,7 +17,7 @@
 <!-- Google Analytics 4 — replace G-XXXXXXXXXX with your real Measurement ID -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
 <script>
-  const APP_VERSION = 'v1.33';
+  const APP_VERSION = 'v1.34';
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
@@ -1751,6 +1751,7 @@ function renderNFLPicks(){
 function clearNFL(){nflToken++;nflLoaded=false;nflLoading=false;nflPicks=[];nflUsed=new Set();nflLivePool=[];pickLocked=false;nflPickCount=1;renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Choose a count and click '+_getNFLLoadHintShort()+'.</div>';}
 async function getTodaysNFLPlayers(option){
   const cacheKey = 'nflLastGoodPool:'+String(option||'');
+  const cacheAnyKey = 'nflLastGoodPool:any';
   function readNFLCache(){
     try{
       const raw = _lhMem.getItem(cacheKey);
@@ -1761,8 +1762,20 @@ async function getTodaysNFLPlayers(option){
   }
   function writeNFLCache(arr){
     try{
-      if(Array.isArray(arr) && arr.length) _lhMem.setItem(cacheKey, JSON.stringify(arr.slice(0,260)));
+      if(Array.isArray(arr) && arr.length){
+        const slim = JSON.stringify(arr.slice(0,260));
+        _lhMem.setItem(cacheKey, slim);
+        _lhMem.setItem(cacheAnyKey, slim);
+      }
     }catch(_){}
+  }
+  function readNFLCacheAny(){
+    try{
+      const raw = _lhMem.getItem(cacheAnyKey);
+      if(!raw) return [];
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    }catch(_){ return []; }
   }
   const events=await getScoreboardEventsNearby('https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard',1,1);
   const players=[];
@@ -1812,7 +1825,6 @@ async function getTodaysNFLPlayers(option){
             else if(option==='Rec Yds'){statVal=parseFloat(vals[1]||0);seasonAvg=statVal+' yds';}
             else if(option==='Receptions'){statVal=parseFloat(vals[0]||0);seasonAvg=statVal+' rec';}
             else if(option==='Pass Yds'){statVal=parseFloat(vals[1]||0);seasonAvg=statVal+' yds';}
-            if(statVal===0) continue;
             const line=Math.round(statVal*2)/2||(option==='Pass Yds'?225.5:option==='Rush Yds'?55.5:option==='Rec Yds'?45.5:option==='Receptions'?4.5:0.5);
             players.push({player:name,espnId,headshotUrl,teamAbbr,pos,statLabel:option,line,seasonAvg});
           }
@@ -1824,8 +1836,18 @@ async function getTodaysNFLPlayers(option){
     writeNFLCache(players);
     return players;
   }
+  {
+    const defaults={TDs:0.5,'Rush Yds':55.5,'Rec Yds':45.5,'Receptions':4.5,'Pass Yds':225.5};
+    const rosterPool=await _buildRosterFallbackPlayers('football/nfl', events, option, defaults);
+    if(rosterPool.length){
+      writeNFLCache(rosterPool);
+      return rosterPool;
+    }
+  }
   const cached = readNFLCache();
   if(cached.length) return cached;
+  const cachedAny = readNFLCacheAny();
+  if(cachedAny.length) return cachedAny;
   return [];
 }
 function poRevealNFLCard(p, idx){
@@ -2008,7 +2030,6 @@ async function getTodaysNBAPlayers(option){
           else if(option==='3PM'){statVal=threeMade;line=Math.round(statVal*2)/2||1.5;seasonAvg=statVal+' 3PM';}
           else if(option==='PRA'){statVal=pra;line=Math.round(pra*2)/2||24.5;seasonAvg=statVal+' PRA';}
           else{statVal=pts;line=14.5;seasonAvg=statVal+' pts';}
-          if(statVal===0)continue;
           const espnId=athleteObj.id!=null?String(athleteObj.id):'';
           const headshotUrl = athleteObj.headshot && athleteObj.headshot.href ? String(athleteObj.headshot.href) : '';
           players.push({player:name,espnId,headshotUrl,teamAbbr,pos:nbaPos,statLabel:option,line,seasonAvg});
@@ -2019,6 +2040,14 @@ async function getTodaysNBAPlayers(option){
   if(players.length){
     writeNBACache(players);
     return players;
+  }
+  {
+    const defaults={Points:19.5,Rebounds:5.5,Assists:4.5,'3PM':1.5,PRA:24.5};
+    const rosterPool=await _buildRosterFallbackPlayers('basketball/nba', events, option, defaults);
+    if(rosterPool.length){
+      writeNBACache(rosterPool);
+      return rosterPool;
+    }
   }
   const cached = readNBACache();
   if(cached.length) return cached;
@@ -2210,7 +2239,6 @@ async function getTodaysNHLPlayers(option){
             line=statVal>0?Math.round(statVal*2)/2:2.5;
             seasonAvg=statVal+' SOG';
           } else {continue;}
-          if(statVal===0&&option!=='Goals'&&option!=='Assists'&&option!=='Points')continue;
           const espnId=athleteObj.id!=null?String(athleteObj.id):'';
           const headshotUrl = athleteObj.headshot && athleteObj.headshot.href ? String(athleteObj.headshot.href) : '';
           players.push({player:name,espnId,headshotUrl,teamAbbr,pos,statLabel:option,line,seasonAvg});
@@ -2221,6 +2249,14 @@ async function getTodaysNHLPlayers(option){
   if(players.length){
     writeNHLCache(players);
     return players;
+  }
+  {
+    const defaults={Goals:0.5,Shots:2.5,Assists:0.5,Points:0.5,'Goalie Saves':24.5};
+    const rosterPool=await _buildRosterFallbackPlayers('hockey/nhl', events, option, defaults);
+    if(rosterPool.length){
+      writeNHLCache(rosterPool);
+      return rosterPool;
+    }
   }
   const cached = readNHLCache();
   if(cached.length) return cached;
@@ -2433,6 +2469,14 @@ async function getTodaysSoccerPlayers(option){
   if(players.length){
     writeSoccerCache(players);
     return players;
+  }
+  {
+    const defaults={Goals:0.5,Assists:0.5,Shots:1.5,SOT:0.5,'GK Saves':2.5};
+    const rosterPool=await _buildRosterFallbackPlayers('soccer/usa.1', events, option, defaults);
+    if(rosterPool.length){
+      writeSoccerCache(rosterPool);
+      return rosterPool;
+    }
   }
   // No placeholder players: use last known real soccer pool if available.
   const cached = readSoccerCache();
@@ -2663,6 +2707,76 @@ async function getScoreboardEventsNearby(baseUrl, backDays, aheadDays){
     }catch(_){}
   }
   return events;
+}
+function _eventTeamRefs(events){
+  const out=[];
+  const seen=new Set();
+  for(const ev of (events||[])){
+    const comps = ev && ev.competitions || [];
+    const comp = comps[0] || ev || {};
+    for(const c of (comp.competitors||[])){
+      const id = c && c.team && c.team.id != null ? String(c.team.id) : '';
+      if(!id || seen.has(id)) continue;
+      seen.add(id);
+      out.push({
+        id,
+        abbr: c.team && c.team.abbreviation || '',
+        name: c.team && (c.team.displayName || c.team.name) || ''
+      });
+    }
+  }
+  return out;
+}
+function _parseRosterAthletes(rosterJson){
+  const list=[];
+  const pushAth=(a)=>{
+    if(!a) return;
+    list.push({
+      id: a.id != null ? String(a.id) : '',
+      name: a.displayName || a.fullName || a.shortName || '',
+      pos: a.position && (a.position.abbreviation || a.position.name) || '',
+      headshotUrl: a.headshot && a.headshot.href ? String(a.headshot.href) : ''
+    });
+  };
+  const athletes = rosterJson && rosterJson.athletes;
+  if(Array.isArray(athletes)){
+    for(const g of athletes){
+      if(Array.isArray(g && g.items)){
+        for(const a of g.items) pushAth(a);
+      }else{
+        pushAth(g);
+      }
+    }
+  }
+  return list;
+}
+async function _buildRosterFallbackPlayers(sportPath, events, option, defaults){
+  const teams=_eventTeamRefs(events);
+  const out=[];
+  const seen=new Set();
+  for(const t of teams){
+    let roster;
+    try{
+      roster = await fetchJson('https://site.api.espn.com/apis/site/v2/sports/'+sportPath+'/teams/'+encodeURIComponent(t.id)+'/roster');
+    }catch(_){ continue; }
+    const athletes=_parseRosterAthletes(roster);
+    for(const a of athletes){
+      const key=(a.id||'')+'::'+(t.abbr||'');
+      if(!a.name || seen.has(key)) continue;
+      seen.add(key);
+      out.push({
+        player:a.name,
+        espnId:a.id||'',
+        headshotUrl:a.headshotUrl||'',
+        teamAbbr:t.abbr||'',
+        pos:a.pos||'',
+        statLabel:option,
+        line:defaults && defaults[option] != null ? defaults[option] : 0.5,
+        seasonAvg:'—'
+      });
+    }
+  }
+  return out;
 }
 async function getTodaysMlbHitters(){const today=todayStr; const scheduleUrl=`https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${today}&hydrate=team`; const sched=await fetchJson(scheduleUrl); const dates=(sched && sched.dates) ? sched.dates : []; const games=[]; dates.forEach(d=>{(d.games||[]).forEach(g=>games.push(g));}); const pools=[]; const gameMap={}; for(const g of games){ const gamePk=g.gamePk; gameMap[String(gamePk)]={gamePk, gameDate:g.gameDate, status:g.status, venue:g.venue}; const boxUrl=`https://statsapi.mlb.com/api/v1/game/${gamePk}/boxscore`; try{ const box=await fetchJson(boxUrl); const collect=(teamObj, side)=>{ const batterIds=teamObj?.batters || []; const teamName = teamObj?.team?.name || teamObj?.team?.abbreviation || side; batterIds.forEach(id=>{ const key=`ID${id}`; const p=teamObj.players?.[key]; if(!p) return; const person = p.person || {}; const pos = p.position?.abbreviation || person?.primaryPosition?.abbreviation || ''; if(isPitcher(pos)) return; const bo = slotToBattingOrder(p.battingOrder); if(bo===null) return; pools.push({player: normalizeName(person.fullName), playerId: person.id!=null?Number(person.id):Number(id), team: teamName, teamAbbr: teamObj?.team?.abbreviation || teamObj?.team?.name || side, teamId: teamObj?.team?.id || null, order: bo, gamePk, game: gameMap[String(gamePk)], hr: p.seasonStats?.batting?.homeRuns ?? '–', avg: p.seasonStats?.batting?.avg ?? '.---', pos}); });}; collect(box?.teams?.home, 'home'); collect(box?.teams?.away, 'away'); } catch(e){} } const unique=new Map(); pools.forEach(x=>{const k=`${x.player}::${x.team}`; if(!unique.has(k)) unique.set(k,x);}); return [...unique.values()].sort((a,b)=>(a.order-b.order)||a.player.localeCompare(b.player)); }
 async function getTodaysPitchers(){
@@ -4085,7 +4199,7 @@ document.addEventListener('click',function(e){const item=e.target.closest('.item
 initLegalModalStyling();
 syncAppVersionBadge();
 </script>
-<div class="app-version" id="appVersion">v1.33</div>
+<div class="app-version" id="appVersion">v1.34</div>
 <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 <div class="toast-stack center" id="toastStackCenter" aria-live="polite" aria-atomic="true"></div>
 </body>
