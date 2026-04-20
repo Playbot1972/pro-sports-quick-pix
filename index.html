@@ -17,7 +17,7 @@
 <!-- Google Analytics 4 — replace G-XXXXXXXXXX with your real Measurement ID -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
 <script>
-  const APP_VERSION = 'v1.16';
+  const APP_VERSION = 'v1.17';
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
@@ -97,10 +97,14 @@ body.light{--card:#ffffff;--card2:#f3f6ff;--text:#14213d;--muted:#56627a;--line:
 .navitem.live-dot{position:relative}
 .navitem.live-dot::after{
   content:'';
-  width:6px;height:6px;border-radius:50%;
+  display:inline-block;
+  width:6px;height:6px;min-width:6px;min-height:6px;
+  border-radius:50%;
   background:#26d9ff;
   box-shadow:0 0 0 0 rgba(38,217,255,.7);
   margin-left:7px;
+  flex-shrink:0;
+  vertical-align:middle;
   animation:livePulse 1.9s ease-out infinite;
 }
 .market-rail{position:sticky;top:8px;z-index:24;backdrop-filter:blur(8px)}
@@ -132,18 +136,20 @@ body.light .tabs{
   background:linear-gradient(180deg,#ffffff,#eef3ff);
   border-bottom:1px solid #d7dfef;
 }
-.tab{border:1px solid var(--line);border-radius:999px;padding:9px 12px;background:rgba(255,255,255,.06);color:var(--text);font-weight:800;cursor:pointer;font-size:12px;transition:transform .15s ease, background .2s ease, border-color .2s ease}
+.tab{display:inline-flex;align-items:center;gap:0;border:1px solid var(--line);border-radius:999px;padding:9px 12px;background:rgba(255,255,255,.06);color:var(--text);font-weight:800;cursor:pointer;font-size:12px;transition:transform .15s ease, background .2s ease, border-color .2s ease}
 .tab:hover{transform:translateY(-1px)}
 .tab.active{background:linear-gradient(180deg,rgba(37,201,255,.26),rgba(37,201,255,.12));border-color:rgba(37,201,255,.62);color:#dff8ff}
-.tab .market-icon{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;margin-right:6px;font-size:12px;opacity:.9}
-.tab.active .market-icon{opacity:1}
 .tab.live-dot{position:relative}
 .tab.live-dot::after{
   content:'';
-  width:6px;height:6px;border-radius:50%;
+  display:inline-block;
+  width:6px;height:6px;min-width:6px;min-height:6px;
+  border-radius:50%;
   background:#26d9ff;
   box-shadow:0 0 0 0 rgba(38,217,255,.7);
   margin-left:7px;
+  flex-shrink:0;
+  vertical-align:middle;
   animation:livePulse 1.9s ease-out infinite;
 }
 .random-orbit{
@@ -1124,24 +1130,13 @@ function setUpdatedTimestamp(){
   const mm = String(t.getMinutes()).padStart(2,'0');
   el.textContent = `Updated: ${hh}:${mm}`;
 }
-function getOptionCompactIcon(sport,opt){
-  const map = {
-    MLB:{HR:'⚾',Hits:'🎯','Total Bases':'🧱',RBI:'💥',Ks:'K'},
-    NFL:{TDs:'🏈','Rush Yds':'🏃','Rec Yds':'🙌',Receptions:'🤲','Pass Yds':'🎯'},
-    NBA:{Points:'🏀',Assists:'🅰️',Rebounds:'🔁','3PM':'3',PRA:'📊'},
-    NHL:{Goals:'🥅',Shots:'🎯',Assists:'🅰️',Saves:'🛡️',Points:'📈'},
-    Soccer:{Goals:'⚽',Shots:'🎯',Assists:'🅰️','Shots OT':'✅','Passes':'🧭'}
-  };
-  return (map[sport] && map[sport][opt]) || '•';
-}
-
 function renderTabs(){
   const outOfSeason = getOutOfSeasonSports();
   const goldLockSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f59e0b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' style='width:13px;height:13px;margin-left:5px;vertical-align:middle;flex-shrink:0'><rect x='3' y='11' width='18' height='11' rx='2' ry='2'/><path d='M7 11V7a5 5 0 0 1 10 0v4'/></svg>`;
   // Bottom nav: always the main sport selector
   document.getElementById('bottomnav').innerHTML=Object.keys(sports).map(s=>`<div class='navitem live-dot ${s===current?'active':''}${outOfSeason.includes(s)?' oos':''}' onclick="setSport('${s}')" style='display:inline-flex;align-items:center;justify-content:center${outOfSeason.includes(s)?';opacity:0.6':''}'><img src='${sports[s].icon}' alt='${s} logo' style='width:18px;height:18px;object-fit:contain;margin-right:6px;flex-shrink:0'>${s}${outOfSeason.includes(s)?goldLockSvg:''}</div>`).join('')+`<div class='navitem random-orbit' onclick="randomSport()" title="Jump to a random sport" style='display:inline-flex;align-items:center;justify-content:center;opacity:.92'>🎲 Random</div>`;
   // Top tabs: always show active sport's sub-options
-  document.getElementById('tabs').innerHTML=sports[current].options.map(o=>`<button type="button" class='tab live-dot ${o===currentOption?'active':''}' style='border-color:${sports[current].color}55' onclick="setOption('${o}')"><span class='market-icon'>${getOptionCompactIcon(current,o)}</span>${o}</button>`).join('')+`<button type="button" class="tab random-orbit" style="border-color:${sports[current].color}55" onclick="randomSubOption()" title="Random stat for this sport">🎲 Random</button>`;
+  document.getElementById('tabs').innerHTML=sports[current].options.map(o=>`<button type="button" class='tab live-dot ${o===currentOption?'active':''}' style='border-color:${sports[current].color}55' onclick="setOption('${o}')">${o}</button>`).join('')+`<button type="button" class="tab random-orbit" style="border-color:${sports[current].color}55" onclick="randomSubOption()" title="Random stat for this sport">🎲 Random</button>`;
 }
 function randomSport(){
   const all = Object.keys(sports);
@@ -4635,7 +4630,7 @@ updateLegalStateLine();
 initLegalModalStyling();
 scheduleSyncAppVersionBadge();
 </script>
-<div class="app-version" id="appVersion">v1.16</div>
+<div class="app-version" id="appVersion">v1.17</div>
 <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 <div class="toast-stack center" id="toastStackCenter" aria-live="polite" aria-atomic="true"></div>
 </body>
