@@ -426,8 +426,13 @@ function _devTriggerClick(){
       }
       renderSport();
     } else {
-      // Dev mode turned off — re-check real paywall state
-      if(_freePickUsed) showUpgradeWall(); else renderSport();
+      // Dev mode turned off — restore paywall flags from saved profile
+      try{
+        const raw = _lhMem.getItem('lhProfile');
+        if(raw) _refreshFreePickConsumedState(JSON.parse(raw));
+        else { _isPro = false; _freePickUsed = false; }
+      }catch(_){ _isPro = false; _freePickUsed = false; }
+      if(_freePickUsed && !_isPro) showUpgradeWall(); else renderSport();
     }
   }
 }
@@ -682,7 +687,7 @@ function randomSubOption(){
 }
 function setSport(s){_trackSectionSwitch(s);current=s;currentOption=sports[s].options[0];renderTabs();renderSport();}
 function renderSport(){
-  const _paywalled = _freePickUsed && !_devMode;
+  const _paywalled = _freePickUsed && !_devMode && !_isPro;
   const data=sports[current];document.getElementById('sportTitle').textContent=current;document.getElementById('sportDesc').textContent=data.desc;document.getElementById('sportHintBadge').textContent=current+' Live Lineups';
   if(current==='MLB'){
     document.getElementById('options').innerHTML='';
@@ -853,7 +858,7 @@ async function startHitsLoad(){
   openPickOverlay();
   const loadBtn=document.getElementById('hitsLoadBtn');
   if(loadBtn) loadBtn.disabled=true;
-  const _markFreeAfter=(!_freePickUsed&&!_devMode);
+  const _markFreeAfter=(!_freePickUsed&&!_devMode&&!_paywallBypassActive());
   const token=++hitsToken;
   hitsLoading=true;hitsLoaded=false;hitsPicks=[];hitsUsed=new Set();hitsLivePool=[];pickLocked=true;
   _firstSfxIdx=-1;_lastSfxIdx=-1;
@@ -955,7 +960,7 @@ async function startBasesLoad(){
   openPickOverlay();
   const loadBtn=document.getElementById('basesLoadBtn');
   if(loadBtn) loadBtn.disabled=true;
-  const _markFreeAfter=(!_freePickUsed&&!_devMode);
+  const _markFreeAfter=(!_freePickUsed&&!_devMode&&!_paywallBypassActive());
   const token=++basesToken;
   basesLoading=true;basesLoaded=false;basesPicks=[];basesUsed=new Set();basesLivePool=[];pickLocked=true;
   _firstSfxIdx=-1;_lastSfxIdx=-1;
@@ -1057,7 +1062,7 @@ async function startRBILoad(){
   openPickOverlay();
   const loadBtn=document.getElementById('rbiLoadBtn');
   if(loadBtn) loadBtn.disabled=true;
-  const _markFreeAfter=(!_freePickUsed&&!_devMode);
+  const _markFreeAfter=(!_freePickUsed&&!_devMode&&!_paywallBypassActive());
   const token=++rbiToken;
   rbiLoading=true;rbiLoaded=false;rbiPicks=[];rbiUsed=new Set();rbiLivePool=[];pickLocked=true;
   _firstSfxIdx=-1;_lastSfxIdx=-1;
@@ -1119,7 +1124,7 @@ async function startRBILoad(){
 // ─────────────────────────────────────────────────────────────────────────────
 // NFL
 // ─────────────────────────────────────────────────────────────────────────────
-function setNFLCount(n){if(pickLocked)return;nflPickCount=n;renderSport();}
+function setNFLCount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'NFL',option:currentOption,attempted_count:n});showUpgradeWall({attemptedNFL:n});return;}nflPickCount=n;renderSport();}
 function renderNFLPicks(){
   document.getElementById('picksTitle').textContent='🏈 NFL Picks';
   if(nflLoading){
@@ -1239,7 +1244,7 @@ async function startNFLLoad(){
   openPickOverlay();
   const loadBtn=document.getElementById('nflLoadBtn');
   if(loadBtn) loadBtn.disabled=true;
-  const _markFreeAfter=(!_freePickUsed&&!_devMode);
+  const _markFreeAfter=(!_freePickUsed&&!_devMode&&!_paywallBypassActive());
   const token=++nflToken;
   nflLoading=true;nflLoaded=false;nflPicks=[];nflUsed=new Set();nflLivePool=[];pickLocked=true;
   _firstSfxIdx=-1;_lastSfxIdx=-1;
@@ -1394,7 +1399,7 @@ async function startNBALoad(){
   openPickOverlay();
   const loadBtn=document.getElementById('nbaLoadBtn');
   if(loadBtn)loadBtn.disabled=true;
-  const _markFreeAfter=(!_freePickUsed&&!_devMode);
+  const _markFreeAfter=(!_freePickUsed&&!_devMode&&!_paywallBypassActive());
   const token=++nbaToken;
   nbaLoading=true;nbaLoaded=false;nbaPicks=[];nbaUsed=new Set();nbaLivePool=[];pickLocked=true;
   _firstSfxIdx=-1;_lastSfxIdx=-1;
@@ -1565,7 +1570,7 @@ async function startNHLLoad(){
   openPickOverlay();
   const loadBtn=document.getElementById('nhlLoadBtn');
   if(loadBtn)loadBtn.disabled=true;
-  const _markFreeAfter=(!_freePickUsed&&!_devMode);
+  const _markFreeAfter=(!_freePickUsed&&!_devMode&&!_paywallBypassActive());
   const token=++nhlToken;
   nhlLoading=true;nhlLoaded=false;nhlPicks=[];nhlUsed=new Set();nhlLivePool=[];pickLocked=true;
   _firstSfxIdx=-1;_lastSfxIdx=-1;
@@ -1748,7 +1753,7 @@ async function startSoccerLoad(){
   openPickOverlay();
   const loadBtn=document.getElementById('soccerLoadBtn');
   if(loadBtn)loadBtn.disabled=true;
-  const _markFreeAfter=(!_freePickUsed&&!_devMode);
+  const _markFreeAfter=(!_freePickUsed&&!_devMode&&!_paywallBypassActive());
   const token=++soccerToken;
   soccerLoading=true;soccerLoaded=false;soccerPicks=[];soccerUsed=new Set();soccerLivePool=[];pickLocked=true;
   _firstSfxIdx=-1;_lastSfxIdx=-1;
@@ -1953,7 +1958,7 @@ async function startMLBLoad(){
   if(loadBtn) loadBtn.disabled=true;
   // markFreePickUsed() is called AFTER picks render — not here — so the
   // upgrade wall doesn't fire 200ms into the load and wipe the UI.
-  const _markFreeAfter = (!_freePickUsed && !_devMode && !document.getElementById('disablePaywall')?.checked);
+  const _markFreeAfter = (!_freePickUsed && !_devMode && !_paywallBypassActive());
   const token=++mlbToken;
   mlbLoading=true;mlbLoaded=false;mlbPicks=[];mlbTeamsUsed=[];mlbHitterUsed=new Set();mlbLivePool=[];pickLocked=true;
   _firstSfxIdx=-1;_lastSfxIdx=-1; // reset SFX state for this run
@@ -2037,7 +2042,7 @@ async function startKsLoad(){
   openPickOverlay();
   const loadBtn=document.getElementById('ksLoadBtn');
   if(loadBtn) loadBtn.disabled=true;
-  const _markFreeAfter = (!_freePickUsed && !_devMode);
+  const _markFreeAfter = (!_freePickUsed && !_devMode && !_paywallBypassActive());
   const token=++ksToken;
   ksLoading=true;ksLoaded=false;ksPicks=[];ksPitcherUsed=new Set();ksLivePool=[];pickLocked=true;
   _firstSfxIdx=-1;_lastSfxIdx=-1;
@@ -2243,8 +2248,37 @@ function stopMoneyTransformButton(){
 let _userName = '';
 let _userEmail = '';
 let _freePickUsed = false;
+let _isPro = false;
 
-renderTabs();renderSport();
+/** Dev-only: checkbox skips consuming the free pick on successful runs. */
+function _paywallBypassActive(){
+  try{ return !!document.getElementById('disablePaywall')?.checked; }catch(_){ return false; }
+}
+
+/**
+ * Sync _isPro / _freePickUsed from lhProfile + apply daily reset rules.
+ * - Free pick is consumed only for the calendar day stored in freePickDate.
+ * - Legacy profiles (freePickUsed without date): stamp date so daily reset works.
+ */
+function _refreshFreePickConsumedState(d){
+  if(!d || typeof d !== 'object') return;
+  const day = new Date().toISOString().slice(0,10);
+  let dirty = false;
+  if(d.freePickUsed && d.freePickDate && d.freePickDate !== day){
+    d.freePickUsed = false;
+    d.freePickDate = null;
+    dirty = true;
+  }
+  if(d.freePickUsed && !d.freePickDate){
+    d.freePickDate = day;
+    dirty = true;
+  }
+  if(dirty){
+    try{ _lhMem.setItem('lhProfile', JSON.stringify(d)); }catch(_){}
+  }
+  _isPro = !!d.isPro;
+  _freePickUsed = !!(d.freePickUsed && d.freePickDate === day);
+}
 
 function hasLocalProfile(){
   try{
@@ -2280,14 +2314,8 @@ function obInit(){
       const d = JSON.parse(profile);
       _userName = d.name || '';
       _userEmail = d.email || '';
-      const _todayStr = new Date().toISOString().slice(0,10);
-      _freePickUsed = (d.freePickUsed && d.freePickDate === _todayStr) ? true : false;
-      if(!_freePickUsed && d.freePickUsed && d.freePickDate !== _todayStr){
-        d.freePickUsed = false; d.freePickDate = null;
-        try{ _lhMem.setItem('lhProfile', JSON.stringify(d)); }catch(e){}
-      }
+      _refreshFreePickConsumedState(d);
       document.getElementById('onboardOverlay').style.display='none';
-      const _isPro = d.isPro || false;
       if(_isPro){ renderSport(); } else if(!_freePickUsed){ showFreeBadge(); } else { setTimeout(showUpgradeWall, 300); }
       syncLogoutButton();
     }catch(e){ showOverlay(); syncLogoutButton(); }
@@ -2381,10 +2409,9 @@ function obComplete(){
   _lhMem.setItem('lhProfile', JSON.stringify({name, email, freePickUsed:false}));
   document.getElementById('ob-welcome').innerHTML =
     `Welcome, <strong style="color:#6ee7ff">${name}</strong>! 🎉<br><span style="color:#9fb0d0;font-size:.88rem">Your free HR pick is unlocked.</span>`;
-  // Auto-select 1 Batter so Pick Lucky Hitter is enabled on first arrival
-  pickCount = 1;
+  _isPro = false;
   obStep(3);
-  renderSport();
+  showFreeBadge();
   syncLogoutButton();
 }
 
@@ -2421,16 +2448,26 @@ function obDismiss(){
 }
 
 function showFreeBadge(){
-  if(_freePickUsed) return;
+  if(_freePickUsed || _isPro) return;
   const badge = document.getElementById('freeBadge');
   if(badge) badge.style.display='inline-block';
-  // Lock batter count to 1 only
-  pickCount=1;
+  // Free tier: exactly one pick per run — enable load buttons on every sport tab
+  pickCount = 1;
+  ksPickCount = 1;
+  hitsPickCount = 1;
+  basesPickCount = 1;
+  rbiPickCount = 1;
+  nflPickCount = 1;
+  nbaPickCount = 1;
+  nhlPickCount = 1;
+  soccerPickCount = 1;
   renderSport();
 }
 
 function markFreePickUsed(){
   if(_devMode) return; // dev mode: skip paywall entirely
+  if(_isPro) return;
+  if(_paywallBypassActive()) return;
   _freePickUsed = true;
   const badge = document.getElementById('freeBadge');
   if(badge) badge.style.display='none';
@@ -2492,6 +2529,7 @@ function showUpgradeWall(opts){
   else if(opts.attemptedNBA != null) nbaPickCount = opts.attemptedNBA;
   else if(opts.attemptedNHL != null) nhlPickCount = opts.attemptedNHL;
   else if(opts.attemptedSoccer != null) soccerPickCount = opts.attemptedSoccer;
+  else if(opts.attemptedNFL != null) nflPickCount = opts.attemptedNFL;
   else {
     pickCount = 0;
     ksPickCount = 0;
@@ -2501,6 +2539,7 @@ function showUpgradeWall(opts){
     nbaPickCount = 0;
     nhlPickCount = 0;
     soccerPickCount = 0;
+    nflPickCount = 1;
   }
   renderSport();
   const row = document.getElementById('pickCountRow');
@@ -2515,6 +2554,7 @@ function showUpgradeWall(opts){
     } else if(current === 'NBA') sel = nbaPickCount;
     else if(current === 'NHL') sel = nhlPickCount;
     else if(current === 'Soccer') sel = soccerPickCount;
+    else if(current === 'NFL') sel = nflPickCount;
     row.querySelectorAll('button').forEach(b=>{
       b.disabled = false;
       const num = parseInt(b.textContent.trim(), 10) || 0;
@@ -2569,6 +2609,8 @@ function startCheckout(){
       d.isPro = true;
       d.freePickUsed = false;
       _lhMem.setItem('lhProfile', JSON.stringify(d));
+      _isPro = true;
+      _freePickUsed = false;
     } catch(e){}
     // Clean URL
     history.replaceState({}, '', window.location.pathname);
@@ -2583,8 +2625,10 @@ function startCheckout(){
   }
 })();
 
-// Run onboarding check on load
+// Run onboarding check on load (obInit sets _isPro / _freePickUsed from lhProfile first)
 obInit();
+renderTabs();
+renderSport();
 document.addEventListener('DOMContentLoaded', ()=>{
   syncLogoutButton();
   if(window.firebaseOnAuthStateChanged && window.firebaseAuth){
