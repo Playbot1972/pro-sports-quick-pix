@@ -17,7 +17,7 @@
 <!-- Google Analytics 4 — replace G-XXXXXXXXXX with your real Measurement ID -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
 <script>
-  const APP_VERSION = 'v1.17';
+  const APP_VERSION = 'v1.18';
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
@@ -684,7 +684,6 @@ window.safeHeadshot = function(obj){
       <input class="ob-input" type="text" id="ob-code" placeholder="Enter 6-digit code" maxlength="6" inputmode="numeric" oninput="obCodeValidate()" autocomplete="one-time-code">
       <div id="ob-code-error" style="color:#f87171;font-size:.82rem;min-height:18px;margin-bottom:4px"></div>
       <button class="ob-btn" id="verifyBtn" disabled onclick="obVerifyCode()">Verify & Unlock Pick 🔓</button>
-      <button class="link-btn-muted" onclick="obComplete()">Skip verification (preview only)</button>
       <div class="inline-note">
         Didn't get it? <button id="resendBtn" class="link-btn" onclick="obResendCode()">Resend code</button>
         <span id="resendTimer" class="inline-note-muted"></span>
@@ -3719,7 +3718,7 @@ function obSendCode(){
   }).then(()=>{
     obStartResendTimer(30);
   }).catch(err=>{
-    document.getElementById('ob-code-error').textContent = 'Email delivery failed — use the skip link below to continue.';
+    document.getElementById('ob-code-error').textContent = 'Email delivery failed. Try again or use Resend after the timer.';
   });
 }
 
@@ -4630,7 +4629,7 @@ updateLegalStateLine();
 initLegalModalStyling();
 scheduleSyncAppVersionBadge();
 </script>
-<div class="app-version" id="appVersion">v1.17</div>
+<div class="app-version" id="appVersion">v1.18</div>
 <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 <div class="toast-stack center" id="toastStackCenter" aria-live="polite" aria-atomic="true"></div>
 </body>
