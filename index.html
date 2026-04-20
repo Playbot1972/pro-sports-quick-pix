@@ -17,7 +17,7 @@
 <!-- Google Analytics 4 — replace G-XXXXXXXXXX with your real Measurement ID -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
 <script>
-  const APP_VERSION = 'v1.01';
+  const APP_VERSION = 'v1.03';
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
@@ -119,12 +119,15 @@ body.light{--card:#ffffff;--card2:#f3f6ff;--text:#14213d;--muted:#56627a;--line:
 .icon{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;margin-right:8px;border-radius:8px;background:rgba(255,255,255,.08)}
 .card{margin-top:14px;background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 14px 36px rgba(0,0,0,.25)}
 .tabs{
-  display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;
+  display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;
   position:sticky;top:66px;z-index:20;
   padding:8px 4px 10px;
   background:linear-gradient(180deg,rgba(15,23,40,.96),rgba(15,23,40,.82));
   border-bottom:1px solid rgba(255,255,255,.08);
+  box-shadow:0 6px 16px rgba(0,0,0,.2);
 }
+/* Keep pick controls from visually tucking under sticky market tabs */
+.card .tabs + .grid{padding-top:6px}
 body.light .tabs{
   background:linear-gradient(180deg,#ffffff,#eef3ff);
   border-bottom:1px solid #d7dfef;
@@ -1738,7 +1741,7 @@ function renderNFLPicks(){
     document.getElementById('picks').innerHTML=nflPicks.map((p)=>{
       const statLabel=p.statLabel||currentOption;
       if(statLabel==='TDs') return `<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'>${nflRowTopPlayerHtml(p)}<span class='muted'><span style='font-weight:700;color:#6ee7ff'>${p.td}</span> <span style='opacity:.6;font-size:11px'>TDs</span></span></div><div class='details'><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>Season TDs: ${p.td}</div><div class='muted'>Game status: ${gameStatusText(p.game)}</div><div class='muted'>Start time: ${gameStartText(p.game)||'—'}</div><div class='muted'>Venue: ${gameVenueText(p.game)||'—'}</div></div></div>`;
-      return `<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'>${nflRowTopPlayerHtml(p)}<span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>${statLabel}</span></span></div><div class='details'><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>${p.dir} ${p.line} ${statLabel}</div><div class='muted'>Season avg: ${p.seasonAvg}</div><div class='muted'>Game status: ${gameStatusText(p.game)}</div><div class='muted'>Start time: ${gameStartText(p.game)||'—'}</div><div class='muted'>Venue: ${gameVenueText(p.game)||'—'}</div></div></div>`;
+      return `<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'>${nflRowTopPlayerHtml(p)}<span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>${statLabel}</span></span></div><div class='details'><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>${p.dir} ${p.line} ${statLabel}</div><div class='muted'>Season avg: ${p.seasonAvg||'—'}</div><div class='muted'>Game status: ${gameStatusText(p.game)}</div><div class='muted'>Start time: ${gameStartText(p.game)||'—'}</div><div class='muted'>Venue: ${gameVenueText(p.game)||'—'}</div></div></div>`;
     }).join('');
   } else if(nflLoaded&&nflPicks.length===0){
     document.getElementById('picks').innerHTML='<div class="muted">No NFL player data available today.</div>';
@@ -1778,6 +1781,7 @@ async function getTodaysNFLPlayers(option){
     }catch(_){ return []; }
   }
   const events=await getScoreboardEventsNearby('https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard',1,1);
+  const teamGameMap=_teamGameMapFromEvents(events);
   const players=[];
   const seen=new Set();
   for(const ev of events){
@@ -1840,15 +1844,16 @@ async function getTodaysNFLPlayers(option){
     return players;
   }
   const cached = readNFLCache();
-  if(cached.length) return cached;
+  if(cached.length) return _hydratePlayersGame(cached,teamGameMap);
   const cachedAny = readNFLCacheAny();
-  if(cachedAny.length) return cachedAny;
+  if(cachedAny.length) return _hydratePlayersGame(cachedAny,teamGameMap);
   {
     const defaults={TDs:0.5,'Rush Yds':55.5,'Rec Yds':45.5,'Receptions':4.5,'Pass Yds':225.5};
     const rosterPool=await _buildRosterFallbackPlayers('football/nfl', events, option, defaults);
     if(rosterPool.length){
-      writeNFLCache(rosterPool);
-      return rosterPool;
+      const hydrated=_hydratePlayersGame(rosterPool,teamGameMap);
+      writeNFLCache(hydrated);
+      return hydrated;
     }
   }
   return [];
@@ -1882,7 +1887,7 @@ function poRevealNFLCard(p, idx){
     <div class="details">
       <div class="muted">Position: ${p.pos||'—'}</div>
       <div class="muted">${p.dir} ${p.line} ${statLabel}</div>
-      <div class="muted">Season avg: ${p.seasonAvg}</div>
+      <div class="muted">Season avg: ${p.seasonAvg||'—'}</div>
       <div class="muted">Game status: ${gameStatusText(p.game)}</div>
       <div class="muted">Start time: ${gameStartText(p.game)||'—'}</div>
       <div class="muted">Venue: ${gameVenueText(p.game)||'—'}</div>
@@ -1965,7 +1970,7 @@ function renderNBAPicks(){
   } else if(nbaPicks.length>0){
     document.getElementById('picks').innerHTML=nbaPicks.map((p)=>{
       const statLabel=p.statLabel||currentOption;
-      return `<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'>${nbaRowTopPlayerHtml(p)}<span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>${statLabel}</span></span></div><div class='details'><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>${p.dir} ${p.line} ${statLabel}</div><div class='muted'>Season avg: ${p.seasonAvg}</div><div class='muted'>Game status: ${gameStatusText(p.game)}</div><div class='muted'>Start time: ${gameStartText(p.game)||'—'}</div><div class='muted'>Venue: ${gameVenueText(p.game)||'—'}</div></div></div>`;
+      return `<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'>${nbaRowTopPlayerHtml(p)}<span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>${statLabel}</span></span></div><div class='details'><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>${p.dir} ${p.line} ${statLabel}</div><div class='muted'>Season avg: ${p.seasonAvg||'—'}</div><div class='muted'>Game status: ${gameStatusText(p.game)}</div><div class='muted'>Start time: ${gameStartText(p.game)||'—'}</div><div class='muted'>Venue: ${gameVenueText(p.game)||'—'}</div></div></div>`;
     }).join('');
   } else if(nbaLoaded&&nbaPicks.length===0){
     document.getElementById('picks').innerHTML='<div class="muted">No NBA player data available today.</div>';
@@ -2005,6 +2010,7 @@ async function getTodaysNBAPlayers(option){
     }catch(_){ return []; }
   }
   const events=await getScoreboardEventsNearby('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard',1,1);
+  const teamGameMap=_teamGameMapFromEvents(events);
   const players=[];
   const seen=new Set();
   for(const ev of events){
@@ -2053,15 +2059,16 @@ async function getTodaysNBAPlayers(option){
     return players;
   }
   const cached = readNBACache();
-  if(cached.length) return cached;
+  if(cached.length) return _hydratePlayersGame(cached,teamGameMap);
   const cachedAny = readNBACacheAny();
-  if(cachedAny.length) return cachedAny;
+  if(cachedAny.length) return _hydratePlayersGame(cachedAny,teamGameMap);
   {
     const defaults={Points:19.5,Rebounds:5.5,Assists:4.5,'3PM':1.5,PRA:24.5};
     const rosterPool=await _buildRosterFallbackPlayers('basketball/nba', events, option, defaults);
     if(rosterPool.length){
-      writeNBACache(rosterPool);
-      return rosterPool;
+      const hydrated=_hydratePlayersGame(rosterPool,teamGameMap);
+      writeNBACache(hydrated);
+      return hydrated;
     }
   }
   return [];
@@ -2081,7 +2088,7 @@ function poRevealNBACard(p, idx){
     <div class="details">
       <div class="muted">Position: ${p.pos||'—'}</div>
       <div class="muted">${p.dir} ${p.line} ${statLabel}</div>
-      <div class="muted">Season avg: ${p.seasonAvg}</div>
+      <div class="muted">Season avg: ${p.seasonAvg||'—'}</div>
       <div class="muted">Game status: ${gameStatusText(p.game)}</div>
       <div class="muted">Start time: ${gameStartText(p.game)||'—'}</div>
       <div class="muted">Venue: ${gameVenueText(p.game)||'—'}</div>
@@ -2163,7 +2170,7 @@ function renderNHLPicks(){
   } else if(nhlPicks.length>0){
     document.getElementById('picks').innerHTML=nhlPicks.map((p)=>{
       const statLabel=p.statLabel||currentOption;
-      return `<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'>${nhlRowTopPlayerHtml(p)}<span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>${statLabel}</span></span></div><div class='details'><div class='muted'>${p.dir} ${p.line} ${statLabel}</div><div class='muted'>Season avg: ${p.seasonAvg}</div><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>Game status: ${gameStatusText(p.game)}</div><div class='muted'>Start time: ${gameStartText(p.game)||'—'}</div><div class='muted'>Venue: ${gameVenueText(p.game)||'—'}</div></div></div>`;
+      return `<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'>${nhlRowTopPlayerHtml(p)}<span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>${statLabel}</span></span></div><div class='details'><div class='muted'>${p.dir} ${p.line} ${statLabel}</div><div class='muted'>Season avg: ${p.seasonAvg||'—'}</div><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>Game status: ${gameStatusText(p.game)}</div><div class='muted'>Start time: ${gameStartText(p.game)||'—'}</div><div class='muted'>Venue: ${gameVenueText(p.game)||'—'}</div></div></div>`;
     }).join('');
   } else if(nhlLoaded&&nhlPicks.length===0){
     document.getElementById('picks').innerHTML='<div class="muted">No NHL player data available today.</div>';
@@ -2203,6 +2210,7 @@ async function getTodaysNHLPlayers(option){
     }catch(_){ return []; }
   }
   const events=await getScoreboardEventsNearby('https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard',1,1);
+  const teamGameMap=_teamGameMapFromEvents(events);
   const players=[];
   const seen=new Set();
   for(const ev of events){
@@ -2267,15 +2275,16 @@ async function getTodaysNHLPlayers(option){
     return players;
   }
   const cached = readNHLCache();
-  if(cached.length) return cached;
+  if(cached.length) return _hydratePlayersGame(cached,teamGameMap);
   const cachedAny = readNHLCacheAny();
-  if(cachedAny.length) return cachedAny;
+  if(cachedAny.length) return _hydratePlayersGame(cachedAny,teamGameMap);
   {
     const defaults={Goals:0.5,Shots:2.5,Assists:0.5,Points:0.5,'Goalie Saves':24.5};
     const rosterPool=await _buildRosterFallbackPlayers('hockey/nhl', events, option, defaults);
     if(rosterPool.length){
-      writeNHLCache(rosterPool);
-      return rosterPool;
+      const hydrated=_hydratePlayersGame(rosterPool,teamGameMap);
+      writeNHLCache(hydrated);
+      return hydrated;
     }
   }
   return [];
@@ -2294,7 +2303,7 @@ function poRevealNHLCard(p, idx){
     </div>
     <div class="details">
       <div class="muted">${p.dir} ${p.line} ${statLabel}</div>
-      <div class="muted">Season avg: ${p.seasonAvg}</div>
+      <div class="muted">Season avg: ${p.seasonAvg||'—'}</div>
       <div class="muted">Position: ${p.pos||'—'}</div>
       <div class="muted">Game status: ${gameStatusText(p.game)}</div>
       <div class="muted">Start time: ${gameStartText(p.game)||'—'}</div>
@@ -2377,7 +2386,7 @@ function renderSoccerPicks(){
   } else if(soccerPicks.length>0){
     document.getElementById('picks').innerHTML=soccerPicks.map((p)=>{
       const statLabel=p.statLabel||currentOption;
-      return `<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'>${soccerRowTopPlayerHtml(p)}<span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>${statLabel}</span></span></div><div class='details'><div class='muted'>${p.dir} ${p.line} ${statLabel}</div><div class='muted'>Season avg: ${p.seasonAvg}</div><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>Game status: ${gameStatusText(p.game)}</div><div class='muted'>Start time: ${gameStartText(p.game)||'—'}</div><div class='muted'>Venue: ${gameVenueText(p.game)||'—'}</div></div></div>`;
+      return `<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'>${soccerRowTopPlayerHtml(p)}<span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>${statLabel}</span></span></div><div class='details'><div class='muted'>${p.dir} ${p.line} ${statLabel}</div><div class='muted'>Season avg: ${p.seasonAvg||'—'}</div><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>Game status: ${gameStatusText(p.game)}</div><div class='muted'>Start time: ${gameStartText(p.game)||'—'}</div><div class='muted'>Venue: ${gameVenueText(p.game)||'—'}</div></div></div>`;
     }).join('');
   } else if(soccerLoaded&&soccerPicks.length===0){
     document.getElementById('picks').innerHTML='<div class="muted">No Soccer player data available today.</div>';
@@ -2417,6 +2426,7 @@ async function getTodaysSoccerPlayers(option){
     }catch(_){ return []; }
   }
   const events=await getScoreboardEventsNearby('https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/scoreboard',1,1);
+  const teamGameMap=_teamGameMapFromEvents(events);
   const players=[];
   const seen=new Set();
   for(const ev of events){
@@ -2493,15 +2503,16 @@ async function getTodaysSoccerPlayers(option){
   }
   // No placeholder players: use last known real soccer pool first.
   const cached = readSoccerCache();
-  if(cached.length) return cached;
+  if(cached.length) return _hydratePlayersGame(cached,teamGameMap);
   const cachedAny = readSoccerCacheAny();
-  if(cachedAny.length) return cachedAny;
+  if(cachedAny.length) return _hydratePlayersGame(cachedAny,teamGameMap);
   {
     const defaults={Goals:0.5,Assists:0.5,Shots:1.5,SOT:0.5,'GK Saves':2.5};
     const rosterPool=await _buildRosterFallbackPlayers('soccer/usa.1', events, option, defaults);
     if(rosterPool.length){
-      writeSoccerCache(rosterPool);
-      return rosterPool;
+      const hydrated=_hydratePlayersGame(rosterPool,teamGameMap);
+      writeSoccerCache(hydrated);
+      return hydrated;
     }
   }
   return [];
@@ -2520,7 +2531,7 @@ function poRevealSoccerCard(p, idx){
     </div>
     <div class="details">
       <div class="muted">${p.dir} ${p.line} ${statLabel}</div>
-      <div class="muted">Season avg: ${p.seasonAvg}</div>
+      <div class="muted">Season avg: ${p.seasonAvg||'—'}</div>
       <div class="muted">Position: ${p.pos||'—'}</div>
       <div class="muted">Game status: ${gameStatusText(p.game)}</div>
       <div class="muted">Start time: ${gameStartText(p.game)||'—'}</div>
@@ -2749,6 +2760,19 @@ function _eventGameByTeamAbbr(ev){
     if(abbr) out[abbr]=g;
   }
   return out;
+}
+function _teamGameMapFromEvents(events){
+  const out={};
+  for(const ev of (events||[])) Object.assign(out,_eventGameByTeamAbbr(ev));
+  return out;
+}
+function _hydratePlayersGame(players, teamGameMap){
+  if(!Array.isArray(players) || !players.length) return players||[];
+  return players.map(function(p){
+    if(p && p.game) return p;
+    const tm = p && p.teamAbbr ? (teamGameMap[p.teamAbbr]||null) : null;
+    return Object.assign({},p,{game:tm});
+  });
 }
 function _eventTeamRefs(events){
   const out=[];
@@ -4243,7 +4267,7 @@ document.addEventListener('click',function(e){const item=e.target.closest('.item
 initLegalModalStyling();
 syncAppVersionBadge();
 </script>
-<div class="app-version" id="appVersion">v1.01</div>
+<div class="app-version" id="appVersion">v1.03</div>
 <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 <div class="toast-stack center" id="toastStackCenter" aria-live="polite" aria-atomic="true"></div>
 </body>
