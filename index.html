@@ -2221,7 +2221,7 @@ function showUpgradeWall(opts){
     else if(current === 'NHL') sel = nhlPickCount;
     else if(current === 'Soccer') sel = soccerPickCount;
     row.querySelectorAll('button').forEach(b=>{
-      b.disabled = true;
+      b.disabled = false;
       const num = parseInt(b.textContent.trim(), 10) || 0;
       const isSel = sel >= 1 && sel <= 3 && num === sel;
       b.classList.toggle('btn2', !isSel);
