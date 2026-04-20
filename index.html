@@ -17,7 +17,7 @@
 <!-- Google Analytics 4 — replace G-XXXXXXXXXX with your real Measurement ID -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
 <script>
-  const APP_VERSION = 'v1.23';
+  const APP_VERSION = 'v1.26';
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
@@ -307,6 +307,17 @@ body.light .age-modal-card{
 body.light .age-modal-card .ob-age-q{color:#32466c}
 body.light .age-modal-card .ob-age-q strong{color:#1d2b46}
 body.light .age-modal-title{color:#1d2b46!important}
+body.light .age-modal-card .ob-age-no-btn{
+  background:#f3f7ff;
+  color:#1f3358;
+  border-color:#c2cfe7;
+  font-size:1rem;
+  font-weight:900;
+}
+body.light .age-modal-card .ob-age-no-btn:hover{
+  background:#e8f0ff;
+  border-color:#aabce0;
+}
 body.light .paywall-overlay-card{
   background:linear-gradient(160deg,#ffffff,#eef3ff);
   border:1px solid #cfd8ea;
@@ -1394,6 +1405,14 @@ function renderKsPicks(){
   if(loadBtn) loadBtn.disabled=!(!pickLocked);
 }
 function clearKs(){ksToken++;ksLoaded=false;ksLoading=false;ksPicks=[];ksPitcherUsed=new Set();ksLivePool=[];pickLocked=false;ksPickCount=0;renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Choose a count and click Pick Lucky Pitcher.</div>';}
+function _validatePlayerCountOrWarn(n, noun){
+  if(n>=1 && n<=3) return true;
+  const label = noun || 'players';
+  document.getElementById('picks').innerHTML='<div class="muted">Please choose 1, 2, or 3 '+label+' first.</div>';
+  showToast('Choose 1, 2, or 3 '+label+' first.', 'error', 'center');
+  stopMoneyTransformButton();
+  return false;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MLB HITS
@@ -1435,6 +1454,7 @@ function poRevealHitsCard(p,idx){
 }
 async function startHitsLoad(){
   pickRandomRhythm();
+  if(!_validatePlayerCountOrWarn(hitsPickCount, 'players')) return;
   openPickOverlay();
   const loadBtn=document.getElementById('hitsLoadBtn');
   if(loadBtn) loadBtn.disabled=true;
@@ -1542,6 +1562,7 @@ function poRevealBasesCard(p,idx){
 }
 async function startBasesLoad(){
   pickRandomRhythm();
+  if(!_validatePlayerCountOrWarn(basesPickCount, 'players')) return;
   openPickOverlay();
   const loadBtn=document.getElementById('basesLoadBtn');
   if(loadBtn) loadBtn.disabled=true;
@@ -1649,6 +1670,7 @@ function poRevealRBICard(p,idx){
 }
 async function startRBILoad(){
   pickRandomRhythm();
+  if(!_validatePlayerCountOrWarn(rbiPickCount, 'players')) return;
   openPickOverlay();
   const loadBtn=document.getElementById('rbiLoadBtn');
   if(loadBtn) loadBtn.disabled=true;
@@ -1836,6 +1858,7 @@ function poRevealNFLCard(p, idx){
 }
 async function startNFLLoad(){
   pickRandomRhythm();
+  if(!_validatePlayerCountOrWarn(nflPickCount, 'players')) return;
   openPickOverlay();
   const loadBtn=document.getElementById('nflLoadBtn');
   if(loadBtn) loadBtn.disabled=true;
@@ -1996,6 +2019,7 @@ function poRevealNBACard(p, idx){
 }
 async function startNBALoad(){
   pickRandomRhythm();
+  if(!_validatePlayerCountOrWarn(nbaPickCount, 'players')) return;
   openPickOverlay();
   const loadBtn=document.getElementById('nbaLoadBtn');
   if(loadBtn)loadBtn.disabled=true;
@@ -2172,6 +2196,7 @@ function poRevealNHLCard(p, idx){
 }
 async function startNHLLoad(){
   pickRandomRhythm();
+  if(!_validatePlayerCountOrWarn(nhlPickCount, 'skaters')) return;
   openPickOverlay();
   const loadBtn=document.getElementById('nhlLoadBtn');
   if(loadBtn)loadBtn.disabled=true;
@@ -2256,6 +2281,20 @@ function renderSoccerPicks(){
 }
 function clearSoccer(){soccerToken++;soccerLoaded=false;soccerLoading=false;soccerPicks=[];soccerUsed=new Set();soccerLivePool=[];pickLocked=false;soccerPickCount=0;renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Choose a count and click Pick Lucky Player.</div>';}
 async function getTodaysSoccerPlayers(option){
+  const cacheKey = 'soccerLastGoodPool:'+String(option||'');
+  function readSoccerCache(){
+    try{
+      const raw = _lhMem.getItem(cacheKey);
+      if(!raw) return [];
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    }catch(_){ return []; }
+  }
+  function writeSoccerCache(arr){
+    try{
+      if(Array.isArray(arr) && arr.length) _lhMem.setItem(cacheKey, JSON.stringify(arr.slice(0,260)));
+    }catch(_){}
+  }
   const sbUrl='https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/scoreboard';
   const sb=await fetchJson(sbUrl);
   const events=(sb&&sb.events)||[];
@@ -2327,17 +2366,14 @@ async function getTodaysSoccerPlayers(option){
       }
     }
   }
-  if(!players.length){
-    for(const ev of events){
-      const comps=(ev.competitions||[ev])[0];
-      for(const c of (comps&&comps.competitors||[])){
-        const abbr=c.team&&c.team.abbreviation||'';
-        const defaults={Goals:0.5,Assists:0.5,Shots:1.5,SOT:0.5,'GK Saves':2.5};
-        players.push({player:abbr+' Player',teamAbbr:abbr,pos:'',statLabel:option,line:defaults[option]||0.5,seasonAvg:'—'});
-      }
-    }
+  if(players.length){
+    writeSoccerCache(players);
+    return players;
   }
-  return players;
+  // No placeholder players: use last known real soccer pool if available.
+  const cached = readSoccerCache();
+  if(cached.length) return cached;
+  return [];
 }
 function poRevealSoccerCard(p, idx){
   const sk=document.getElementById('poSkel-'+idx);
@@ -2360,6 +2396,7 @@ function poRevealSoccerCard(p, idx){
 }
 async function startSoccerLoad(){
   pickRandomRhythm();
+  if(!_validatePlayerCountOrWarn(soccerPickCount, 'players')) return;
   openPickOverlay();
   const loadBtn=document.getElementById('soccerLoadBtn');
   if(loadBtn)loadBtn.disabled=true;
@@ -2659,6 +2696,7 @@ function poRevealKsCard(p, idx){
 async function startKsLoad(){
   trackEvent('pick_load_start',{sport:'MLB',option:'Ks'});
   pickRandomRhythm();
+  if(!_validatePlayerCountOrWarn(ksPickCount, 'pitchers')) return;
   // ── Open full-screen overlay ──
   openPickOverlay();
   const loadBtn=document.getElementById('ksLoadBtn');
@@ -3925,7 +3963,7 @@ document.addEventListener('click',function(e){const item=e.target.closest('.item
 initLegalModalStyling();
 syncAppVersionBadge();
 </script>
-<div class="app-version" id="appVersion">v1.23</div>
+<div class="app-version" id="appVersion">v1.26</div>
 <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 <div class="toast-stack center" id="toastStackCenter" aria-live="polite" aria-atomic="true"></div>
 </body>
