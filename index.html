@@ -17,7 +17,7 @@
 <!-- Google Analytics 4 — replace G-XXXXXXXXXX with your real Measurement ID -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
 <script>
-  const APP_VERSION = 'v1.03';
+  const APP_VERSION = 'v1.07';
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
@@ -1154,6 +1154,7 @@ function randomSport(){
   currentOption = sports[s].options[0];
   renderTabs();
   renderSport();
+  if(current==='MLB' || current==='NFL' || current==='NBA') _snapActiveMarketTabLeft();
 }
 function randomSubOption(){
   const opts = sports[current].options;
@@ -1162,8 +1163,23 @@ function randomSubOption(){
   let n = 0;
   while(opts.length>1 && o===currentOption && n++<20) o = opts[Math.floor(Math.random()*opts.length)];
   setOption(o);
+  if(current==='MLB' || current==='NFL' || current==='NBA') _snapActiveMarketTabLeft();
 }
 function setSport(s){_trackSectionSwitch(s);current=s;currentOption=sports[s].options[0];renderTabs();renderSport();}
+function _snapActiveMarketTabLeft(){
+  const tabsEl=document.getElementById('tabs');
+  if(!tabsEl) return;
+  const active=tabsEl.querySelector('.tab.active');
+  if(!active) return;
+  requestAnimationFrame(function(){
+    try{
+      active.scrollIntoView({behavior:'smooth',inline:'start',block:'nearest'});
+    }catch(_){
+      const left=active.offsetLeft-8;
+      tabsEl.scrollLeft=left>0?left:0;
+    }
+  });
+}
 function renderSport(){
   const _paywalled = _freePickUsed && !_devMode && !_isPro;
   const data=sports[current];document.getElementById('sportTitle').textContent=current;document.getElementById('sportDesc').textContent=data.desc;document.getElementById('sportHintBadge').textContent=current+' Live Lineups';
@@ -1460,7 +1476,7 @@ async function startHitsLoad(){
     const pool=await getTodaysMlbHitters();
     if(token!==hitsToken)return;
     // Annotate each player with a prop line based on season hits
-    const annotated=pool.map(p=>{
+    const annotated=_withOppTeamFromPool(pool).map(p=>{
       const h=parseInt(p.hits||p.seasonHits||0)||0;
       const line=h>0?Math.round((h/162*1.1)*2)/2:0.5; // ~1.1 hits/game projected
       return Object.assign({},p,{seasonHits:h,line:Math.max(line,0.5)});
@@ -1480,15 +1496,17 @@ async function startHitsLoad(){
     const max=Math.min(hitsPickCount,3);
     poSeedSkeletons(max);
     shuffler=startNameShuffle(annotated,token,()=>hitsToken);
+    const selectedTeams=new Set();
     for(let i=0;i<max;i++){
       if(token!==hitsToken)return;
       await sleep(Math.max(500,getRhythmSuspense(i)));
       if(token!==hitsToken)return;
-      const avail=annotated.filter(x=>!hitsUsed.has(x.player));
-      const choice=Object.assign({},avail.length?pickRandom(avail):pickRandom(annotated));
+      const picked=pickDiversifiedPlayer(annotated,hitsUsed,selectedTeams);
+      const choice=Object.assign({},picked||pickRandom(annotated));
       choice.dir=Math.random()<0.5?'Over':'Under';
       hitsPicks.push(choice);
       hitsUsed.add(choice.player);
+      if(choice.teamAbbr || choice.team) selectedTeams.add(choice.teamAbbr||choice.team);
       renderHitsPicks();
       poRevealHitsCard(choice,i);
       if(i===max-1)stopMoneyTransformButton();
@@ -1568,7 +1586,7 @@ async function startBasesLoad(){
     const pool=await getTodaysMlbHitters();
     if(token!==basesToken)return;
     // Total Bases line = SLG * 4 projected per game, round to .5
-    const annotated=pool.map(p=>{
+    const annotated=_withOppTeamFromPool(pool).map(p=>{
       const slg=parseFloat(p.slg||p.avg||'.250');
       const line=slg>0?Math.round((slg*4*0.9)*2)/2:1.5;
       return Object.assign({},p,{slg:p.slg||p.avg||'.250',line:Math.max(line,0.5)});
@@ -1588,15 +1606,17 @@ async function startBasesLoad(){
     const max=Math.min(basesPickCount,3);
     poSeedSkeletons(max);
     shuffler=startNameShuffle(annotated,token,()=>basesToken);
+    const selectedTeams=new Set();
     for(let i=0;i<max;i++){
       if(token!==basesToken)return;
       await sleep(Math.max(500,getRhythmSuspense(i)));
       if(token!==basesToken)return;
-      const avail=annotated.filter(x=>!basesUsed.has(x.player));
-      const choice=Object.assign({},avail.length?pickRandom(avail):pickRandom(annotated));
+      const picked=pickDiversifiedPlayer(annotated,basesUsed,selectedTeams);
+      const choice=Object.assign({},picked||pickRandom(annotated));
       choice.dir=Math.random()<0.5?'Over':'Under';
       basesPicks.push(choice);
       basesUsed.add(choice.player);
+      if(choice.teamAbbr || choice.team) selectedTeams.add(choice.teamAbbr||choice.team);
       renderBasesPicks();
       poRevealBasesCard(choice,i);
       if(i===max-1)stopMoneyTransformButton();
@@ -1676,7 +1696,7 @@ async function startRBILoad(){
     const pool=await getTodaysMlbHitters();
     if(token!==rbiToken)return;
     // RBI line: season RBI / 162 * 0.9 games, round to .5
-    const annotated=pool.map(p=>{
+    const annotated=_withOppTeamFromPool(pool).map(p=>{
       const rbi=parseInt(p.rbi||p.seasonRbi||0)||0;
       const line=rbi>0?Math.round((rbi/162*0.9)*2)/2:0.5;
       return Object.assign({},p,{seasonRbi:rbi,line:Math.max(line,0.5)});
@@ -1696,15 +1716,17 @@ async function startRBILoad(){
     const max=Math.min(rbiPickCount,3);
     poSeedSkeletons(max);
     shuffler=startNameShuffle(annotated,token,()=>rbiToken);
+    const selectedTeams=new Set();
     for(let i=0;i<max;i++){
       if(token!==rbiToken)return;
       await sleep(Math.max(500,getRhythmSuspense(i)));
       if(token!==rbiToken)return;
-      const avail=annotated.filter(x=>!rbiUsed.has(x.player));
-      const choice=Object.assign({},avail.length?pickRandom(avail):pickRandom(annotated));
+      const picked=pickDiversifiedPlayer(annotated,rbiUsed,selectedTeams);
+      const choice=Object.assign({},picked||pickRandom(annotated));
       choice.dir=Math.random()<0.5?'Over':'Under';
       rbiPicks.push(choice);
       rbiUsed.add(choice.player);
+      if(choice.teamAbbr || choice.team) selectedTeams.add(choice.teamAbbr||choice.team);
       renderRBIPicks();
       poRevealRBICard(choice,i);
       if(i===max-1)stopMoneyTransformButton();
@@ -1782,6 +1804,7 @@ async function getTodaysNFLPlayers(option){
   }
   const events=await getScoreboardEventsNearby('https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard',1,1);
   const teamGameMap=_teamGameMapFromEvents(events);
+  const teamOppMap=_teamOpponentMapFromEvents(events);
   const players=[];
   const seen=new Set();
   for(const ev of events){
@@ -1822,7 +1845,7 @@ async function getTodaysNFLPlayers(option){
               if(!existing.headshotUrl&&headshotUrl) existing.headshotUrl=headshotUrl;
               if(!existing.game) existing.game = teamGameMap[teamAbbr]||eventGame;
             } else {
-              players.push({player:name,espnId,headshotUrl,teamAbbr,pos,statLabel:'TDs',td:tdVal,line:0,seasonAvg:tdVal+' TDs',game:teamGameMap[teamAbbr]||eventGame});
+              players.push({player:name,espnId,headshotUrl,teamAbbr,oppTeamAbbr:teamOppMap[teamAbbr]||'',pos,statLabel:'TDs',td:tdVal,line:0,seasonAvg:tdVal+' TDs',game:teamGameMap[teamAbbr]||eventGame});
             }
           } else {
             if(seen.has(name+gname)) continue;
@@ -1833,7 +1856,7 @@ async function getTodaysNFLPlayers(option){
             else if(option==='Receptions'){statVal=parseFloat(vals[0]||0);seasonAvg=statVal+' rec';}
             else if(option==='Pass Yds'){statVal=parseFloat(vals[1]||0);seasonAvg=statVal+' yds';}
             const line=Math.round(statVal*2)/2||(option==='Pass Yds'?225.5:option==='Rush Yds'?55.5:option==='Rec Yds'?45.5:option==='Receptions'?4.5:0.5);
-            players.push({player:name,espnId,headshotUrl,teamAbbr,pos,statLabel:option,line,seasonAvg,game:teamGameMap[teamAbbr]||eventGame});
+            players.push({player:name,espnId,headshotUrl,teamAbbr,oppTeamAbbr:teamOppMap[teamAbbr]||'',pos,statLabel:option,line,seasonAvg,game:teamGameMap[teamAbbr]||eventGame});
           }
         }
       }
@@ -1844,14 +1867,14 @@ async function getTodaysNFLPlayers(option){
     return players;
   }
   const cached = readNFLCache();
-  if(cached.length) return _hydratePlayersGame(cached,teamGameMap);
+  if(cached.length) return _hydratePlayersGame(cached,teamGameMap,teamOppMap);
   const cachedAny = readNFLCacheAny();
-  if(cachedAny.length) return _hydratePlayersGame(cachedAny,teamGameMap);
+  if(cachedAny.length) return _hydratePlayersGame(cachedAny,teamGameMap,teamOppMap);
   {
     const defaults={TDs:0.5,'Rush Yds':55.5,'Rec Yds':45.5,'Receptions':4.5,'Pass Yds':225.5};
     const rosterPool=await _buildRosterFallbackPlayers('football/nfl', events, option, defaults);
     if(rosterPool.length){
-      const hydrated=_hydratePlayersGame(rosterPool,teamGameMap);
+      const hydrated=_hydratePlayersGame(rosterPool,teamGameMap,teamOppMap);
       writeNFLCache(hydrated);
       return hydrated;
     }
@@ -1924,17 +1947,19 @@ async function startNFLLoad(){
       stopMoneyTransformButton();renderNFLPicks();return;
     }
     const max=Math.min(nflPickCount,3);
+    const selectedTeams=new Set();
     poSeedSkeletons(max);
     shuffler=startNameShuffle(pool,token,()=>nflToken);
     for(let i=0;i<max;i++){
       if(token!==nflToken)return;
       await sleep(Math.max(500,getRhythmSuspense(i)));
       if(token!==nflToken)return;
-      const avail=pool.filter(x=>!nflUsed.has(x.player));
-      const choice=Object.assign({},avail.length?pickRandom(avail):pickRandom(pool));
+      const picked=pickDiversifiedPlayer(pool,nflUsed,selectedTeams);
+      const choice=Object.assign({},picked||pickRandom(pool));
       if(choice.statLabel!=='TDs') choice.dir=Math.random()<0.5?'Over':'Under';
       nflPicks.push(choice);
       nflUsed.add(choice.player);
+      if(choice.teamAbbr) selectedTeams.add(choice.teamAbbr);
       renderNFLPicks();
       poRevealNFLCard(choice,i);
       if(i===max-1)stopMoneyTransformButton();
@@ -2011,6 +2036,7 @@ async function getTodaysNBAPlayers(option){
   }
   const events=await getScoreboardEventsNearby('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard',1,1);
   const teamGameMap=_teamGameMapFromEvents(events);
+  const teamOppMap=_teamOpponentMapFromEvents(events);
   const players=[];
   const seen=new Set();
   for(const ev of events){
@@ -2049,7 +2075,7 @@ async function getTodaysNBAPlayers(option){
           else{statVal=pts;line=14.5;seasonAvg=statVal+' pts';}
           const espnId=athleteObj.id!=null?String(athleteObj.id):'';
           const headshotUrl = athleteObj.headshot && athleteObj.headshot.href ? String(athleteObj.headshot.href) : '';
-          players.push({player:name,espnId,headshotUrl,teamAbbr,pos:nbaPos,statLabel:option,line,seasonAvg,game:teamGameMap[teamAbbr]||eventGame});
+          players.push({player:name,espnId,headshotUrl,teamAbbr,oppTeamAbbr:teamOppMap[teamAbbr]||'',pos:nbaPos,statLabel:option,line,seasonAvg,game:teamGameMap[teamAbbr]||eventGame});
         }
       }
     }
@@ -2059,14 +2085,14 @@ async function getTodaysNBAPlayers(option){
     return players;
   }
   const cached = readNBACache();
-  if(cached.length) return _hydratePlayersGame(cached,teamGameMap);
+  if(cached.length) return _hydratePlayersGame(cached,teamGameMap,teamOppMap);
   const cachedAny = readNBACacheAny();
-  if(cachedAny.length) return _hydratePlayersGame(cachedAny,teamGameMap);
+  if(cachedAny.length) return _hydratePlayersGame(cachedAny,teamGameMap,teamOppMap);
   {
     const defaults={Points:19.5,Rebounds:5.5,Assists:4.5,'3PM':1.5,PRA:24.5};
     const rosterPool=await _buildRosterFallbackPlayers('basketball/nba', events, option, defaults);
     if(rosterPool.length){
-      const hydrated=_hydratePlayersGame(rosterPool,teamGameMap);
+      const hydrated=_hydratePlayersGame(rosterPool,teamGameMap,teamOppMap);
       writeNBACache(hydrated);
       return hydrated;
     }
@@ -2124,17 +2150,19 @@ async function startNBALoad(){
       stopMoneyTransformButton();renderNBAPicks();return;
     }
     const max=Math.min(nbaPickCount,3);
+    const selectedTeams=new Set();
     poSeedSkeletons(max);
     shuffler=startNameShuffle(pool,token,()=>nbaToken);
     for(let i=0;i<max;i++){
       if(token!==nbaToken)return;
       await sleep(Math.max(500,getRhythmSuspense(i)));
       if(token!==nbaToken)return;
-      const avail=pool.filter(x=>!nbaUsed.has(x.player));
-      const choice=Object.assign({},avail.length?pickRandom(avail):pickRandom(pool));
+      const picked=pickDiversifiedPlayer(pool,nbaUsed,selectedTeams);
+      const choice=Object.assign({},picked||pickRandom(pool));
       choice.dir=Math.random()<0.5?'Over':'Under';
       nbaPicks.push(choice);
       nbaUsed.add(choice.player);
+      if(choice.teamAbbr) selectedTeams.add(choice.teamAbbr);
       renderNBAPicks();
       poRevealNBACard(choice,i);
       if(i===max-1)stopMoneyTransformButton();
@@ -2211,6 +2239,7 @@ async function getTodaysNHLPlayers(option){
   }
   const events=await getScoreboardEventsNearby('https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard',1,1);
   const teamGameMap=_teamGameMapFromEvents(events);
+  const teamOppMap=_teamOpponentMapFromEvents(events);
   const players=[];
   const seen=new Set();
   for(const ev of events){
@@ -2265,7 +2294,7 @@ async function getTodaysNHLPlayers(option){
           } else {continue;}
           const espnId=athleteObj.id!=null?String(athleteObj.id):'';
           const headshotUrl = athleteObj.headshot && athleteObj.headshot.href ? String(athleteObj.headshot.href) : '';
-          players.push({player:name,espnId,headshotUrl,teamAbbr,pos,statLabel:option,line,seasonAvg,game:teamGameMap[teamAbbr]||eventGame});
+          players.push({player:name,espnId,headshotUrl,teamAbbr,oppTeamAbbr:teamOppMap[teamAbbr]||'',pos,statLabel:option,line,seasonAvg,game:teamGameMap[teamAbbr]||eventGame});
         }
       }
     }
@@ -2275,14 +2304,14 @@ async function getTodaysNHLPlayers(option){
     return players;
   }
   const cached = readNHLCache();
-  if(cached.length) return _hydratePlayersGame(cached,teamGameMap);
+  if(cached.length) return _hydratePlayersGame(cached,teamGameMap,teamOppMap);
   const cachedAny = readNHLCacheAny();
-  if(cachedAny.length) return _hydratePlayersGame(cachedAny,teamGameMap);
+  if(cachedAny.length) return _hydratePlayersGame(cachedAny,teamGameMap,teamOppMap);
   {
     const defaults={Goals:0.5,Shots:2.5,Assists:0.5,Points:0.5,'Goalie Saves':24.5};
     const rosterPool=await _buildRosterFallbackPlayers('hockey/nhl', events, option, defaults);
     if(rosterPool.length){
-      const hydrated=_hydratePlayersGame(rosterPool,teamGameMap);
+      const hydrated=_hydratePlayersGame(rosterPool,teamGameMap,teamOppMap);
       writeNHLCache(hydrated);
       return hydrated;
     }
@@ -2340,17 +2369,19 @@ async function startNHLLoad(){
       stopMoneyTransformButton();renderNHLPicks();return;
     }
     const max=Math.min(nhlPickCount,3);
+    const selectedTeams=new Set();
     poSeedSkeletons(max);
     shuffler=startNameShuffle(pool,token,()=>nhlToken);
     for(let i=0;i<max;i++){
       if(token!==nhlToken)return;
       await sleep(Math.max(500,getRhythmSuspense(i)));
       if(token!==nhlToken)return;
-      const avail=pool.filter(x=>!nhlUsed.has(x.player));
-      const choice=Object.assign({},avail.length?pickRandom(avail):pickRandom(pool));
+      const picked=pickDiversifiedPlayer(pool,nhlUsed,selectedTeams);
+      const choice=Object.assign({},picked||pickRandom(pool));
       choice.dir=Math.random()<0.5?'Over':'Under';
       nhlPicks.push(choice);
       nhlUsed.add(choice.player);
+      if(choice.teamAbbr) selectedTeams.add(choice.teamAbbr);
       renderNHLPicks();
       poRevealNHLCard(choice,i);
       if(i===max-1)stopMoneyTransformButton();
@@ -2427,6 +2458,7 @@ async function getTodaysSoccerPlayers(option){
   }
   const events=await getScoreboardEventsNearby('https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/scoreboard',1,1);
   const teamGameMap=_teamGameMapFromEvents(events);
+  const teamOppMap=_teamOpponentMapFromEvents(events);
   const players=[];
   const seen=new Set();
   for(const ev of events){
@@ -2477,7 +2509,7 @@ async function getTodaysSoccerPlayers(option){
           line=statVal>0?Math.round(statVal*2)/2:0.5;
           seasonAvg=statVal+' SOT';
         } else {continue;}
-        players.push({player:name,espnId,teamAbbr,pos,statLabel:option,line,seasonAvg,game:teamGameMap[teamAbbr]||eventGame});
+        players.push({player:name,espnId,teamAbbr,oppTeamAbbr:teamOppMap[teamAbbr]||'',pos,statLabel:option,line,seasonAvg,game:teamGameMap[teamAbbr]||eventGame});
       }
     }
     // Fallback: try boxscore.players if rosters empty
@@ -2491,7 +2523,7 @@ async function getTodaysSoccerPlayers(option){
             const espnId=athlete.athlete&&athlete.athlete.id!=null?Number(athlete.athlete.id):'';
             if(!name||seen.has(name))continue;
             seen.add(name);
-            players.push({player:name,espnId,teamAbbr,pos:'',statLabel:option,line:0.5,seasonAvg:'—',game:teamGameMap[teamAbbr]||eventGame});
+            players.push({player:name,espnId,teamAbbr,oppTeamAbbr:teamOppMap[teamAbbr]||'',pos:'',statLabel:option,line:0.5,seasonAvg:'—',game:teamGameMap[teamAbbr]||eventGame});
           }
         }
       }
@@ -2503,14 +2535,14 @@ async function getTodaysSoccerPlayers(option){
   }
   // No placeholder players: use last known real soccer pool first.
   const cached = readSoccerCache();
-  if(cached.length) return _hydratePlayersGame(cached,teamGameMap);
+  if(cached.length) return _hydratePlayersGame(cached,teamGameMap,teamOppMap);
   const cachedAny = readSoccerCacheAny();
-  if(cachedAny.length) return _hydratePlayersGame(cachedAny,teamGameMap);
+  if(cachedAny.length) return _hydratePlayersGame(cachedAny,teamGameMap,teamOppMap);
   {
     const defaults={Goals:0.5,Assists:0.5,Shots:1.5,SOT:0.5,'GK Saves':2.5};
     const rosterPool=await _buildRosterFallbackPlayers('soccer/usa.1', events, option, defaults);
     if(rosterPool.length){
-      const hydrated=_hydratePlayersGame(rosterPool,teamGameMap);
+      const hydrated=_hydratePlayersGame(rosterPool,teamGameMap,teamOppMap);
       writeSoccerCache(hydrated);
       return hydrated;
     }
@@ -2568,17 +2600,19 @@ async function startSoccerLoad(){
       stopMoneyTransformButton();renderSoccerPicks();return;
     }
     const max=Math.min(soccerPickCount,3);
+    const selectedTeams=new Set();
     poSeedSkeletons(max);
     shuffler=startNameShuffle(pool,token,()=>soccerToken);
     for(let i=0;i<max;i++){
       if(token!==soccerToken)return;
       await sleep(Math.max(500,getRhythmSuspense(i)));
       if(token!==soccerToken)return;
-      const avail=pool.filter(x=>!soccerUsed.has(x.player));
-      const choice=Object.assign({},avail.length?pickRandom(avail):pickRandom(pool));
+      const picked=pickDiversifiedPlayer(pool,soccerUsed,selectedTeams);
+      const choice=Object.assign({},picked||pickRandom(pool));
       choice.dir=Math.random()<0.5?'Over':'Under';
       soccerPicks.push(choice);
       soccerUsed.add(choice.player);
+      if(choice.teamAbbr) selectedTeams.add(choice.teamAbbr);
       renderSoccerPicks();
       poRevealSoccerCard(choice,i);
       if(i===max-1)stopMoneyTransformButton();
@@ -2605,6 +2639,41 @@ async function startSoccerLoad(){
 
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 function pickRandom(arr){return arr[Math.floor(Math.random()*arr.length)];}
+function pickDiversifiedPlayer(pool, usedPlayersSet, usedTeamsSet){
+  const base=(pool||[]).filter(function(x){return !usedPlayersSet.has(x.player);});
+  if(!base.length) return null;
+  const noSameTeam=base.filter(function(x){
+    return !x.teamAbbr || !usedTeamsSet.has(x.teamAbbr);
+  });
+  const noOpponent=noSameTeam.filter(function(x){
+    return !x.oppTeamAbbr || !usedTeamsSet.has(x.oppTeamAbbr);
+  });
+  if(noOpponent.length) return pickRandom(noOpponent);
+  if(noSameTeam.length) return pickRandom(noSameTeam);
+  return pickRandom(base);
+}
+function _withOppTeamFromPool(list){
+  const arr=Array.isArray(list)?list:[];
+  const perGame={};
+  for(const p of arr){
+    const gk = String((p&&p.gamePk) || (p&&p.game&&p.game.gamePk) || '');
+    const t = p && (p.teamAbbr || p.team) || '';
+    if(!gk || !t) continue;
+    if(!perGame[gk]) perGame[gk]=new Set();
+    perGame[gk].add(t);
+  }
+  return arr.map(function(p){
+    if(p && p.oppTeamAbbr) return p;
+    const gk = String((p&&p.gamePk) || (p&&p.game&&p.game.gamePk) || '');
+    const t = p && (p.teamAbbr || p.team) || '';
+    let opp='';
+    const teams = gk && perGame[gk] ? Array.from(perGame[gk]) : [];
+    if(teams.length===2 && t){
+      opp = teams[0]===t ? teams[1] : teams[0];
+    }
+    return Object.assign({},p,{oppTeamAbbr:opp});
+  });
+}
 function pickWithoutDuplicateHitter(arr, usedHitters){const avail=arr.filter(x=>!usedHitters.has(x.player));return avail.length?pickRandom(avail):arr.length?pickRandom(arr):null;}
 function normalizeName(s){return String(s||'').replace(/\s+/g,' ').trim();}
 function teamLogoUrl(teamId){return teamId ? `https://www.mlbstatic.com/team-logos/team-cap-on-dark/${teamId}.svg` : '';}
@@ -2761,17 +2830,39 @@ function _eventGameByTeamAbbr(ev){
   }
   return out;
 }
+function _eventOpponentByTeamAbbr(ev){
+  const out={};
+  const comp = ev && ev.competitions && ev.competitions[0] || {};
+  const teams = (comp.competitors||[]).map(function(c){
+    return c && c.team && c.team.abbreviation || '';
+  }).filter(Boolean);
+  if(teams.length===2){
+    out[teams[0]]=teams[1];
+    out[teams[1]]=teams[0];
+  }
+  return out;
+}
 function _teamGameMapFromEvents(events){
   const out={};
   for(const ev of (events||[])) Object.assign(out,_eventGameByTeamAbbr(ev));
   return out;
 }
-function _hydratePlayersGame(players, teamGameMap){
+function _teamOpponentMapFromEvents(events){
+  const out={};
+  for(const ev of (events||[])) Object.assign(out,_eventOpponentByTeamAbbr(ev));
+  return out;
+}
+function _hydratePlayersGame(players, teamGameMap, teamOppMap){
   if(!Array.isArray(players) || !players.length) return players||[];
   return players.map(function(p){
-    if(p && p.game) return p;
-    const tm = p && p.teamAbbr ? (teamGameMap[p.teamAbbr]||null) : null;
-    return Object.assign({},p,{game:tm});
+    const team = p && p.teamAbbr ? p.teamAbbr : '';
+    const tm = team ? (teamGameMap[team]||null) : null;
+    const opp = team ? (teamOppMap && teamOppMap[team] || '') : '';
+    if(p && p.game && (p.oppTeamAbbr || !opp)) return p;
+    return Object.assign({},p,{
+      game:p && p.game ? p.game : tm,
+      oppTeamAbbr:p && p.oppTeamAbbr ? p.oppTeamAbbr : opp
+    });
   });
 }
 function _eventTeamRefs(events){
@@ -2819,6 +2910,7 @@ function _parseRosterAthletes(rosterJson){
 }
 async function _buildRosterFallbackPlayers(sportPath, events, option, defaults){
   const teams=_eventTeamRefs(events);
+  const teamOppMap=_teamOpponentMapFromEvents(events);
   const out=[];
   const seen=new Set();
   for(const t of teams){
@@ -2836,6 +2928,7 @@ async function _buildRosterFallbackPlayers(sportPath, events, option, defaults){
         espnId:a.id||'',
         headshotUrl:a.headshotUrl||'',
         teamAbbr:t.abbr||'',
+        oppTeamAbbr:teamOppMap[t.abbr||'']||'',
         pos:a.pos||'',
         statLabel:option,
         line:defaults && defaults[option] != null ? defaults[option] : 0.5,
@@ -2846,7 +2939,100 @@ async function _buildRosterFallbackPlayers(sportPath, events, option, defaults){
   }
   return out;
 }
-async function getTodaysMlbHitters(){const today=todayStr; const scheduleUrl=`https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${today}&hydrate=team`; const sched=await fetchJson(scheduleUrl); const dates=(sched && sched.dates) ? sched.dates : []; const games=[]; dates.forEach(d=>{(d.games||[]).forEach(g=>games.push(g));}); const pools=[]; const gameMap={}; for(const g of games){ const gamePk=g.gamePk; gameMap[String(gamePk)]={gamePk, gameDate:g.gameDate, status:g.status, venue:g.venue}; const boxUrl=`https://statsapi.mlb.com/api/v1/game/${gamePk}/boxscore`; try{ const box=await fetchJson(boxUrl); const collect=(teamObj, side)=>{ const batterIds=teamObj?.batters || []; const teamName = teamObj?.team?.name || teamObj?.team?.abbreviation || side; batterIds.forEach(id=>{ const key=`ID${id}`; const p=teamObj.players?.[key]; if(!p) return; const person = p.person || {}; const pos = p.position?.abbreviation || person?.primaryPosition?.abbreviation || ''; if(isPitcher(pos)) return; const bo = slotToBattingOrder(p.battingOrder); if(bo===null) return; pools.push({player: normalizeName(person.fullName), playerId: person.id!=null?Number(person.id):Number(id), team: teamName, teamAbbr: teamObj?.team?.abbreviation || teamObj?.team?.name || side, teamId: teamObj?.team?.id || null, order: bo, gamePk, game: gameMap[String(gamePk)], hr: p.seasonStats?.batting?.homeRuns ?? '–', avg: p.seasonStats?.batting?.avg ?? '.---', pos}); });}; collect(box?.teams?.home, 'home'); collect(box?.teams?.away, 'away'); } catch(e){} } const unique=new Map(); pools.forEach(x=>{const k=`${x.player}::${x.team}`; if(!unique.has(k)) unique.set(k,x);}); return [...unique.values()].sort((a,b)=>(a.order-b.order)||a.player.localeCompare(b.player)); }
+async function getTodaysMlbHitters(){
+  const today=todayStr;
+  const scheduleUrl=`https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${today}&hydrate=team`;
+  const sched=await fetchJson(scheduleUrl);
+  const dates=(sched && sched.dates) ? sched.dates : [];
+  const games=[];
+  dates.forEach(d=>{(d.games||[]).forEach(g=>games.push(g));});
+  const pools=[];
+  const gameMap={};
+  for(const g of games){
+    const gamePk=g.gamePk;
+    gameMap[String(gamePk)]={gamePk, gameDate:g.gameDate, status:g.status, venue:g.venue};
+    const boxUrl=`https://statsapi.mlb.com/api/v1/game/${gamePk}/boxscore`;
+    try{
+      const box=await fetchJson(boxUrl);
+      const collect=(teamObj, side)=>{
+        const teamName = teamObj?.team?.name || teamObj?.team?.abbreviation || side;
+        const teamAbbr = teamObj?.team?.abbreviation || teamObj?.team?.name || side;
+        const teamId = teamObj?.team?.id || null;
+        const playersMap = teamObj?.players || {};
+
+        // Primary source: confirmed batting order IDs.
+        const batterIds = teamObj?.batters || [];
+        for(const id of batterIds){
+          const key=`ID${id}`;
+          const p=playersMap[key];
+          if(!p) continue;
+          const person=p.person||{};
+          const pos=p.position?.abbreviation||person?.primaryPosition?.abbreviation||'';
+          if(isPitcher(pos)) continue;
+          const bo=slotToBattingOrder(p.battingOrder);
+          if(bo===null) continue;
+          pools.push({
+            player: normalizeName(person.fullName),
+            playerId: person.id!=null?Number(person.id):Number(id),
+            team: teamName,
+            teamAbbr,
+            teamId,
+            order: bo,
+            gamePk,
+            game: gameMap[String(gamePk)],
+            hr: p.seasonStats?.batting?.homeRuns ?? '–',
+            avg: p.seasonStats?.batting?.avg ?? '.---',
+            pos
+          });
+        }
+
+        // Fallback when lineups are not posted yet:
+        // choose likely hitters from all team players with batting season stats.
+        if(!batterIds.length){
+          const candidates=[];
+          for(const key of Object.keys(playersMap)){
+            const p=playersMap[key];
+            const person=p?.person||{};
+            const name=normalizeName(person.fullName||'');
+            if(!name) continue;
+            const pos=p?.position?.abbreviation||person?.primaryPosition?.abbreviation||'';
+            if(isPitcher(pos)) continue;
+            const batting=p?.seasonStats?.batting||{};
+            const ab=parseInt(batting.atBats||0,10)||0;
+            if(ab<=0) continue;
+            candidates.push({
+              player:name,
+              playerId: person.id!=null?Number(person.id):NaN,
+              team: teamName,
+              teamAbbr,
+              teamId,
+              order: 99,
+              gamePk,
+              game: gameMap[String(gamePk)],
+              hr: batting.homeRuns ?? '–',
+              avg: batting.avg ?? '.---',
+              pos,
+              _ab: ab
+            });
+          }
+          candidates.sort((a,b)=>b._ab-a._ab || a.player.localeCompare(b.player));
+          candidates.slice(0,12).forEach(c=>{
+            delete c._ab;
+            pools.push(c);
+          });
+        }
+      };
+      collect(box?.teams?.home, 'home');
+      collect(box?.teams?.away, 'away');
+    }catch(e){}
+  }
+  const unique=new Map();
+  pools.forEach(x=>{
+    const k=`${x.player}::${x.team}`;
+    if(!unique.has(k)) unique.set(k,x);
+  });
+  return [...unique.values()].sort((a,b)=>(a.order-b.order)||a.player.localeCompare(b.player));
+}
 async function getTodaysPitchers(){
   const today=todayStr;
   // Single call — season stats are embedded in probablePitcher.stats[]
@@ -2862,6 +3048,7 @@ async function getTodaysPitchers(){
         if(!pp||!pp.id||seen.has(pp.id)) return;
         seen.add(pp.id);
         const teamAbbr=g.teams?.[side]?.team?.abbreviation||side;
+        const oppAbbr=g.teams?.[side==='home'?'away':'home']?.team?.abbreviation||'';
         // Find statsSingleSeason pitching block
         const seasonStat=(pp.stats||[]).find(s=>s.type?.displayName==='statsSingleSeason'&&s.group?.displayName==='pitching');
         const stat=seasonStat?.stats||{};
@@ -2873,6 +3060,9 @@ async function getTodaysPitchers(){
           player: normalizeName(pp.fullName||`Pitcher ${pp.id}`),
           playerId: pp.id,
           teamAbbr,
+          oppTeamAbbr: oppAbbr,
+          gamePk: g.gamePk,
+          game: {gamePk:g.gamePk, gameDate:g.gameDate, status:g.status, venue:g.venue},
           era,
           k9: k9.toFixed(1),
           kLine
@@ -2924,7 +3114,8 @@ async function startMLBLoad(){
   try{
     const pool=await getTodaysMlbHitters();
     if(token!==mlbToken) return;
-    mlbLivePool=pool;
+    const poolDiv=_withOppTeamFromPool(pool);
+    mlbLivePool=poolDiv;
     mlbLoading=false;mlbLoaded=true;
     if(!pickCount || pickCount<1 || pickCount>3){
       mlbPicks=[];renderMLB();return;
@@ -2943,17 +3134,19 @@ async function startMLBLoad(){
     const max=Math.min(pickCount,3);
     // Seed overlay with skeleton cards before names are known
     poSeedSkeletons(max);
-    shuffler=startNameShuffle(pool, token);
+    shuffler=startNameShuffle(poolDiv, token);
+    const selectedTeams=new Set();
     for(let i=0;i<max;i++){
       if(token!==mlbToken) return;
       // Spin this card for at least 500ms before revealing
       await sleep(Math.max(500, getRhythmSuspense(i)));
       if(token!==mlbToken) return;
-      let choice=pickWithoutDuplicateHitter(pool,mlbHitterUsed);
-      if(!choice) choice=pickRandom(pool);
+      const picked=pickDiversifiedPlayer(poolDiv,mlbHitterUsed,selectedTeams);
+      let choice=Object.assign({},picked||pickRandom(poolDiv));
       mlbPicks.push(choice);
       mlbTeamsUsed.push(choice.team);
       mlbHitterUsed.add(choice.player);
+      if(choice.teamAbbr || choice.team) selectedTeams.add(choice.teamAbbr||choice.team);
       renderMLB();
       poRevealCard(choice, i);
       const lastCard=document.querySelector('#picks .item:last-child');
@@ -3013,7 +3206,7 @@ async function startKsLoad(){
   let shuffler=null;
   const stopShuffle=()=>{ if(shuffler) shuffler._timers?.forEach(t=>{clearTimeout(t);clearInterval(t);}); shuffler=null; };
   try{
-    const pool=await getTodaysPitchers();
+    const pool=_withOppTeamFromPool(await getTodaysPitchers());
     if(token!==ksToken) return;
     ksLivePool=pool;
     ksLoading=false;ksLoaded=true;
@@ -3032,15 +3225,17 @@ async function startKsLoad(){
     const max=Math.min(ksPickCount,3);
     poSeedSkeletons(max);
     shuffler=startNameShuffle(pool, token, ()=>ksToken);
+    const selectedTeams=new Set();
     for(let i=0;i<max;i++){
       if(token!==ksToken) return;
       await sleep(Math.max(500, getRhythmSuspense(i)));
       if(token!==ksToken) return;
-      const avail=pool.filter(x=>!ksPitcherUsed.has(x.player));
-      const choice=Object.assign({},avail.length?pickRandom(avail):pickRandom(pool));
+      const picked=pickDiversifiedPlayer(pool,ksPitcherUsed,selectedTeams);
+      const choice=Object.assign({},picked||pickRandom(pool));
       choice.dir=Math.random()<0.5?'Over':'Under';
       ksPicks.push(choice);
       ksPitcherUsed.add(choice.player);
+      if(choice.teamAbbr || choice.team) selectedTeams.add(choice.teamAbbr||choice.team);
       renderKsPicks();
       poRevealKsCard(choice, i);
       const lastCard=document.querySelector('#picks .item:last-child');
@@ -4267,7 +4462,7 @@ document.addEventListener('click',function(e){const item=e.target.closest('.item
 initLegalModalStyling();
 syncAppVersionBadge();
 </script>
-<div class="app-version" id="appVersion">v1.03</div>
+<div class="app-version" id="appVersion">v1.07</div>
 <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 <div class="toast-stack center" id="toastStackCenter" aria-live="polite" aria-atomic="true"></div>
 </body>
