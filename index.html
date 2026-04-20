@@ -49,6 +49,29 @@ body.light{--card:#ffffff;--card2:#f3f6ff;--text:#14213d;--muted:#56627a;--line:
   background:rgba(255,255,255,.08);color:inherit;font-weight:700;font-size:12px;cursor:pointer;
 }
 .topbar-btn:hover{border-color:rgba(255,255,255,.28);background:rgba(255,255,255,.12)}
+.btn-cta{
+  border:0;border-radius:14px;cursor:pointer;font-weight:900;color:#07111f;
+  background:linear-gradient(90deg,#6ee7ff,#8b5cf6);
+}
+.btn-cta:hover{opacity:.92}
+.btn-cta-lg{padding:14px;font-size:1rem}
+.btn-cta-md{padding:13px 26px;font-size:.98rem}
+.btn-cta-sm{padding:12px 24px;font-size:.95rem}
+.btn-pill{
+  display:none;padding:5px 12px;font-size:12px;border-radius:999px;
+  border:1px solid rgba(110,231,255,.3);background:rgba(110,231,255,.08);
+  color:#6ee7ff;cursor:pointer;font-weight:600;transition:all .2s;
+}
+.link-btn{
+  background:none;border:none;color:#6ee7ff;cursor:pointer;
+  font-size:.83rem;text-decoration:underline;padding:0;
+}
+.link-btn-muted{
+  margin-top:10px;background:none;border:none;color:#56627a;
+  font-size:.78rem;cursor:pointer;text-decoration:underline;padding:0;
+}
+.inline-note{margin-top:14px;font-size:.83rem;color:#9fb0d0}
+.inline-note-muted{color:#56627a;display:none}
 .account-strip{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.04)}
 .account-copy{font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.01em}
 .account-copy strong{color:var(--text);font-weight:800}
@@ -497,7 +520,7 @@ window.safeHeadshot = function(obj){
       <div class="panel">
         <div class="pick-head">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><strong id="picksTitle">Quick Picks</strong><span class="pick-title-chip">Bet Slip</span><span id="freeBadge">🎁 1 Free Pick</span><span id="updatedAt" class="muted" style="font-weight:700">Updated: --</span></div>
-          <button id="shareBtn" onclick="copyPicks()" style="display:none;padding:5px 12px;font-size:12px;border-radius:999px;border:1px solid rgba(110,231,255,.3);background:rgba(110,231,255,.08);color:#6ee7ff;cursor:pointer;font-weight:600;transition:all .2s">⎘ Copy Picks</button>
+          <button id="shareBtn" class="btn-pill" onclick="copyPicks()">⎘ Copy Picks</button>
         </div>
         <div class="list" id="picks"><div class="muted">Choose a sport and option to see starter picks.</div></div>
       </div>
@@ -2824,7 +2847,7 @@ function _buildPaywallOverlayHTML(){
       <div style="font-size:2.2rem;margin-bottom:12px">🔒</div>
       <div style="font-weight:900;font-size:1.1rem;color:#eef3ff;margin-bottom:10px">Unlock unlimited picks</div>
       <div style="color:#9fb0d0;font-size:.92rem;line-height:1.55;margin-bottom:22px">You’ve used your free daily pick or this count needs Pro.<br>Upgrade for unlimited picks, every count option, and more.</div>
-      <button onclick="showUpgradeModal()" style="padding:13px 26px;border-radius:14px;border:0;background:linear-gradient(90deg,#6ee7ff,#8b5cf6);color:#07111f;font-weight:900;font-size:.98rem;cursor:pointer">Upgrade 🚀</button>
+      <button class="btn-cta btn-cta-md" onclick="showUpgradeModal()">Upgrade 🚀</button>
       <div style="margin-top:14px;font-size:.8rem;color:#56627a">Free pick resets daily. Swipe down or tap ✕ to close.</div>
     </div>`;
 }
@@ -2911,7 +2934,7 @@ function showUpgradeWall(opts){
       <div style="font-size:1.6rem;margin-bottom:10px">🔒</div>
       <div style="font-weight:900;font-size:1rem;color:#eef3ff;margin-bottom:8px">Free Pick Used!</div>
       <div style="color:#9fb0d0;font-size:.88rem;line-height:1.5;margin-bottom:18px">You’ve used your 1 free daily pick.<br>Upgrade to unlock unlimited picks, all batter counts, and more.</div>
-      <button onclick="showUpgradeModal()" style="padding:12px 24px;border-radius:14px;border:0;background:linear-gradient(90deg,#6ee7ff,#8b5cf6);color:#07111f;font-weight:900;font-size:.95rem;cursor:pointer">Upgrade 🚀</button>
+      <button class="btn-cta btn-cta-sm" onclick="showUpgradeModal()">Upgrade 🚀</button>
       <div style="margin-top:12px;font-size:.78rem;color:#56627a">Resets daily. Come back tomorrow for another free pick.</div>
     </div>`;
   showPaywallOverlayIfNeeded();
@@ -3016,7 +3039,7 @@ function getRhythmSuspense(i){
       <span style="font-size:2rem;font-weight:900;color:#eef3ff">$4.99</span><span style="color:#9fb0d0;font-size:.9rem"> / month</span>
     </div>
     <div style="text-align:center;font-size:.78rem;color:#56627a;margin-bottom:18px">Cancel anytime. Billed monthly.</div>
-    <button id="checkoutBtn" onclick="startCheckout()" style="width:100%;padding:14px;border-radius:14px;border:0;background:linear-gradient(90deg,#6ee7ff,#8b5cf6);color:#07111f;font-weight:900;font-size:1rem;cursor:pointer;transition:opacity .2s">Subscribe for $4.99/mo 🚀</button>
+    <button id="checkoutBtn" class="btn-cta btn-cta-lg" onclick="startCheckout()" style="width:100%;transition:opacity .2s">Subscribe for $4.99/mo 🚀</button>
     <div id="checkoutError" style="color:#f87171;font-size:.82rem;text-align:center;margin-top:8px;min-height:18px"></div>
     <div style="text-align:center;margin-top:14px;font-size:.75rem;color:#56627a">Secured by <strong style="color:#9fb0d0">Stripe</strong> · 256-bit SSL encryption</div>
   </div>
@@ -3602,7 +3625,7 @@ function setPlayerPickSelected(el){try{document.querySelectorAll('.item').forEac
 document.addEventListener('click',function(e){const item=e.target.closest('.item'); if(item && item.classList.contains('expandable')) setPlayerPickSelected(item);});
 initLegalModalStyling();
 </script>
-<div class="app-version" id="appVersion">v1.03</div>
+<div class="app-version" id="appVersion">v1.04</div>
 <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 </body>
 </html>
