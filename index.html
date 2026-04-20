@@ -17,7 +17,8 @@
 <!-- Google Analytics 4 — replace G-XXXXXXXXXX with your real Measurement ID -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
 <script>
-  const APP_VERSION = 'v1.21';
+  // Bump APP_VERSION whenever behavior or user-visible copy changes; keep in sync with #appVersion markup below.
+  const APP_VERSION = 'v1.22';
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
@@ -119,6 +120,7 @@ body.light{--card:#ffffff;--card2:#f3f6ff;--text:#14213d;--muted:#56627a;--line:
 .market-rail .navitem{flex:0 0 auto}
 .title{font-size:26px;font-weight:900;letter-spacing:.01em}
 .subtitle{color:var(--muted);margin-top:6px}
+.subtitle .dev-tap{cursor:default;-webkit-user-select:none;user-select:none}
 .badge{padding:8px 12px;border-radius:999px;background:rgba(37,201,255,.12);border:1px solid rgba(37,201,255,.28);color:var(--text);font-weight:700;font-size:12px}
 .icon{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;margin-right:8px;border-radius:8px;background:rgba(255,255,255,.08)}
 .card{margin-top:14px;background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 14px 36px rgba(0,0,0,.25)}
@@ -718,7 +720,7 @@ window.safeHeadshot = function(obj){
       <button type="button" id="themeToggle" class="badge topbar-btn" onclick="toggleTheme()" aria-label="Switch to light mode">☀️ Light mode</button>
       <div>
       <div class="title">Pro Sports Quick Pix</div>
-      <div class="subtitle">Daily sports picks powered by professional sports lineups. Free Fast. Sharp.</div>
+      <div class="subtitle" id="taglineSubtitle">Daily sports picks powered by professional sports lineups. <span class="dev-tap" data-dev-word="free" onclick="_devTapSubtitleWord(event,'free')" role="button" tabindex="0">Free</span> <span class="dev-tap" data-dev-word="fast" onclick="_devTapSubtitleWord(event,'fast')" role="button" tabindex="0">Fast</span>. <span class="dev-tap" data-dev-word="sharp" onclick="_devTapSubtitleWord(event,'sharp')" role="button" tabindex="0">Sharp</span>.</div>
       </div>
     </div>
     <div class="topbar-right">
@@ -768,12 +770,7 @@ window.safeHeadshot = function(obj){
       </div>
     </div>
     <div class="slip-actions">
-      <button type="button" id="slipClearBtn" class="slip-btn"
-        onpointerdown="_slipClearPointerDown(event)"
-        onpointerup="_slipClearPointerEnd(event)"
-        onpointerleave="_slipClearPointerEnd(event)"
-        onpointercancel="_slipClearPointerEnd(event)"
-        onclick="_slipClearClick(event)">Clear Current</button>
+      <button type="button" id="slipClearBtn" class="slip-btn" onclick="clearCurrentSportPicks()">Clear Current</button>
       <button type="button" id="slipCopyBtn" class="slip-btn primary" onclick="copyCurrentSportPicks()">Copy Slip</button>
     </div>
   </div>
@@ -792,18 +789,88 @@ var _lhMem=(function(){
   };
 })();
 
-// ── DEV MODE: (1) ~600ms hold "Clear Current"  (2) triple-click Age "Yes" ───
+// ── DEV MODE: triple "Sharp" → triple "Fast" → triple "Free" (each word in tagline), within a short window ───
 var _devMode = false;
-var _slipClearDevHoldMs = 600;
-var _slipClearDevLongTimer = null;
-var _slipClearDevSuppressNextClick = false;
+var _devUnlockStep = 0;
+var _devUnlockDeadline = 0;
+var _devUnlockWindowMs = 3200;
+var _devTapSharp = {c:0,t:null};
+var _devTapFast = {c:0,t:null};
+var _devTapFree = {c:0,t:null};
+var _devTripleGapMs = 420;
 function _syncDevClearBtnStyle(){
   const clearBtn = document.getElementById('slipClearBtn');
   if(!clearBtn) return;
   clearBtn.classList.toggle('slip-btn-dev-active', !!_devMode);
 }
+function _devResetSubtitleTapCounters(){
+  [_devTapSharp,_devTapFast,_devTapFree].forEach(function(o){
+    clearTimeout(o.t);
+    o.t = null;
+    o.c = 0;
+  });
+}
+function _devUnlockExpireIfNeeded(){
+  if(_devUnlockStep > 0 && Date.now() > _devUnlockDeadline){
+    _devUnlockStep = 0;
+    _devUnlockDeadline = 0;
+  }
+}
+function _devSubtitleSequenceOnTriple(word){
+  _devUnlockExpireIfNeeded();
+  var now = Date.now();
+  if(word === 'sharp'){
+    if(_devUnlockStep === 0){
+      _devUnlockStep = 1;
+      _devUnlockDeadline = now + _devUnlockWindowMs;
+      try{ if(navigator.vibrate) navigator.vibrate(12); }catch(_){}
+    }else{
+      _devUnlockStep = 0;
+      _devUnlockDeadline = 0;
+    }
+  }else if(word === 'fast'){
+    if(_devUnlockStep === 1){
+      _devUnlockStep = 2;
+      _devUnlockDeadline = now + _devUnlockWindowMs;
+      try{ if(navigator.vibrate) navigator.vibrate(12); }catch(_){}
+    }else{
+      _devUnlockStep = 0;
+      _devUnlockDeadline = 0;
+    }
+  }else if(word === 'free'){
+    if(_devUnlockStep === 2){
+      _devUnlockStep = 0;
+      _devUnlockDeadline = 0;
+      _devResetSubtitleTapCounters();
+      _devToggleMode();
+      try{ if(navigator.vibrate) navigator.vibrate(25); }catch(_){}
+    }else{
+      _devUnlockStep = 0;
+      _devUnlockDeadline = 0;
+    }
+  }
+}
+function _devTapSubtitleWord(ev, word){
+  if(ev) ev.preventDefault();
+  var bucket = word === 'sharp' ? _devTapSharp : word === 'fast' ? _devTapFast : _devTapFree;
+  bucket.c++;
+  clearTimeout(bucket.t);
+  if(bucket.c >= 3){
+    bucket.c = 0;
+    bucket.t = null;
+    _devSubtitleSequenceOnTriple(word);
+    return;
+  }
+  bucket.t = setTimeout(function(){
+    bucket.c = 0;
+    bucket.t = null;
+  }, _devTripleGapMs);
+}
 function _devToggleMode(){
   _devMode = !_devMode;
+  _devUnlockStep = 0;
+  _devUnlockDeadline = 0;
+  _devResetSubtitleTapCounters();
   _syncDevClearBtnStyle();
   if(_devMode){
     _freePickUsed = false;
@@ -826,31 +893,10 @@ function _devToggleMode(){
     if(_freePickUsed && !_isPro) showUpgradeWall(); else renderSport();
   }
 }
-function _slipClearPointerDown(e){
-  if(e && e.button != null && e.button !== 0) return;
-  clearTimeout(_slipClearDevLongTimer);
-  _slipClearDevLongTimer = setTimeout(function(){
-    _slipClearDevLongTimer = null;
-    _slipClearDevSuppressNextClick = true;
-    try{ if(navigator.vibrate) navigator.vibrate(20); }catch(_){}
-    _devToggleMode();
-  }, _slipClearDevHoldMs);
-}
-function _slipClearPointerEnd(){
-  clearTimeout(_slipClearDevLongTimer);
-  _slipClearDevLongTimer = null;
-}
-function _slipClearClick(){
-  if(_slipClearDevSuppressNextClick){
-    _slipClearDevSuppressNextClick = false;
-    return;
-  }
-  clearCurrentSportPicks();
-}
 var _ageYesDevSeq = 0;
 var _ageYesDevTimer = null;
 var _ageYesDevDebounceMs = 220;
-/** Triple-click within window toggles dev; otherwise after short debounce runs normal Yes (onboarding or age modal). */
+/** Triple-click on Yes still counts as a single Yes after debounce (no dev toggle). */
 function _ageYesTripleOrProceed(fromModal){
   _ageYesDevSeq++;
   clearTimeout(_ageYesDevTimer);
@@ -858,7 +904,8 @@ function _ageYesTripleOrProceed(fromModal){
     _ageYesDevSeq = 0;
     clearTimeout(_ageYesDevTimer);
     _ageYesDevTimer = null;
-    _devToggleMode();
+    if(fromModal) closeAgeGateModal();
+    else obStep(2);
     return;
   }
   _ageYesDevTimer = setTimeout(function(){
@@ -4689,7 +4736,7 @@ initLegalModalStyling();
 scheduleSyncAppVersionBadge();
 _syncDevClearBtnStyle();
 </script>
-<div class="app-version" id="appVersion">v1.21</div>
+<div class="app-version" id="appVersion">v1.22</div>
 <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 <div class="toast-stack center" id="toastStackCenter" aria-live="polite" aria-atomic="true"></div>
 </body>
