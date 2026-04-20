@@ -17,7 +17,7 @@
 <!-- Google Analytics 4 — replace G-XXXXXXXXXX with your real Measurement ID -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
 <script>
-  const APP_VERSION = 'v1.34';
+  const APP_VERSION = 'v1.00';
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
@@ -1836,6 +1836,10 @@ async function getTodaysNFLPlayers(option){
     writeNFLCache(players);
     return players;
   }
+  const cached = readNFLCache();
+  if(cached.length) return cached;
+  const cachedAny = readNFLCacheAny();
+  if(cachedAny.length) return cachedAny;
   {
     const defaults={TDs:0.5,'Rush Yds':55.5,'Rec Yds':45.5,'Receptions':4.5,'Pass Yds':225.5};
     const rosterPool=await _buildRosterFallbackPlayers('football/nfl', events, option, defaults);
@@ -1844,10 +1848,6 @@ async function getTodaysNFLPlayers(option){
       return rosterPool;
     }
   }
-  const cached = readNFLCache();
-  if(cached.length) return cached;
-  const cachedAny = readNFLCacheAny();
-  if(cachedAny.length) return cachedAny;
   return [];
 }
 function poRevealNFLCard(p, idx){
@@ -2041,6 +2041,10 @@ async function getTodaysNBAPlayers(option){
     writeNBACache(players);
     return players;
   }
+  const cached = readNBACache();
+  if(cached.length) return cached;
+  const cachedAny = readNBACacheAny();
+  if(cachedAny.length) return cachedAny;
   {
     const defaults={Points:19.5,Rebounds:5.5,Assists:4.5,'3PM':1.5,PRA:24.5};
     const rosterPool=await _buildRosterFallbackPlayers('basketball/nba', events, option, defaults);
@@ -2049,10 +2053,6 @@ async function getTodaysNBAPlayers(option){
       return rosterPool;
     }
   }
-  const cached = readNBACache();
-  if(cached.length) return cached;
-  const cachedAny = readNBACacheAny();
-  if(cachedAny.length) return cachedAny;
   return [];
 }
 function poRevealNBACard(p, idx){
@@ -2250,6 +2250,10 @@ async function getTodaysNHLPlayers(option){
     writeNHLCache(players);
     return players;
   }
+  const cached = readNHLCache();
+  if(cached.length) return cached;
+  const cachedAny = readNHLCacheAny();
+  if(cachedAny.length) return cachedAny;
   {
     const defaults={Goals:0.5,Shots:2.5,Assists:0.5,Points:0.5,'Goalie Saves':24.5};
     const rosterPool=await _buildRosterFallbackPlayers('hockey/nhl', events, option, defaults);
@@ -2258,10 +2262,6 @@ async function getTodaysNHLPlayers(option){
       return rosterPool;
     }
   }
-  const cached = readNHLCache();
-  if(cached.length) return cached;
-  const cachedAny = readNHLCacheAny();
-  if(cachedAny.length) return cachedAny;
   return [];
 }
 function poRevealNHLCard(p, idx){
@@ -2470,6 +2470,11 @@ async function getTodaysSoccerPlayers(option){
     writeSoccerCache(players);
     return players;
   }
+  // No placeholder players: use last known real soccer pool first.
+  const cached = readSoccerCache();
+  if(cached.length) return cached;
+  const cachedAny = readSoccerCacheAny();
+  if(cachedAny.length) return cachedAny;
   {
     const defaults={Goals:0.5,Assists:0.5,Shots:1.5,SOT:0.5,'GK Saves':2.5};
     const rosterPool=await _buildRosterFallbackPlayers('soccer/usa.1', events, option, defaults);
@@ -2478,11 +2483,6 @@ async function getTodaysSoccerPlayers(option){
       return rosterPool;
     }
   }
-  // No placeholder players: use last known real soccer pool if available.
-  const cached = readSoccerCache();
-  if(cached.length) return cached;
-  const cachedAny = readSoccerCacheAny();
-  if(cachedAny.length) return cachedAny;
   return [];
 }
 function poRevealSoccerCard(p, idx){
@@ -4199,7 +4199,7 @@ document.addEventListener('click',function(e){const item=e.target.closest('.item
 initLegalModalStyling();
 syncAppVersionBadge();
 </script>
-<div class="app-version" id="appVersion">v1.34</div>
+<div class="app-version" id="appVersion">v1.00</div>
 <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 <div class="toast-stack center" id="toastStackCenter" aria-live="polite" aria-atomic="true"></div>
 </body>
