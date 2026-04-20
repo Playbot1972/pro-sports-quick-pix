@@ -277,6 +277,11 @@ body.light .slip-btn.primary{
   .title{font-size:22px}
   .topbar{padding:11px 12px}
   .tabs{top:72px}
+  .tab{font-size:13px}
+  .btn{font-size:14px}
+  #pickCountRow .btn{font-size:14px}
+  .slip-btn{font-size:13px}
+  .navitem{font-size:14px}
 }
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
@@ -3762,7 +3767,7 @@ function setPlayerPickSelected(el){try{document.querySelectorAll('.item').forEac
 document.addEventListener('click',function(e){const item=e.target.closest('.item'); if(item && item.classList.contains('expandable')) setPlayerPickSelected(item);});
 initLegalModalStyling();
 </script>
-<div class="app-version" id="appVersion">v1.12</div>
+<div class="app-version" id="appVersion">v1.13</div>
 <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 <div class="toast-stack center" id="toastStackCenter" aria-live="polite" aria-atomic="true"></div>
 </body>
