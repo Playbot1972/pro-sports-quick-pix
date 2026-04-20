@@ -93,6 +93,15 @@ body.light{--card:#ffffff;--card2:#f3f6ff;--text:#14213d;--muted:#56627a;--line:
   animation:livePulse 1.9s ease-out infinite;
 }
 .market-rail{position:sticky;top:8px;z-index:24;backdrop-filter:blur(8px)}
+.market-rail{
+  flex-wrap:nowrap;
+  overflow-x:auto;
+  overflow-y:hidden;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+}
+.market-rail::-webkit-scrollbar{display:none}
+.market-rail .navitem{flex:0 0 auto}
 .title{font-size:26px;font-weight:900;letter-spacing:.01em}
 .subtitle{color:var(--muted);margin-top:6px}
 .badge{padding:8px 12px;border-radius:999px;background:rgba(37,201,255,.12);border:1px solid rgba(37,201,255,.28);color:var(--text);font-weight:700;font-size:12px}
@@ -100,7 +109,7 @@ body.light{--card:#ffffff;--card2:#f3f6ff;--text:#14213d;--muted:#56627a;--line:
 .card{margin-top:14px;background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 14px 36px rgba(0,0,0,.25)}
 .tabs{
   display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;
-  position:sticky;top:64px;z-index:20;
+  position:sticky;top:66px;z-index:20;
   padding:8px 4px 10px;
   background:linear-gradient(180deg,rgba(15,23,40,.96),rgba(15,23,40,.82));
   border-bottom:1px solid rgba(255,255,255,.08);
@@ -203,7 +212,7 @@ body.light{--card:#ffffff;--card2:#f3f6ff;--text:#14213d;--muted:#56627a;--line:
   .grid{grid-template-columns:1fr}
   .title{font-size:22px}
   .topbar{padding:11px 12px}
-  .tabs{top:76px}
+  .tabs{top:72px}
 }
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
@@ -772,6 +781,17 @@ function unlockPickSfxFromGesture(){
   try{ _ensureLootAudioCtx(); }catch(_){}
   _pickSfxAudioPrimed = true;
 }
+function stopPickSfxNow(){
+  const ids = ['chingSfx','chingSfx_1982','chingSfx_2021','chingSfx_1935','pickTickSfx'];
+  for(let i=0;i<ids.length;i++){
+    try{
+      const el = document.getElementById(ids[i]);
+      if(!el) continue;
+      el.pause();
+      el.currentTime = 0;
+    }catch(_){}
+  }
+}
 // ─────────────────────────────────────────────────────────────────────────────
 
 const sports={MLB:{icon:'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Major_League_Baseball_logo.svg/1280px-Major_League_Baseball_logo.svg.png',desc:'Load live lineup hitters for today, then picks appear one at a time.',options:['HR','Hits','Total Bases','RBI','Ks'],color:'#6ee7ff'},NFL:{icon:'https://upload.wikimedia.org/wikipedia/en/a/a2/National_Football_League_logo.svg',desc:'Starter options: passing yards, rushing yards, receiving yards, receptions, TDs.',options:['TDs','Rush Yds','Rec Yds','Receptions','Pass Yds'],color:'#34d399'},NBA:{icon:'https://upload.wikimedia.org/wikipedia/en/0/03/National_Basketball_Association_logo.svg',desc:'Starter options: points, rebounds, assists, threes, PRA.',options:['Points','Assists','Rebounds','3PM','PRA'],color:'#f59e0b'},NHL:{icon:'https://media.nhl.com/site/asset/public/images/2022/01/NewShield-02023704-10094134.jpg',desc:'Starter options: shots on goal, goals, assists, goalie saves, points.',options:['Goals','Shots','Assists','Points','Goalie Saves'],color:'#60a5fa'},Soccer:{icon:'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Soccerball.svg/3840px-Soccerball.svg.png',desc:'Starter options: shots, shots on target, goals, assists, goalkeeper saves.',options:['Goals','Assists','Shots','SOT','GK Saves'],color:'#f472b6'}};
@@ -1217,6 +1237,11 @@ async function startHitsLoad(){
     if(!annotated.length){
       document.getElementById('picks').innerHTML='<div class="muted">No hitter data found for today.</div>';
       poSetError('No hitter data found for today.');
+      showToast('No live hitter data found for today.', 'error');
+      pickLocked=false;
+      if(loadBtn)loadBtn.disabled=false;
+      stopPickSfxNow();
+      closePickOverlay();
       stopMoneyTransformButton();renderHitsPicks();return;
     }
     const max=Math.min(hitsPickCount,3);
@@ -1319,6 +1344,11 @@ async function startBasesLoad(){
     if(!annotated.length){
       document.getElementById('picks').innerHTML='<div class="muted">No hitter data found for today.</div>';
       poSetError('No hitter data found for today.');
+      showToast('No live hitter data found for today.', 'error');
+      pickLocked=false;
+      if(loadBtn)loadBtn.disabled=false;
+      stopPickSfxNow();
+      closePickOverlay();
       stopMoneyTransformButton();renderBasesPicks();return;
     }
     const max=Math.min(basesPickCount,3);
@@ -1421,6 +1451,11 @@ async function startRBILoad(){
     if(!annotated.length){
       document.getElementById('picks').innerHTML='<div class="muted">No hitter data found for today.</div>';
       poSetError('No hitter data found for today.');
+      showToast('No live hitter data found for today.', 'error');
+      pickLocked=false;
+      if(loadBtn)loadBtn.disabled=false;
+      stopPickSfxNow();
+      closePickOverlay();
       stopMoneyTransformButton();renderRBIPicks();return;
     }
     const max=Math.min(rbiPickCount,3);
@@ -1597,6 +1632,11 @@ async function startNFLLoad(){
     if(!pool.length){
       document.getElementById('picks').innerHTML='<div class="muted">No NFL players found for today.</div>';
       poSetError('No NFL players found for today.');
+      showToast('No live NFL players found for today.', 'error');
+      pickLocked=false;
+      if(loadBtn) loadBtn.disabled=false;
+      stopPickSfxNow();
+      closePickOverlay();
       stopMoneyTransformButton();renderNFLPicks();return;
     }
     const max=Math.min(nflPickCount,3);
@@ -1752,6 +1792,11 @@ async function startNBALoad(){
     if(!pool.length){
       document.getElementById('picks').innerHTML='<div class="muted">No NBA players found for today.</div>';
       poSetError('No NBA players found for today.');
+      showToast('No live NBA players found for today.', 'error');
+      pickLocked=false;
+      if(loadBtn)loadBtn.disabled=false;
+      stopPickSfxNow();
+      closePickOverlay();
       stopMoneyTransformButton();renderNBAPicks();return;
     }
     const max=Math.min(nbaPickCount,3);
@@ -1923,6 +1968,11 @@ async function startNHLLoad(){
     if(!pool.length){
       document.getElementById('picks').innerHTML='<div class="muted">No NHL players found for today.</div>';
       poSetError('No NHL players found for today.');
+      showToast('No live NHL players found for today.', 'error');
+      pickLocked=false;
+      if(loadBtn)loadBtn.disabled=false;
+      stopPickSfxNow();
+      closePickOverlay();
       stopMoneyTransformButton();renderNHLPicks();return;
     }
     const max=Math.min(nhlPickCount,3);
@@ -2106,6 +2156,11 @@ async function startSoccerLoad(){
     if(!pool.length){
       document.getElementById('picks').innerHTML='<div class="muted">No MLS players found for today.</div>';
       poSetError('No MLS players found for today.');
+      showToast('No live MLS players found for today.', 'error');
+      pickLocked=false;
+      if(loadBtn)loadBtn.disabled=false;
+      stopPickSfxNow();
+      closePickOverlay();
       stopMoneyTransformButton();renderSoccerPicks();return;
     }
     const max=Math.min(soccerPickCount,3);
@@ -2314,6 +2369,12 @@ async function startMLBLoad(){
     if(!pool.length){
       document.getElementById('picks').innerHTML='<div class="muted">No live hitters found for today.</div>';
       poSetError('No live hitters found for today.');
+      showToast('No live hitters found for today.', 'error');
+      pickLocked=false;
+      if(loadBtn) loadBtn.disabled=false;
+      stopPickSfxNow();
+      stopMoneyTransformButton();
+      closePickOverlay();
       renderMLB();return;
     }
     const max=Math.min(pickCount,3);
@@ -2395,6 +2456,11 @@ async function startKsLoad(){
     if(!pool.length){
       document.getElementById('picks').innerHTML='<div class="muted">No probable pitchers found for today.</div>';
       poSetError('No probable pitchers found for today.');
+      showToast('No probable pitchers found for today.', 'error');
+      pickLocked=false;
+      if(loadBtn) loadBtn.disabled=false;
+      stopPickSfxNow();
+      closePickOverlay();
       renderKsPicks();
       stopMoneyTransformButton();
       return;
@@ -3632,7 +3698,7 @@ function setPlayerPickSelected(el){try{document.querySelectorAll('.item').forEac
 document.addEventListener('click',function(e){const item=e.target.closest('.item'); if(item && item.classList.contains('expandable')) setPlayerPickSelected(item);});
 initLegalModalStyling();
 </script>
-<div class="app-version" id="appVersion">v1.06</div>
+<div class="app-version" id="appVersion">v1.09</div>
 <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 </body>
 </html>
