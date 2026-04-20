@@ -51,6 +51,19 @@ body.light{--card:#ffffff;--card2:#f3f6ff;--text:#14213d;--muted:#56627a;--line:
 .navitem{padding:9px 11px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);font-weight:800;cursor:pointer;color:var(--text);font-size:13px;letter-spacing:.01em;transition:background .18s ease,border-color .18s ease,transform .12s ease}
 .navitem:hover{transform:translateY(-1px);border-color:rgba(255,255,255,.16)}
 .navitem.active{background:linear-gradient(180deg,rgba(37,201,255,.26),rgba(37,201,255,.12));border-color:rgba(37,201,255,.62);color:#dff8ff}
+.btn:focus-visible,.btn2:focus-visible,.tab:focus-visible,.navitem:focus-visible,.slip-btn:focus-visible,.badge:focus-visible,button:focus-visible,a:focus-visible{
+  outline:2px solid rgba(37,201,255,.95);
+  outline-offset:2px;
+}
+.navitem.live-dot{position:relative}
+.navitem.live-dot::after{
+  content:'';
+  width:6px;height:6px;border-radius:50%;
+  background:#26d9ff;
+  box-shadow:0 0 0 0 rgba(38,217,255,.7);
+  margin-left:7px;
+  animation:livePulse 1.9s ease-out infinite;
+}
 .market-rail{position:sticky;top:8px;z-index:15;backdrop-filter:blur(8px)}
 .title{font-size:26px;font-weight:900;letter-spacing:.01em}
 .subtitle{color:var(--muted);margin-top:6px}
@@ -61,6 +74,17 @@ body.light{--card:#ffffff;--card2:#f3f6ff;--text:#14213d;--muted:#56627a;--line:
 .tab{border:1px solid var(--line);border-radius:999px;padding:9px 12px;background:rgba(255,255,255,.06);color:var(--text);font-weight:800;cursor:pointer;font-size:12px;transition:transform .15s ease, background .2s ease, border-color .2s ease}
 .tab:hover{transform:translateY(-1px)}
 .tab.active{background:linear-gradient(180deg,rgba(37,201,255,.26),rgba(37,201,255,.12));border-color:rgba(37,201,255,.62);color:#dff8ff}
+.tab .market-icon{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;margin-right:6px;font-size:12px;opacity:.9}
+.tab.active .market-icon{opacity:1}
+.tab.live-dot{position:relative}
+.tab.live-dot::after{
+  content:'';
+  width:6px;height:6px;border-radius:50%;
+  background:#26d9ff;
+  box-shadow:0 0 0 0 rgba(38,217,255,.7);
+  margin-left:7px;
+  animation:livePulse 1.9s ease-out infinite;
+}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .panel{padding:14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
 .btnrow{display:flex;flex-wrap:wrap;gap:10px}
@@ -94,6 +118,15 @@ body.light{--card:#ffffff;--card2:#f3f6ff;--text:#14213d;--muted:#56627a;--line:
   letter-spacing:.03em;
   user-select:none;
 }
+.toast-stack{position:fixed;right:12px;bottom:38px;z-index:9500;display:grid;gap:8px;pointer-events:none}
+.toast{
+  min-width:220px;max-width:340px;padding:10px 12px;border-radius:10px;
+  border:1px solid rgba(255,255,255,.16);background:rgba(10,18,32,.95);
+  color:#dff8ff;font-size:12px;font-weight:700;box-shadow:0 8px 26px rgba(0,0,0,.35);
+  opacity:0;transform:translateY(6px);animation:toastIn .2s ease forwards;
+}
+.toast.error{border-color:rgba(248,113,113,.5);color:#ffd5d5}
+@keyframes toastIn{to{opacity:1;transform:translateY(0)}}
 .reel{display:inline-block;min-width:180px;letter-spacing:.08em;font-weight:900;opacity:.9;animation:reelSpin .4s linear infinite}
 @keyframes reelSpin{0%{transform:translateY(0) skewY(0deg)}50%{transform:translateY(-1px) skewY(-2deg)}100%{transform:translateY(0) skewY(0deg)}}
 .item.expandable{cursor:pointer;align-items:flex-start;flex-direction:column}
@@ -114,6 +147,7 @@ body.light{--card:#ffffff;--card2:#f3f6ff;--text:#14213d;--muted:#56627a;--line:
 @keyframes jackpotFlash{0%{transform:scale(1);filter:brightness(1)}20%{transform:scale(1.03);filter:brightness(1.35)}50%{transform:scale(1.01);filter:brightness(1.15)}100%{transform:scale(1);filter:brightness(1)}}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes bar{0%{transform:translateX(-120%)}50%{transform:translateX(140%)}100%{transform:translateX(260%)} }
+@keyframes livePulse{0%{box-shadow:0 0 0 0 rgba(38,217,255,.65)}70%{box-shadow:0 0 0 7px rgba(38,217,255,0)}100%{box-shadow:0 0 0 0 rgba(38,217,255,0)}}
 .locked{opacity:.45;filter:grayscale(.15);background:rgba(255,255,255,.08)!important;color:var(--text)!important}
 .locked[disabled]{pointer-events:none}
 .trust-banner{margin:14px 0 16px;padding:14px 16px;border:1px solid rgba(110,231,255,.25);border-radius:16px;background:linear-gradient(180deg,rgba(17,28,51,.95),rgba(24,39,71,.95));box-shadow:0 10px 28px rgba(0,0,0,.18);color:#e8eeff}
@@ -128,6 +162,9 @@ body.light{--card:#ffffff;--card2:#f3f6ff;--text:#14213d;--muted:#56627a;--line:
   .grid{grid-template-columns:1fr}
   .title{font-size:22px}
   .topbar{padding:11px 12px}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
 }
 
 .money-spin{display:inline-flex;gap:1px;justify-content:center;align-items:center}
@@ -404,7 +441,7 @@ window.safeHeadshot = function(obj){
       <button type="button" id="themeToggle" class="badge" onclick="toggleTheme()" aria-label="Switch to light mode" style="cursor:pointer;border:0">☀️ Light mode</button>
       <div>
       <div class="title">Pro Sports Quick Pix</div>
-      <div class="subtitle">Daily Sports picks powered by professional sports line ups. <span id="devTrigger" onclick="_devTriggerClick()" style="cursor:default">Free</span> Fast Sharp.</div>
+      <div class="subtitle">Daily sports picks powered by professional sports lineups. <span id="devTrigger" onclick="_devTriggerClick()" style="cursor:default">Free</span> Fast. Sharp.</div>
       </div>
     </div>
     <div class="topbar-right">
@@ -447,7 +484,7 @@ window.safeHeadshot = function(obj){
       </div>
       <div class="panel">
         <div class="pick-head">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><strong id="picksTitle">Quick Picks</strong><span class="pick-title-chip">Bet Slip</span><span id="freeBadge">🎁 1 Free Pick</span></div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><strong id="picksTitle">Quick Picks</strong><span class="pick-title-chip">Bet Slip</span><span id="freeBadge">🎁 1 Free Pick</span><span id="updatedAt" class="muted" style="font-weight:700">Updated: --</span></div>
           <button id="shareBtn" onclick="copyPicks()" style="display:none;padding:5px 12px;font-size:12px;border-radius:999px;border:1px solid rgba(110,231,255,.3);background:rgba(110,231,255,.08);color:#6ee7ff;cursor:pointer;font-weight:600;transition:all .2s">⎘ Copy Picks</button>
         </div>
         <div class="list" id="picks"><div class="muted">Choose a sport and option to see starter picks.</div></div>
@@ -791,14 +828,32 @@ window.addEventListener('beforeunload', function(){
 });
 const teamColors={ARI:'#A71930',ATL:'#CE1141',BAL:'#DF4601',BOS:'#BD3039',CHC:'#0E3386',CIN:'#C6011F',CLE:'#00385D',COL:'#33006F',CWS:'#27251F',DET:'#0C2C56',HOU:'#002D62',KC:'#004687',LAA:'#BA0021',LAD:'#005A9C',MIA:'#00A3E0',MIL:'#12284B',MIN:'#002B5C',NYM:'#002D72',NYY:'#0C2340',OAK:'#003831',PHI:'#E81828',PIT:'#FDB827',SD:'#2F241D',SEA:'#0C2C56',SF:'#FD5A1E',STL:'#C41E3A',TB:'#092C5C',TEX:'#003278',TOR:'#134A8E',WSH:'#AB0003'};
 function teamPill(abbr){const c=teamColors[String(abbr||'').toUpperCase()]||'#5b6475'; return `<span class="team-pill" style="background:${c}">${abbr||''}</span>`;}
+function setUpdatedTimestamp(){
+  const el = document.getElementById('updatedAt');
+  if(!el) return;
+  const t = new Date();
+  const hh = String(t.getHours()).padStart(2,'0');
+  const mm = String(t.getMinutes()).padStart(2,'0');
+  el.textContent = `Updated: ${hh}:${mm}`;
+}
+function getOptionCompactIcon(sport,opt){
+  const map = {
+    MLB:{HR:'⚾',Hits:'🎯','Total Bases':'🧱',RBI:'💥',Ks:'K'},
+    NFL:{TDs:'🏈','Rush Yds':'🏃','Rec Yds':'🙌',Receptions:'🤲','Pass Yds':'🎯'},
+    NBA:{Points:'🏀',Assists:'🅰️',Rebounds:'🔁','3PM':'3',PRA:'📊'},
+    NHL:{Goals:'🥅',Shots:'🎯',Assists:'🅰️',Saves:'🛡️',Points:'📈'},
+    Soccer:{Goals:'⚽',Shots:'🎯',Assists:'🅰️','Shots OT':'✅','Passes':'🧭'}
+  };
+  return (map[sport] && map[sport][opt]) || '•';
+}
 
 function renderTabs(){
   const outOfSeason = getOutOfSeasonSports();
   const goldLockSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f59e0b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' style='width:13px;height:13px;margin-left:5px;vertical-align:middle;flex-shrink:0'><rect x='3' y='11' width='18' height='11' rx='2' ry='2'/><path d='M7 11V7a5 5 0 0 1 10 0v4'/></svg>`;
   // Bottom nav: always the main sport selector
-  document.getElementById('bottomnav').innerHTML=Object.keys(sports).map(s=>`<div class='navitem ${s===current?'active':''}${outOfSeason.includes(s)?' oos':''}' onclick="setSport('${s}')" style='display:inline-flex;align-items:center;justify-content:center${outOfSeason.includes(s)?';opacity:0.6':''}'><img src='${sports[s].icon}' alt='${s} logo' style='width:18px;height:18px;object-fit:contain;margin-right:6px;flex-shrink:0'>${s}${outOfSeason.includes(s)?goldLockSvg:''}</div>`).join('')+`<div class='navitem' onclick="randomSport()" title="Jump to a random sport" style='display:inline-flex;align-items:center;justify-content:center;border-style:dashed;opacity:.92'>🎲 Random</div>`;
+  document.getElementById('bottomnav').innerHTML=Object.keys(sports).map(s=>`<div class='navitem live-dot ${s===current?'active':''}${outOfSeason.includes(s)?' oos':''}' onclick="setSport('${s}')" style='display:inline-flex;align-items:center;justify-content:center${outOfSeason.includes(s)?';opacity:0.6':''}'><img src='${sports[s].icon}' alt='${s} logo' style='width:18px;height:18px;object-fit:contain;margin-right:6px;flex-shrink:0'>${s}${outOfSeason.includes(s)?goldLockSvg:''}</div>`).join('')+`<div class='navitem' onclick="randomSport()" title="Jump to a random sport" style='display:inline-flex;align-items:center;justify-content:center;border-style:dashed;opacity:.92'>🎲 Random</div>`;
   // Top tabs: always show active sport's sub-options
-  document.getElementById('tabs').innerHTML=sports[current].options.map(o=>`<button type="button" class='tab ${o===currentOption?'active':''}' style='border-color:${sports[current].color}55' onclick="setOption('${o}')">${o}</button>`).join('')+`<button type="button" class="tab" style="border-color:${sports[current].color}55;border-style:dashed" onclick="randomSubOption()" title="Random stat for this sport">🎲 Random</button>`;
+  document.getElementById('tabs').innerHTML=sports[current].options.map(o=>`<button type="button" class='tab live-dot ${o===currentOption?'active':''}' style='border-color:${sports[current].color}55' onclick="setOption('${o}')"><span class='market-icon'>${getOptionCompactIcon(current,o)}</span>${o}</button>`).join('')+`<button type="button" class="tab" style="border-color:${sports[current].color}55;border-style:dashed" onclick="randomSubOption()" title="Random stat for this sport">🎲 Random</button>`;
 }
 function randomSport(){
   const all = Object.keys(sports);
@@ -908,6 +963,7 @@ function renderSport(){
     document.getElementById('options').innerHTML='';
     renderPicks([]);
   }
+  setUpdatedTimestamp();
   syncSlipActions();
 }
 function _currentPicksCount(){
@@ -943,7 +999,7 @@ function copyCurrentSportPicks(){
     soccerPicks.forEach((p,i)=>lines.push(`${i+1}. ${p.player||'Player'} (${p.teamAbbr||p.team||''}) - ${(p.dir||'Over')} ${p.line||''} ${currentOption}`));
   }
   if(!lines.length) return;
-  copyTextRobust(`🎯 Pro Sports Quick Pix — ${current} ${currentOption}\n\n${lines.join('\n')}${_picksShareFooter()}`);
+  copyTextRobust(`🎯 Pro Sports Quick Pix — ${current} ${currentOption}\n\n${lines.join('\n')}${_picksShareFooter()}`).then(function(){ showToast('Slip copied to clipboard.'); });
 }
 function clearCurrentSportPicks(){
   if(current==='MLB'){
@@ -965,6 +1021,19 @@ function syncSlipActions(){
   const has = _currentPicksCount() > 0;
   copyBtn.disabled = !has;
   clearBtn.disabled = !has;
+}
+function showToast(message, kind){
+  const stack = document.getElementById('toastStack');
+  if(!stack) return;
+  const t = document.createElement('div');
+  t.className = 'toast'+(kind ? ' '+kind : '');
+  t.textContent = message;
+  stack.appendChild(t);
+  setTimeout(function(){
+    t.style.opacity = '0';
+    t.style.transform = 'translateY(4px)';
+    setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, 180);
+  }, 2200);
 }
 function setOption(o){currentOption=o;renderTabs();renderSport();}
 function setCount(n){if(pickLocked) return; if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'HR',attempted_count:n});showUpgradeWall({attemptedHR:n});return;} pickCount=n;renderSport();}
@@ -3424,9 +3493,11 @@ function fbSubmit(){
       console.error('EmailJS feedback error:', err);
       var hint = (err && (err.text || err.message)) ? String(err.text || err.message) : '';
       if(hint) console.error('Detail:', hint);
+      showToast('Feedback could not be sent to email service right now.', 'error');
     });
   } else {
     console.warn('EmailJS feedback service unavailable in this session.');
+    showToast('Feedback service unavailable in this session.', 'error');
   }
   finishFeedbackFlow();
 }
@@ -3508,6 +3579,7 @@ function fbSubmit(){
 function setPlayerPickSelected(el){try{document.querySelectorAll('.item').forEach(x=>x.classList.remove('selected')); if(el) el.classList.add('selected')}catch(e){}}
 document.addEventListener('click',function(e){const item=e.target.closest('.item'); if(item && item.classList.contains('expandable')) setPlayerPickSelected(item);});
 </script>
-<div class="app-version" id="appVersion">v1.00</div>
+<div class="app-version" id="appVersion">v1.02</div>
+<div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 </body>
 </html>
