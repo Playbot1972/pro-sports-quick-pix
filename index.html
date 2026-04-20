@@ -17,7 +17,7 @@
 <!-- Google Analytics 4 — replace G-XXXXXXXXXX with your real Measurement ID -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
 <script>
-  const APP_VERSION = 'v1.09';
+  const APP_VERSION = 'v1.10';
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
@@ -1892,7 +1892,6 @@ async function getTodaysNFLPlayers(option){
     const rosterPool=await _buildRosterFallbackPlayers('football/nfl', events, option, defaults);
     if(rosterPool.length){
       const hydrated=_hydratePlayersGame(rosterPool,teamGameMap,teamOppMap);
-      writeNFLCache(hydrated);
       return hydrated;
     }
   }
@@ -2110,7 +2109,6 @@ async function getTodaysNBAPlayers(option){
     const rosterPool=await _buildRosterFallbackPlayers('basketball/nba', events, option, defaults);
     if(rosterPool.length){
       const hydrated=_hydratePlayersGame(rosterPool,teamGameMap,teamOppMap);
-      writeNBACache(hydrated);
       return hydrated;
     }
   }
@@ -2329,7 +2327,6 @@ async function getTodaysNHLPlayers(option){
     const rosterPool=await _buildRosterFallbackPlayers('hockey/nhl', events, option, defaults);
     if(rosterPool.length){
       const hydrated=_hydratePlayersGame(rosterPool,teamGameMap,teamOppMap);
-      writeNHLCache(hydrated);
       return hydrated;
     }
   }
@@ -2560,7 +2557,6 @@ async function getTodaysSoccerPlayers(option){
     const rosterPool=await _buildRosterFallbackPlayers('soccer/usa.1', events, option, defaults);
     if(rosterPool.length){
       const hydrated=_hydratePlayersGame(rosterPool,teamGameMap,teamOppMap);
-      writeSoccerCache(hydrated);
       return hydrated;
     }
   }
@@ -4529,7 +4525,7 @@ document.addEventListener('click',function(e){const item=e.target.closest('.item
 initLegalModalStyling();
 syncAppVersionBadge();
 </script>
-<div class="app-version" id="appVersion">v1.09</div>
+<div class="app-version" id="appVersion">v1.10</div>
 <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 <div class="toast-stack center" id="toastStackCenter" aria-live="polite" aria-atomic="true"></div>
 </body>
