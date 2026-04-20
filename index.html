@@ -2142,10 +2142,13 @@ function _buildPaywallOverlayHTML(){
       <div style="margin-top:14px;font-size:.8rem;color:#56627a">Free pick resets daily. Swipe down or tap ✕ to close.</div>
     </div>`;
 }
+/** True only while paywall sheet is visibly covering (not mid–close animation). */
 function isPaywallOverlayOpen(){
   const ov = document.getElementById('pickOverlay');
   const root = document.getElementById('poPaywallRoot');
-  return !!(ov && ov.classList.contains('open') && root && ov.contains(root));
+  if(!ov || !root || !ov.contains(root)) return false;
+  if(ov.classList.contains('closing')) return false;
+  return ov.classList.contains('open');
 }
 function openPaywallOverlayFull(){
   const ov = document.getElementById('pickOverlay');
@@ -2158,10 +2161,15 @@ function openPaywallOverlayFull(){
   document.getElementById('poCards').innerHTML = _buildPaywallOverlayHTML();
   document.getElementById('poShareBtn').style.display = 'none';
 }
-/** Slides the upgrade panel up unless the pick overlay is already open with paywall content (avoids flicker). */
+/**
+ * Shows / refreshes paywall in #pickOverlay. Runs on every paywall trigger after free pick is used.
+ * Skips only when the paywall sheet is already fully open (no double slide / flicker).
+ * If the overlay is closing or was dismissed, the next click repopulates and slides up again.
+ */
 function showPaywallOverlayIfNeeded(){
   if(isPaywallOverlayOpen()) return;
-  const pickRunOpen = _poOpen && !document.getElementById('poPaywallRoot');
+  const hasPaywallDom = !!document.getElementById('poPaywallRoot');
+  const pickRunOpen = _poOpen && !hasPaywallDom;
   if(pickRunOpen){
     closePickOverlay();
     setTimeout(openPaywallOverlayFull, 420);
