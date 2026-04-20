@@ -63,7 +63,7 @@ body.light{--card:#ffffff;--card2:#eef2ff;--text:#14213d;--muted:#56627a;--line:
 .item .rowtop{display:flex;justify-content:space-between;gap:10px;align-items:center;width:100%}
 .rowtop-left{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
 .rowtop-name{min-width:0;font-weight:700}
-.mlb-headshot{width:38px;height:38px;border-radius:10px;object-fit:cover;flex-shrink:0;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.22)}
+.mlb-headshot,.nba-headshot{width:38px;height:38px;border-radius:10px;object-fit:cover;flex-shrink:0;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.22)}
 .chev{font-size:14px;color:var(--muted)}
 .muted{font-size:13px;color:var(--muted)}
 .team-pill{display:inline-flex;align-items:center;justify-content:center;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:900;margin-left:8px;line-height:1;color:#fff;vertical-align:middle;white-space:nowrap}
@@ -1302,7 +1302,7 @@ function renderNBAPicks(){
   } else if(nbaPicks.length>0){
     document.getElementById('picks').innerHTML=nbaPicks.map((p)=>{
       const statLabel=p.statLabel||currentOption;
-      return `<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'><span>${p.player} ${teamPill(p.teamAbbr)} <span class='chev'>▾</span></span><span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>${statLabel}</span></span></div><div class='details'><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>${p.dir} ${p.line} ${statLabel}</div><div class='muted'>Season avg: ${p.seasonAvg}</div></div></div>`;
+      return `<div class='item expandable' onclick="const d=this.querySelector('.details');d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'>${nbaRowTopPlayerHtml(p)}<span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>${statLabel}</span></span></div><div class='details'><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>${p.dir} ${p.line} ${statLabel}</div><div class='muted'>Season avg: ${p.seasonAvg}</div></div></div>`;
     }).join('');
   } else if(nbaLoaded&&nbaPicks.length===0){
     document.getElementById('picks').innerHTML='<div class="muted">No NBA player data available today.</div>';
@@ -1351,7 +1351,8 @@ async function getTodaysNBAPlayers(option){
           else if(option==='PRA'){statVal=pra;line=Math.round(pra*2)/2||24.5;seasonAvg=statVal+' PRA';}
           else{statVal=pts;line=14.5;seasonAvg=statVal+' pts';}
           if(statVal===0)continue;
-          players.push({player:name,teamAbbr,pos:nbaPos,statLabel:option,line,seasonAvg});
+          const espnId=athlete.athlete&&athlete.athlete.id!=null?Number(athlete.athlete.id):'';
+          players.push({player:name,espnId,teamAbbr,pos:nbaPos,statLabel:option,line,seasonAvg});
         }
       }
     }
@@ -1377,7 +1378,7 @@ function poRevealNBACard(p, idx){
   const statLabel=p.statLabel||currentOption;
   card.innerHTML=`
     <div class="rowtop" onclick="const d=this.nextElementSibling;d.style.display=d.style.display==='block'?'none':'block'">
-      <span>${p.player} ${teamPill(p.teamAbbr)} <span class="chev">&#9662;</span></span>
+      ${nbaRowTopPlayerHtml(p,'<span class="chev">&#9662;</span>')}
       <span class="muted"><span style="font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}">${p.dir} ${p.line}</span> <span style="opacity:.6;font-size:11px">${statLabel}</span></span>
     </div>
     <div class="details">
@@ -1814,6 +1815,20 @@ function mlbRowTopPlayerHtml(p, chevHtml){
   const url = mlbHeadshotUrl(p.playerId);
   const img = url
     ? '<img class="mlb-headshot" src="'+url+'" alt="" width="38" height="38" loading="lazy" decoding="async" onerror="this.remove()">'
+    : '';
+  return '<span class="rowtop-left">'+img+'<span class="rowtop-name">'+p.player+' '+teamPill(team)+' '+chev+'</span></span>';
+}
+function nbaHeadshotUrl(espnId){
+  const id = Number(espnId);
+  if(!id || id !== id) return '';
+  return 'https://a.espncdn.com/i/headshots/nba/players/full/'+id+'.png';
+}
+function nbaRowTopPlayerHtml(p, chevHtml){
+  const chev = chevHtml != null ? chevHtml : "<span class=\"chev\">▾</span>";
+  const team = p.teamAbbr || '';
+  const url = nbaHeadshotUrl(p.espnId);
+  const img = url
+    ? '<img class="nba-headshot" src="'+url+'" alt="" width="38" height="38" loading="lazy" decoding="async" onerror="this.remove()">'
     : '';
   return '<span class="rowtop-left">'+img+'<span class="rowtop-name">'+p.player+' '+teamPill(team)+' '+chev+'</span></span>';
 }
