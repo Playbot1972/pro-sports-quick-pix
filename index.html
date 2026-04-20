@@ -17,7 +17,7 @@
 <!-- Google Analytics 4 — replace G-XXXXXXXXXX with your real Measurement ID -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
 <script>
-  const APP_VERSION = 'v1.32';
+  const APP_VERSION = 'v1.33';
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
@@ -153,30 +153,23 @@ body.light .tabs{
   position:absolute;
   inset:-1px;
   border-radius:inherit;
-  padding:1.5px;
-  background:repeating-conic-gradient(from 0deg, rgba(37,201,255,.75) 0 10deg, transparent 10deg 22deg);
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite:xor;
-  mask-composite:exclude;
+  border:2px dotted rgba(37,201,255,.82);
   pointer-events:none;
-  animation:orbitDashedRing 10s linear infinite;
+  transform-origin:center;
+  will-change:transform;
+  animation:orbitDashedRing 7.5s linear infinite;
 }
 .random-spin::after{
   content:'';
   position:absolute;
-  inset:-3px;
+  inset:-4px;
   border-radius:inherit;
-  padding:1.2px;
+  border:1px dotted rgba(139,92,246,.72);
+  opacity:.95;
   pointer-events:none;
-  background:repeating-conic-gradient(from 0deg, rgba(37,201,255,.55) 0 8deg, transparent 8deg 20deg);
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite:xor;
-  mask-composite:exclude;
-  animation:orbitDashedRing 7.2s linear infinite reverse;
+  transform-origin:center;
+  will-change:transform;
+  animation:orbitDashedRing 5.8s linear infinite reverse;
 }
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .panel{padding:14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
@@ -4018,7 +4011,7 @@ document.addEventListener('click',function(e){const item=e.target.closest('.item
 initLegalModalStyling();
 syncAppVersionBadge();
 </script>
-<div class="app-version" id="appVersion">v1.32</div>
+<div class="app-version" id="appVersion">v1.33</div>
 <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 <div class="toast-stack center" id="toastStackCenter" aria-live="polite" aria-atomic="true"></div>
 </body>
