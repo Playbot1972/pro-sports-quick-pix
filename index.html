@@ -338,6 +338,7 @@ window.safeHeadshot = function(obj){
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
       <button type="button" id="logoutBtn" onclick="logoutSession()" style="display:none;padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:inherit;font-weight:700;font-size:12px;cursor:pointer">Log out</button>
       <button id="themeToggle" class="badge" onclick="toggleTheme()" style="cursor:pointer;border:0">🌙 Night</button>
+      <button type="button" class="badge" onclick="previewOrchestralLootStinger()" style="cursor:pointer;border:0;font-size:11px;font-weight:700" title="Play the last-pick orchestral sting once">🔊 Preview sting</button>
       <div class="badge" id="sportHintBadge">Choose a sport tab</div>
     </div>
   </div>
@@ -606,6 +607,13 @@ function unlockPickSfxFromGesture(){
   }
   try{ _ensureLootAudioCtx(); }catch(_){}
   _pickSfxAudioPrimed = true;
+}
+/** Top-bar “Preview sting”: same gesture rules as a pick tap so Web Audio + SFX unlock reliably. */
+function previewOrchestralLootStinger(){
+  try{
+    unlockPickSfxFromGesture();
+    playOrchestralLootStinger();
+  }catch(_){}
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
