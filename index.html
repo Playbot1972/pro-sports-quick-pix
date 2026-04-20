@@ -17,7 +17,7 @@
 <!-- Google Analytics 4 — replace G-XXXXXXXXXX with your real Measurement ID -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
 <script>
-  const APP_VERSION = 'v1.31';
+  const APP_VERSION = 'v1.33';
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
@@ -1764,9 +1764,7 @@ async function getTodaysNFLPlayers(option){
       if(Array.isArray(arr) && arr.length) _lhMem.setItem(cacheKey, JSON.stringify(arr.slice(0,260)));
     }catch(_){}
   }
-  const sbUrl='https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard';
-  const sb=await fetchJson(sbUrl);
-  const events=(sb&&sb.events)||[];
+  const events=await getScoreboardEventsNearby('https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard',1,1);
   const players=[];
   const seen=new Set();
   for(const ev of events){
@@ -1949,6 +1947,7 @@ function renderNBAPicks(){
 function clearNBA(){nbaToken++;nbaLoaded=false;nbaLoading=false;nbaPicks=[];nbaUsed=new Set();nbaLivePool=[];pickLocked=false;nbaPickCount=0;renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Choose a count and click Pick Lucky Player.</div>';}
 async function getTodaysNBAPlayers(option){
   const cacheKey = 'nbaLastGoodPool:'+String(option||'');
+  const cacheAnyKey = 'nbaLastGoodPool:any';
   function readNBACache(){
     try{
       const raw = _lhMem.getItem(cacheKey);
@@ -1959,12 +1958,22 @@ async function getTodaysNBAPlayers(option){
   }
   function writeNBACache(arr){
     try{
-      if(Array.isArray(arr) && arr.length) _lhMem.setItem(cacheKey, JSON.stringify(arr.slice(0,260)));
+      if(Array.isArray(arr) && arr.length){
+        const slim = JSON.stringify(arr.slice(0,260));
+        _lhMem.setItem(cacheKey, slim);
+        _lhMem.setItem(cacheAnyKey, slim);
+      }
     }catch(_){}
   }
-  const sbUrl='https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard';
-  const sb=await fetchJson(sbUrl);
-  const events=(sb&&sb.events)||[];
+  function readNBACacheAny(){
+    try{
+      const raw = _lhMem.getItem(cacheAnyKey);
+      if(!raw) return [];
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    }catch(_){ return []; }
+  }
+  const events=await getScoreboardEventsNearby('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard',1,1);
   const players=[];
   const seen=new Set();
   for(const ev of events){
@@ -2013,6 +2022,8 @@ async function getTodaysNBAPlayers(option){
   }
   const cached = readNBACache();
   if(cached.length) return cached;
+  const cachedAny = readNBACacheAny();
+  if(cachedAny.length) return cachedAny;
   return [];
 }
 function poRevealNBACard(p, idx){
@@ -2122,6 +2133,7 @@ function renderNHLPicks(){
 function clearNHL(){nhlToken++;nhlLoaded=false;nhlLoading=false;nhlPicks=[];nhlUsed=new Set();nhlLivePool=[];pickLocked=false;nhlPickCount=0;renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Choose a count and click Pick Lucky Player.</div>';}
 async function getTodaysNHLPlayers(option){
   const cacheKey = 'nhlLastGoodPool:'+String(option||'');
+  const cacheAnyKey = 'nhlLastGoodPool:any';
   function readNHLCache(){
     try{
       const raw = _lhMem.getItem(cacheKey);
@@ -2132,12 +2144,22 @@ async function getTodaysNHLPlayers(option){
   }
   function writeNHLCache(arr){
     try{
-      if(Array.isArray(arr) && arr.length) _lhMem.setItem(cacheKey, JSON.stringify(arr.slice(0,260)));
+      if(Array.isArray(arr) && arr.length){
+        const slim = JSON.stringify(arr.slice(0,260));
+        _lhMem.setItem(cacheKey, slim);
+        _lhMem.setItem(cacheAnyKey, slim);
+      }
     }catch(_){}
   }
-  const sbUrl='https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard';
-  const sb=await fetchJson(sbUrl);
-  const events=(sb&&sb.events)||[];
+  function readNHLCacheAny(){
+    try{
+      const raw = _lhMem.getItem(cacheAnyKey);
+      if(!raw) return [];
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    }catch(_){ return []; }
+  }
+  const events=await getScoreboardEventsNearby('https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard',1,1);
   const players=[];
   const seen=new Set();
   for(const ev of events){
@@ -2202,6 +2224,8 @@ async function getTodaysNHLPlayers(option){
   }
   const cached = readNHLCache();
   if(cached.length) return cached;
+  const cachedAny = readNHLCacheAny();
+  if(cachedAny.length) return cachedAny;
   return [];
 }
 function poRevealNHLCard(p, idx){
@@ -2311,6 +2335,7 @@ function renderSoccerPicks(){
 function clearSoccer(){soccerToken++;soccerLoaded=false;soccerLoading=false;soccerPicks=[];soccerUsed=new Set();soccerLivePool=[];pickLocked=false;soccerPickCount=0;renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Choose a count and click Pick Lucky Player.</div>';}
 async function getTodaysSoccerPlayers(option){
   const cacheKey = 'soccerLastGoodPool:'+String(option||'');
+  const cacheAnyKey = 'soccerLastGoodPool:any';
   function readSoccerCache(){
     try{
       const raw = _lhMem.getItem(cacheKey);
@@ -2321,12 +2346,22 @@ async function getTodaysSoccerPlayers(option){
   }
   function writeSoccerCache(arr){
     try{
-      if(Array.isArray(arr) && arr.length) _lhMem.setItem(cacheKey, JSON.stringify(arr.slice(0,260)));
+      if(Array.isArray(arr) && arr.length){
+        const slim = JSON.stringify(arr.slice(0,260));
+        _lhMem.setItem(cacheKey, slim);
+        _lhMem.setItem(cacheAnyKey, slim);
+      }
     }catch(_){}
   }
-  const sbUrl='https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/scoreboard';
-  const sb=await fetchJson(sbUrl);
-  const events=(sb&&sb.events)||[];
+  function readSoccerCacheAny(){
+    try{
+      const raw = _lhMem.getItem(cacheAnyKey);
+      if(!raw) return [];
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    }catch(_){ return []; }
+  }
+  const events=await getScoreboardEventsNearby('https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/scoreboard',1,1);
   const players=[];
   const seen=new Set();
   for(const ev of events){
@@ -2402,6 +2437,8 @@ async function getTodaysSoccerPlayers(option){
   // No placeholder players: use last known real soccer pool if available.
   const cached = readSoccerCache();
   if(cached.length) return cached;
+  const cachedAny = readSoccerCacheAny();
+  if(cachedAny.length) return cachedAny;
   return [];
 }
 function poRevealSoccerCard(p, idx){
@@ -2579,7 +2616,54 @@ function gameStatusText(g){return g?.status?.abstractGameState || g?.status?.det
 function gameStartText(g){const d = g?.gameDate ? new Date(g.gameDate) : null; return d ? d.toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}) : ''; }
 function gameVenueText(g){return g?.venue?.name || ''; }
 function gameKey(g){return String(g?.gamePk || g?.gamePk || '');}
-async function fetchJson(url){const r=await fetch(url,{cache:'no-store'}); if(!r.ok) throw new Error('Fetch failed'); return await r.json();}
+async function fetchJson(url){
+  let lastErr;
+  for(let i=0;i<2;i++){
+    try{
+      const r=await fetch(url,{cache:'no-store'});
+      if(!r.ok) throw new Error('Fetch failed');
+      return await r.json();
+    }catch(e){
+      lastErr=e;
+      if(i===0) await sleep(180);
+    }
+  }
+  throw lastErr||new Error('Fetch failed');
+}
+function _espnDatesParamOffset(days){
+  const d=new Date();
+  d.setDate(d.getDate()+days);
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,'0');
+  const dd=String(d.getDate()).padStart(2,'0');
+  return ''+y+m+dd;
+}
+async function getScoreboardEventsNearby(baseUrl, backDays, aheadDays){
+  const seen=new Set();
+  const events=[];
+  const pushEvents=(arr)=>{
+    for(const ev of (arr||[])){
+      if(!ev || !ev.id || seen.has(ev.id)) continue;
+      seen.add(ev.id);
+      events.push(ev);
+    }
+  };
+  try{
+    const sb=await fetchJson(baseUrl);
+    pushEvents(sb&&sb.events);
+  }catch(_){}
+  if(events.length) return events;
+  for(let off=-Math.max(0,backDays||0);off<=Math.max(0,aheadDays||0);off++){
+    if(off===0) continue;
+    const u=baseUrl+(baseUrl.indexOf('?')>=0?'&':'?')+'dates='+_espnDatesParamOffset(off);
+    try{
+      const sb=await fetchJson(u);
+      pushEvents(sb&&sb.events);
+      if(events.length) break;
+    }catch(_){}
+  }
+  return events;
+}
 async function getTodaysMlbHitters(){const today=todayStr; const scheduleUrl=`https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${today}&hydrate=team`; const sched=await fetchJson(scheduleUrl); const dates=(sched && sched.dates) ? sched.dates : []; const games=[]; dates.forEach(d=>{(d.games||[]).forEach(g=>games.push(g));}); const pools=[]; const gameMap={}; for(const g of games){ const gamePk=g.gamePk; gameMap[String(gamePk)]={gamePk, gameDate:g.gameDate, status:g.status, venue:g.venue}; const boxUrl=`https://statsapi.mlb.com/api/v1/game/${gamePk}/boxscore`; try{ const box=await fetchJson(boxUrl); const collect=(teamObj, side)=>{ const batterIds=teamObj?.batters || []; const teamName = teamObj?.team?.name || teamObj?.team?.abbreviation || side; batterIds.forEach(id=>{ const key=`ID${id}`; const p=teamObj.players?.[key]; if(!p) return; const person = p.person || {}; const pos = p.position?.abbreviation || person?.primaryPosition?.abbreviation || ''; if(isPitcher(pos)) return; const bo = slotToBattingOrder(p.battingOrder); if(bo===null) return; pools.push({player: normalizeName(person.fullName), playerId: person.id!=null?Number(person.id):Number(id), team: teamName, teamAbbr: teamObj?.team?.abbreviation || teamObj?.team?.name || side, teamId: teamObj?.team?.id || null, order: bo, gamePk, game: gameMap[String(gamePk)], hr: p.seasonStats?.batting?.homeRuns ?? '–', avg: p.seasonStats?.batting?.avg ?? '.---', pos}); });}; collect(box?.teams?.home, 'home'); collect(box?.teams?.away, 'away'); } catch(e){} } const unique=new Map(); pools.forEach(x=>{const k=`${x.player}::${x.team}`; if(!unique.has(k)) unique.set(k,x);}); return [...unique.values()].sort((a,b)=>(a.order-b.order)||a.player.localeCompare(b.player)); }
 async function getTodaysPitchers(){
   const today=todayStr;
@@ -4001,7 +4085,7 @@ document.addEventListener('click',function(e){const item=e.target.closest('.item
 initLegalModalStyling();
 syncAppVersionBadge();
 </script>
-<div class="app-version" id="appVersion">v1.31</div>
+<div class="app-version" id="appVersion">v1.33</div>
 <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 <div class="toast-stack center" id="toastStackCenter" aria-live="polite" aria-atomic="true"></div>
 </body>
