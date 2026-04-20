@@ -663,29 +663,24 @@ function sportInSeason(sport){
   const d = t.getDate();
   switch(sport){
     case 'NFL':
-      // Early Sep → mid‑Feb (regular season + playoffs)
       if(m >= 10) return true;
       if(m === 9 && d >= 4) return true;
       if(m <= 2) return m === 1 || (m === 2 && d <= 15);
       return false;
     case 'MLB':
-      // Late March → mid‑November
       if(m === 3) return d >= 20;
       if(m >= 4 && m <= 10) return true;
       if(m === 11) return d <= 12;
       return false;
     case 'NBA':
-      // Mid‑October → late June
       if(m >= 11 || (m === 10 && d >= 15)) return true;
       if(m <= 5) return true;
       return m === 6 && d <= 25;
     case 'NHL':
-      // Early October → late June
       if(m >= 11 || (m === 10 && d >= 7)) return true;
       if(m <= 5) return true;
       return m === 6 && d <= 28;
     case 'Soccer':
-      // MLS‑style late Feb → early December
       if(m >= 3 && m <= 11) return true;
       if(m === 2) return d >= 22;
       return m === 12 && d <= 8;
@@ -779,7 +774,7 @@ function randomSubOption(){
 function setSport(s){_trackSectionSwitch(s);current=s;currentOption=sports[s].options[0];renderTabs();renderSport();}
 function renderSport(){
   const _paywalled = _freePickUsed && !_devMode && !_isPro;
-  const data=sports[current];document.getElementById('sportTitle').textContent=current;document.getElementById('sportDesc').textContent=data.desc;document.getElementById('sportHintBadge').textContent=sportInSeason(current)?current+' Live Lineups':'Off season';
+  const data=sports[current];document.getElementById('sportTitle').textContent=current;document.getElementById('sportDesc').textContent=data.desc;document.getElementById('sportHintBadge').textContent=current+' Live Lineups';
   if(current==='MLB'){
     document.getElementById('options').innerHTML='';
     if(!sportInSeason('MLB')){
