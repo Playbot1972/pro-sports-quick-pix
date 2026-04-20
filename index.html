@@ -715,7 +715,7 @@ window.safeHeadshot = function(obj){
   <div class="trust-banner">
     <div class="trust-row">
       <div class="trust-badge">21+ ONLY</div>
-      <div class="trust-text">Tennessee only where legal. Results are not guaranteed. For entertainment only.</div>
+      <div class="trust-text" id="legalStateLine">Your state only where legal. Results are not guaranteed. For entertainment only.</div>
     </div>
     <div class="trust-links">
       <a href="#" onclick="openAgeGate();return false;">Age Check</a>
@@ -4599,6 +4599,27 @@ function fbSubmit(){
 
 function setPlayerPickSelected(el){try{document.querySelectorAll('.item').forEach(x=>x.classList.remove('selected')); if(el) el.classList.add('selected')}catch(e){}}
 document.addEventListener('click',function(e){const item=e.target.closest('.item'); if(item && item.classList.contains('expandable')) setPlayerPickSelected(item);});
+function updateLegalStateLine(){
+  const el=document.getElementById('legalStateLine');
+  if(!el) return;
+  const setLine=function(stateLabel){
+    const safe=(stateLabel && String(stateLabel).trim()) ? String(stateLabel).trim() : 'Your state';
+    el.textContent=safe+' only where legal. Results are not guaranteed. For entertainment only.';
+  };
+  setLine('Your state');
+  fetch('https://ipapi.co/json/',{cache:'no-store'})
+    .then(function(r){ return r && r.ok ? r.json() : null; })
+    .then(function(j){
+      if(!j) return;
+      const country=(j.country_name||j.country||'').toString().trim();
+      const region=(j.region||j.region_code||'').toString().trim();
+      if(region && /^united states$/i.test(country)) setLine(region);
+      else if(region) setLine(region);
+      else if(country) setLine(country);
+    })
+    .catch(function(){});
+}
+updateLegalStateLine();
 initLegalModalStyling();
 syncAppVersionBadge();
 </script>
