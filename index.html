@@ -162,6 +162,13 @@ body.light{--card:#ffffff;--card2:#f3f6ff;--text:#14213d;--muted:#56627a;--line:
   user-select:none;
 }
 .toast-stack{position:fixed;right:12px;bottom:38px;z-index:9500;display:grid;gap:8px;pointer-events:none}
+.toast-stack.center{
+  right:auto;
+  left:50%;
+  transform:translateX(-50%);
+  bottom:84px;
+  justify-items:center;
+}
 .toast{
   min-width:220px;max-width:340px;padding:10px 12px;border-radius:10px;
   border:1px solid rgba(255,255,255,.16);background:rgba(10,18,32,.95);
@@ -1084,8 +1091,8 @@ function syncSlipActions(){
   copyBtn.disabled = !has;
   clearBtn.disabled = !has;
 }
-function showToast(message, kind){
-  const stack = document.getElementById('toastStack');
+function showToast(message, kind, placement){
+  const stack = (placement==='center' ? document.getElementById('toastStackCenter') : document.getElementById('toastStack'));
   if(!stack) return;
   const t = document.createElement('div');
   t.className = 'toast'+(kind ? ' '+kind : '');
@@ -1237,7 +1244,7 @@ async function startHitsLoad(){
     if(!annotated.length){
       document.getElementById('picks').innerHTML='<div class="muted">No hitter data found for today.</div>';
       poSetError('No hitter data found for today.');
-      showToast('No live hitter data found for today.', 'error');
+      showToast('No live hitter data found for today.', 'error', 'center');
       pickLocked=false;
       if(loadBtn)loadBtn.disabled=false;
       stopPickSfxNow();
@@ -1344,7 +1351,7 @@ async function startBasesLoad(){
     if(!annotated.length){
       document.getElementById('picks').innerHTML='<div class="muted">No hitter data found for today.</div>';
       poSetError('No hitter data found for today.');
-      showToast('No live hitter data found for today.', 'error');
+      showToast('No live hitter data found for today.', 'error', 'center');
       pickLocked=false;
       if(loadBtn)loadBtn.disabled=false;
       stopPickSfxNow();
@@ -1451,7 +1458,7 @@ async function startRBILoad(){
     if(!annotated.length){
       document.getElementById('picks').innerHTML='<div class="muted">No hitter data found for today.</div>';
       poSetError('No hitter data found for today.');
-      showToast('No live hitter data found for today.', 'error');
+      showToast('No live hitter data found for today.', 'error', 'center');
       pickLocked=false;
       if(loadBtn)loadBtn.disabled=false;
       stopPickSfxNow();
@@ -1632,7 +1639,7 @@ async function startNFLLoad(){
     if(!pool.length){
       document.getElementById('picks').innerHTML='<div class="muted">No NFL players found for today.</div>';
       poSetError('No NFL players found for today.');
-      showToast('No live NFL players found for today.', 'error');
+      showToast('No live NFL players found for today.', 'error', 'center');
       pickLocked=false;
       if(loadBtn) loadBtn.disabled=false;
       stopPickSfxNow();
@@ -1792,7 +1799,7 @@ async function startNBALoad(){
     if(!pool.length){
       document.getElementById('picks').innerHTML='<div class="muted">No NBA players found for today.</div>';
       poSetError('No NBA players found for today.');
-      showToast('No live NBA players found for today.', 'error');
+      showToast('No live NBA players found for today.', 'error', 'center');
       pickLocked=false;
       if(loadBtn)loadBtn.disabled=false;
       stopPickSfxNow();
@@ -1968,7 +1975,7 @@ async function startNHLLoad(){
     if(!pool.length){
       document.getElementById('picks').innerHTML='<div class="muted">No NHL players found for today.</div>';
       poSetError('No NHL players found for today.');
-      showToast('No live NHL players found for today.', 'error');
+      showToast('No live NHL players found for today.', 'error', 'center');
       pickLocked=false;
       if(loadBtn)loadBtn.disabled=false;
       stopPickSfxNow();
@@ -2156,7 +2163,7 @@ async function startSoccerLoad(){
     if(!pool.length){
       document.getElementById('picks').innerHTML='<div class="muted">No MLS players found for today.</div>';
       poSetError('No MLS players found for today.');
-      showToast('No live MLS players found for today.', 'error');
+      showToast('No live MLS players found for today.', 'error', 'center');
       pickLocked=false;
       if(loadBtn)loadBtn.disabled=false;
       stopPickSfxNow();
@@ -2369,7 +2376,7 @@ async function startMLBLoad(){
     if(!pool.length){
       document.getElementById('picks').innerHTML='<div class="muted">No live hitters found for today.</div>';
       poSetError('No live hitters found for today.');
-      showToast('No live hitters found for today.', 'error');
+      showToast('No live hitters found for today.', 'error', 'center');
       pickLocked=false;
       if(loadBtn) loadBtn.disabled=false;
       stopPickSfxNow();
@@ -2456,7 +2463,7 @@ async function startKsLoad(){
     if(!pool.length){
       document.getElementById('picks').innerHTML='<div class="muted">No probable pitchers found for today.</div>';
       poSetError('No probable pitchers found for today.');
-      showToast('No probable pitchers found for today.', 'error');
+      showToast('No probable pitchers found for today.', 'error', 'center');
       pickLocked=false;
       if(loadBtn) loadBtn.disabled=false;
       stopPickSfxNow();
@@ -3698,7 +3705,8 @@ function setPlayerPickSelected(el){try{document.querySelectorAll('.item').forEac
 document.addEventListener('click',function(e){const item=e.target.closest('.item'); if(item && item.classList.contains('expandable')) setPlayerPickSelected(item);});
 initLegalModalStyling();
 </script>
-<div class="app-version" id="appVersion">v1.09</div>
+<div class="app-version" id="appVersion">v1.10</div>
 <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
+<div class="toast-stack center" id="toastStackCenter" aria-live="polite" aria-atomic="true"></div>
 </body>
 </html>
