@@ -187,6 +187,13 @@ body.light .tabs{
 }
 /* Per-pick-row orb + pulse (staggered via --orbit-delay / --orbit-duration / --flash-delay on each .item). */
 #picks > .item{position:relative;overflow:visible}
+#picks > .item.picks-loading{
+  justify-content:center;
+  align-items:center;
+  min-height:76px;
+  flex-direction:column;
+  cursor:default;
+}
 #picks > .item.orbit-ring{
   box-shadow:0 0 0 1px rgba(37,201,255,.38),0 0 14px rgba(38,217,255,.22),0 0 26px rgba(38,217,255,.08);
 }
@@ -1664,7 +1671,7 @@ function setKsCount(n){if(pickLocked) return; ksPickCount=n; renderSport();}
 function renderKsPicks(){
   document.getElementById('picksTitle').textContent='⚾ Lucky Pitchers';
   if(ksLoading){
-    document.getElementById('picks').innerHTML='<div class="muted">Loading pitcher data...</div>';
+    document.getElementById('picks').innerHTML=picksLoadingRowHtml('Loading pitcher data...');
   } else if(ksPicks.length>0){
     document.getElementById('picks').innerHTML=_pickSwipeHintHtml()+ksPicks.map((p,i)=>`<div class='item expandable pick-swipe-row' data-pick-swipe-mode='mlb-ks' data-pick-swipe-idx='${i}' title='Swipe sideways to replace this pick'><div class='rowtop'>${mlbRowTopPlayerHtml(p)}<span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir||'Over'} ${p.kLine}</span> <span style='opacity:.6;font-size:11px'>Ks</span></span></div><div class='details'><div class='muted'>${p.dir||'Over'} ${p.kLine} Ks</div><div class='muted'>K/9: ${p.k9}</div><div class='muted'>ERA: ${p.era}</div></div></div>`).join('');
     _wirePickSwipeRows();
@@ -1695,7 +1702,7 @@ function setHitsCount(n){if(pickLocked)return;hitsPickCount=n;renderSport();}
 function renderHitsPicks(){
   document.getElementById('picksTitle').textContent='💥 Hits Picks';
   if(hitsLoading){
-    document.getElementById('picks').innerHTML='<div class="muted">Loading hitter data...</div>';
+    document.getElementById('picks').innerHTML=picksLoadingRowHtml('Loading hitter data...');
   } else if(hitsPicks.length>0){
     document.getElementById('picks').innerHTML=_pickSwipeHintHtml()+hitsPicks.map((p,i)=>`<div class='item expandable pick-swipe-row' data-pick-swipe-mode='mlb-hits' data-pick-swipe-idx='${i}' title='Swipe sideways to replace this pick'><div class='rowtop'>${mlbRowTopPlayerHtml(p)}<span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>Hits</span></span></div><div class='details'><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>${p.dir} ${p.line} Hits</div><div class='muted'>Season Hits: ${p.seasonHits}</div><div class='muted'>AVG: ${p.avg}</div></div></div>`).join('');
     _wirePickSwipeRows();
@@ -1813,7 +1820,7 @@ function setBasesCount(n){if(pickLocked)return;basesPickCount=n;renderSport();}
 function renderBasesPicks(){
   document.getElementById('picksTitle').textContent='🎯 Total Bases Picks';
   if(basesLoading){
-    document.getElementById('picks').innerHTML='<div class="muted">Loading hitter data...</div>';
+    document.getElementById('picks').innerHTML=picksLoadingRowHtml('Loading hitter data...');
   } else if(basesPicks.length>0){
     document.getElementById('picks').innerHTML=_pickSwipeHintHtml()+basesPicks.map((p,i)=>`<div class='item expandable pick-swipe-row' data-pick-swipe-mode='mlb-bases' data-pick-swipe-idx='${i}' title='Swipe sideways to replace this pick'><div class='rowtop'>${mlbRowTopPlayerHtml(p)}<span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>Bases</span></span></div><div class='details'><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>${p.dir} ${p.line} Total Bases</div><div class='muted'>Season SLG: ${p.slg}</div><div class='muted'>AVG: ${p.avg}</div></div></div>`).join('');
     _wirePickSwipeRows();
@@ -1926,7 +1933,7 @@ function setRBICount(n){if(pickLocked)return;rbiPickCount=n;renderSport();}
 function renderRBIPicks(){
   document.getElementById('picksTitle').textContent='💪 RBI Picks';
   if(rbiLoading){
-    document.getElementById('picks').innerHTML='<div class="muted">Loading hitter data...</div>';
+    document.getElementById('picks').innerHTML=picksLoadingRowHtml('Loading hitter data...');
   } else if(rbiPicks.length>0){
     document.getElementById('picks').innerHTML=_pickSwipeHintHtml()+rbiPicks.map((p,i)=>`<div class='item expandable pick-swipe-row' data-pick-swipe-mode='mlb-rbi' data-pick-swipe-idx='${i}' title='Swipe sideways to replace this pick'><div class='rowtop'>${mlbRowTopPlayerHtml(p)}<span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>RBI</span></span></div><div class='details'><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>${p.dir} ${p.line} RBI</div><div class='muted'>Season RBI: ${p.seasonRbi}</div><div class='muted'>AVG: ${p.avg}</div></div></div>`).join('');
     _wirePickSwipeRows();
@@ -2039,7 +2046,7 @@ function setNFLCount(n){if(pickLocked)return;nflPickCount=n;renderSport();}
 function renderNFLPicks(){
   document.getElementById('picksTitle').textContent='🏈 NFL Picks';
   if(nflLoading){
-    document.getElementById('picks').innerHTML='<div class="muted">Loading NFL players...</div>';
+    document.getElementById('picks').innerHTML=picksLoadingRowHtml('Loading NFL players...');
   } else if(nflPicks.length>0){
     document.getElementById('picks').innerHTML=_pickSwipeHintHtml()+nflPicks.map((p,i)=>{
       const statLabel=p.statLabel||currentOption;
@@ -2275,7 +2282,7 @@ function setNBACount(n){if(pickLocked)return;nbaPickCount=n;renderSport();}
 function renderNBAPicks(){
   document.getElementById('picksTitle').textContent='🏀 NBA Picks';
   if(nbaLoading){
-    document.getElementById('picks').innerHTML='<div class="muted">Loading NBA players...</div>';
+    document.getElementById('picks').innerHTML=picksLoadingRowHtml('Loading NBA players...');
   } else if(nbaPicks.length>0){
     document.getElementById('picks').innerHTML=_pickSwipeHintHtml()+nbaPicks.map((p,i)=>{
       const statLabel=p.statLabel||currentOption;
@@ -2479,7 +2486,7 @@ function setNHLCount(n){if(pickLocked)return;nhlPickCount=n;renderSport();}
 function renderNHLPicks(){
   document.getElementById('picksTitle').textContent='🏒 NHL Picks';
   if(nhlLoading){
-    document.getElementById('picks').innerHTML='<div class="muted">Loading NHL players...</div>';
+    document.getElementById('picks').innerHTML=picksLoadingRowHtml('Loading NHL players...');
   } else if(nhlPicks.length>0){
     document.getElementById('picks').innerHTML=_pickSwipeHintHtml()+nhlPicks.map((p,i)=>{
       const statLabel=p.statLabel||currentOption;
@@ -2699,7 +2706,7 @@ function setSoccerCount(n){if(pickLocked)return;soccerPickCount=n;renderSport();
 function renderSoccerPicks(){
   document.getElementById('picksTitle').textContent='⚽ Soccer Picks';
   if(soccerLoading){
-    document.getElementById('picks').innerHTML='<div class="muted">Loading MLS players...</div>';
+    document.getElementById('picks').innerHTML=picksLoadingRowHtml('Loading MLS players...');
   } else if(soccerPicks.length>0){
     document.getElementById('picks').innerHTML=_pickSwipeHintHtml()+soccerPicks.map((p,i)=>{
       const statLabel=p.statLabel||currentOption;
@@ -3401,6 +3408,10 @@ function currentDisplayedPickPoolOpen(){
     if(current==='Soccer') return _poolHasLiveGame(soccerPicks);
   }catch(_){}
   return false;
+}
+/** Single-row placeholder while fetches run; same .item orbit treatment as real pick rows. */
+function picksLoadingRowHtml(message){
+  return '<div class="item picks-loading" aria-busy="true"><div class="muted">'+message+'</div></div>';
 }
 function syncPicksBoardWrapOrbit(){
   const wrap=document.getElementById('picksBoardWrap');
@@ -4124,7 +4135,7 @@ async function getTodaysPitchers(){
 function renderMLB(){
   document.getElementById('picksTitle').textContent='🏟️ Homerun Hitters';
   if(mlbLoading){
-    document.getElementById('picks').innerHTML='<div class="muted">Loading MLB picks...</div>';
+    document.getElementById('picks').innerHTML=picksLoadingRowHtml('Loading MLB picks...');
   } else if(mlbPicks.length>0){
     document.getElementById('picks').innerHTML=_pickSwipeHintHtml()+mlbPicks.map((p,i)=>`<div class='item expandable pick-swipe-row' data-pick-swipe-mode='mlb-hr' data-pick-swipe-idx='${i}' title='Swipe sideways to replace this pick'><div class='rowtop'>${mlbRowTopPlayerHtml(p)}<div class='rowtop-meta'>${mlbHrEnvRatingPillHtml(p)}<span class='muted'><span style='font-weight:700;color:#6ee7ff'>${(p.hr==null||p.hr==='–')?0:p.hr}</span> <span style='opacity:.6;font-size:11px'>HR</span></span></div></div><div class='details'>${p.pos?`<div class='muted'>Position: ${p.pos}</div>`:''}<div class='muted'>Season AVG: ${p.avg}</div>${mlbHrCarryDetailsHtml(p)}<div class='muted'>Game status: ${gameStatusText(p.game)}</div><div class='muted'>Start time: ${gameStartText(p.game)}</div><div class='muted'>Venue: ${gameVenueText(p.game)}</div></div></div>`).join('');
     _wirePickSwipeRows();
