@@ -19,7 +19,7 @@
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
 <script>
   // Public version: use letter suffixes for QA (see release.py --part letter).
-  const APP_VERSION = 'v1.23.8a';
+  const APP_VERSION = 'v1.23.8';
   const APP_BUILD_TAG = (function(){
     const d = new Date(document.lastModified || Date.now());
     if(Number.isNaN(d.getTime())) return '';
@@ -263,8 +263,8 @@ body.light .tabs{
 .app-version{
   position:fixed;
   right:10px;
-  bottom:10px;
-  z-index:8999;
+  bottom:calc(10px + env(safe-area-inset-bottom, 0px));
+  z-index:10060;
   padding:4px 8px;
   border-radius:999px;
   border:1px solid rgba(255,255,255,.14);
@@ -278,7 +278,6 @@ body.light .tabs{
   transform:translateY(0);
   transition:opacity .25s ease,transform .25s ease,visibility .25s ease;
 }
-.app-version.is-hidden{opacity:0;transform:translateY(4px);visibility:hidden;pointer-events:none}
 .toast-stack{position:fixed;right:12px;bottom:38px;z-index:9500;display:grid;gap:8px;pointer-events:none}
 .toast-stack.center{
   right:auto;
@@ -4240,17 +4239,7 @@ function syncAppVersionBadge(){
 }
 /** #appVersion may appear after this script; run sync once the node exists. */
 function scheduleSyncAppVersionBadge(){
-  let hideTimer = null;
-  const hideBadge = function(){
-    const el = document.getElementById('appVersion');
-    if(!el) return;
-    el.classList.add('is-hidden');
-  };
-  const run=function(){
-    if(hideTimer) clearTimeout(hideTimer);
-    syncAppVersionBadge();
-    hideTimer = setTimeout(hideBadge, 2600);
-  };
+  const run=function(){ syncAppVersionBadge(); };
   if(document.getElementById('appVersion')){ run(); return; }
   if(document.readyState==='loading'){
     document.addEventListener('DOMContentLoaded', run, {once:true});
@@ -5442,7 +5431,7 @@ scheduleSyncAppVersionBadge();
 _syncDevClearBtnStyle();
 syncPicksBoardWrapOrbit();
 </script>
-<div class="app-version" id="appVersion">v1.23.8a</div>
+<div class="app-version" id="appVersion">v-auto</div>
 <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 <div class="toast-stack center" id="toastStackCenter" aria-live="polite" aria-atomic="true"></div>
 </body>
