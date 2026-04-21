@@ -1492,7 +1492,23 @@ function showToast(message, kind, placement){
   }, 2200);
 }
 function setOption(o){currentOption=o;renderTabs();renderSport();}
-function setCount(n){if(pickLocked) return; if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'HR',attempted_count:n});showUpgradeWall({attemptedHR:n});return;} pickCount=n;renderSport();}
+function _shouldGateLoadWithUpgrade(meta){
+  if(_devMode || _isPro) return false;
+  const attempted = Number(meta && meta.attemptedCount) || 1;
+  const freeUsed = !!_freePickUsed;
+  const countLocked = attempted > 1;
+  if(!freeUsed && !countLocked) return false;
+  trackEvent('paywall_hit',{
+    sport:(meta && meta.sport) || current,
+    option:(meta && meta.option) || currentOption,
+    attempted_count:attempted,
+    trigger:'load_click',
+    reason:freeUsed?'free_used':'count_locked'
+  });
+  showUpgradeWall((meta && meta.payload) || {});
+  return true;
+}
+function setCount(n){if(pickLocked) return; pickCount=n;renderSport();}
 function renderPicks(list){document.getElementById('picksTitle').textContent='Quick Picks';document.getElementById('picks').innerHTML=list.length?list.map(p=>`<div class='item'><span>${p}</span><span class='muted'>${currentOption}</span></div>`).join(''):'<div class="muted">No picks available yet.</div>';syncPicksBoardWrapOrbit();}
 /** Sync fallback when Clipboard API is missing, insecure (e.g. file://), or rejects. */
 function _copyTextExecCommand(text){
@@ -1550,7 +1566,7 @@ function copyPicks(){
   }
 }
 function clearMLB(){mlbToken++;mlbLoaded=false;mlbLoading=false;mlbPicks=[];mlbTeamsUsed=[];mlbHitterUsed=new Set();mlbLivePool=[];mlbHrPickSlotCount=0;pickLocked=false;pickCount=0;currentOption='HR';renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Click Pick Lucky Hitter.</div>';syncPicksBoardWrapOrbit();}
-function setKsCount(n){if(pickLocked) return; if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'Ks',attempted_count:n});showUpgradeWall({attemptedKs:n});return;} ksPickCount=n; renderSport();}
+function setKsCount(n){if(pickLocked) return; ksPickCount=n; renderSport();}
 function renderKsPicks(){
   document.getElementById('picksTitle').textContent='⚾ Lucky Pitchers';
   if(ksLoading){
@@ -1581,7 +1597,7 @@ function _validatePlayerCountOrWarn(n, noun){
 // ─────────────────────────────────────────────────────────────────────────────
 // MLB HITS
 // ─────────────────────────────────────────────────────────────────────────────
-function setHitsCount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'Hits',attempted_count:n});showUpgradeWall({attemptedHits:n});return;}hitsPickCount=n;renderSport();}
+function setHitsCount(n){if(pickLocked)return;hitsPickCount=n;renderSport();}
 function renderHitsPicks(){
   document.getElementById('picksTitle').textContent='💥 Hits Picks';
   if(hitsLoading){
@@ -1621,6 +1637,7 @@ function poRevealHitsCard(p,idx){
 async function startHitsLoad(){
   pickRandomRhythm();
   if(!_validatePlayerCountOrWarn(hitsPickCount, 'players')) return;
+  if(_shouldGateLoadWithUpgrade({sport:'MLB',option:'Hits',attemptedCount:hitsPickCount,payload:{attemptedHits:hitsPickCount}})) return;
   openPickOverlay();
   const loadBtn=document.getElementById('hitsLoadBtn');
   if(loadBtn) loadBtn.disabled=true;
@@ -1698,7 +1715,7 @@ async function startHitsLoad(){
 // ─────────────────────────────────────────────────────────────────────────────
 // MLB TOTAL BASES
 // ─────────────────────────────────────────────────────────────────────────────
-function setBasesCount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'Total Bases',attempted_count:n});showUpgradeWall({attemptedBases:n});return;}basesPickCount=n;renderSport();}
+function setBasesCount(n){if(pickLocked)return;basesPickCount=n;renderSport();}
 function renderBasesPicks(){
   document.getElementById('picksTitle').textContent='🎯 Total Bases Picks';
   if(basesLoading){
@@ -1738,6 +1755,7 @@ function poRevealBasesCard(p,idx){
 async function startBasesLoad(){
   pickRandomRhythm();
   if(!_validatePlayerCountOrWarn(basesPickCount, 'players')) return;
+  if(_shouldGateLoadWithUpgrade({sport:'MLB',option:'Total Bases',attemptedCount:basesPickCount,payload:{attemptedBases:basesPickCount}})) return;
   openPickOverlay();
   const loadBtn=document.getElementById('basesLoadBtn');
   if(loadBtn) loadBtn.disabled=true;
@@ -1810,7 +1828,7 @@ async function startBasesLoad(){
 // ─────────────────────────────────────────────────────────────────────────────
 // MLB RBI
 // ─────────────────────────────────────────────────────────────────────────────
-function setRBICount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'MLB',option:'RBI',attempted_count:n});showUpgradeWall({attemptedRBI:n});return;}rbiPickCount=n;renderSport();}
+function setRBICount(n){if(pickLocked)return;rbiPickCount=n;renderSport();}
 function renderRBIPicks(){
   document.getElementById('picksTitle').textContent='💪 RBI Picks';
   if(rbiLoading){
@@ -1850,6 +1868,7 @@ function poRevealRBICard(p,idx){
 async function startRBILoad(){
   pickRandomRhythm();
   if(!_validatePlayerCountOrWarn(rbiPickCount, 'players')) return;
+  if(_shouldGateLoadWithUpgrade({sport:'MLB',option:'RBI',attemptedCount:rbiPickCount,payload:{attemptedRBI:rbiPickCount}})) return;
   openPickOverlay();
   const loadBtn=document.getElementById('rbiLoadBtn');
   if(loadBtn) loadBtn.disabled=true;
@@ -1922,7 +1941,7 @@ async function startRBILoad(){
 // ─────────────────────────────────────────────────────────────────────────────
 // NFL
 // ─────────────────────────────────────────────────────────────────────────────
-function setNFLCount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'NFL',option:currentOption,attempted_count:n});showUpgradeWall({attemptedNFL:n});return;}nflPickCount=n;renderSport();}
+function setNFLCount(n){if(pickLocked)return;nflPickCount=n;renderSport();}
 function renderNFLPicks(){
   document.getElementById('picksTitle').textContent='🏈 NFL Picks';
   if(nflLoading){
@@ -2091,6 +2110,7 @@ function poRevealNFLCard(p, idx){
 async function startNFLLoad(){
   pickRandomRhythm();
   if(!_validatePlayerCountOrWarn(nflPickCount, 'players')) return;
+  if(_shouldGateLoadWithUpgrade({sport:'NFL',option:currentOption,attemptedCount:nflPickCount,payload:{attemptedNFL:nflPickCount}})) return;
   openPickOverlay();
   const loadBtn=document.getElementById('nflLoadBtn');
   if(loadBtn) loadBtn.disabled=true;
@@ -2157,7 +2177,7 @@ async function startNFLLoad(){
 // ─────────────────────────────────────────────────────────────────────────────
 // NBA
 // ─────────────────────────────────────────────────────────────────────────────
-function setNBACount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'NBA',option:currentOption,attempted_count:n});showUpgradeWall({attemptedNBA:n});return;}nbaPickCount=n;renderSport();}
+function setNBACount(n){if(pickLocked)return;nbaPickCount=n;renderSport();}
 function renderNBAPicks(){
   document.getElementById('picksTitle').textContent='🏀 NBA Picks';
   if(nbaLoading){
@@ -2294,6 +2314,7 @@ function poRevealNBACard(p, idx){
 async function startNBALoad(){
   pickRandomRhythm();
   if(!_validatePlayerCountOrWarn(nbaPickCount, 'players')) return;
+  if(_shouldGateLoadWithUpgrade({sport:'NBA',option:currentOption,attemptedCount:nbaPickCount,payload:{attemptedNBA:nbaPickCount}})) return;
   openPickOverlay();
   const loadBtn=document.getElementById('nbaLoadBtn');
   if(loadBtn)loadBtn.disabled=true;
@@ -2360,7 +2381,7 @@ async function startNBALoad(){
 // ─────────────────────────────────────────────────────────────────────────────
 // NHL
 // ─────────────────────────────────────────────────────────────────────────────
-function setNHLCount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'NHL',option:currentOption,attempted_count:n});showUpgradeWall({attemptedNHL:n});return;}nhlPickCount=n;renderSport();}
+function setNHLCount(n){if(pickLocked)return;nhlPickCount=n;renderSport();}
 function renderNHLPicks(){
   document.getElementById('picksTitle').textContent='🏒 NHL Picks';
   if(nhlLoading){
@@ -2513,6 +2534,7 @@ function poRevealNHLCard(p, idx){
 async function startNHLLoad(){
   pickRandomRhythm();
   if(!_validatePlayerCountOrWarn(nhlPickCount, 'skaters')) return;
+  if(_shouldGateLoadWithUpgrade({sport:'NHL',option:currentOption,attemptedCount:nhlPickCount,payload:{attemptedNHL:nhlPickCount}})) return;
   openPickOverlay();
   const loadBtn=document.getElementById('nhlLoadBtn');
   if(loadBtn)loadBtn.disabled=true;
@@ -2579,7 +2601,7 @@ async function startNHLLoad(){
 // ─────────────────────────────────────────────────────────────────────────────
 // SOCCER (MLS)
 // ─────────────────────────────────────────────────────────────────────────────
-function setSoccerCount(n){if(pickLocked)return;if(!_devMode&&(_freePickUsed||n>1)){trackEvent('paywall_hit',{sport:'Soccer',option:currentOption,attempted_count:n});showUpgradeWall({attemptedSoccer:n});return;}soccerPickCount=n;renderSport();}
+function setSoccerCount(n){if(pickLocked)return;soccerPickCount=n;renderSport();}
 function renderSoccerPicks(){
   document.getElementById('picksTitle').textContent='⚽ Soccer Picks';
   if(soccerLoading){
@@ -2744,6 +2766,7 @@ function poRevealSoccerCard(p, idx){
 async function startSoccerLoad(){
   pickRandomRhythm();
   if(!_validatePlayerCountOrWarn(soccerPickCount, 'players')) return;
+  if(_shouldGateLoadWithUpgrade({sport:'Soccer',option:currentOption,attemptedCount:soccerPickCount,payload:{attemptedSoccer:soccerPickCount}})) return;
   openPickOverlay();
   const loadBtn=document.getElementById('soccerLoadBtn');
   if(loadBtn)loadBtn.disabled=true;
@@ -3950,6 +3973,7 @@ async function startMLBLoad(){
     document.getElementById('picks').innerHTML='<div class="muted">Please choose number of batters.</div>';
     return;
   }
+  if(_shouldGateLoadWithUpgrade({sport:'MLB',option:'HR',attemptedCount:pickCount,payload:{attemptedHR:pickCount}})) return;
   // ── Open full-screen overlay ──
   openPickOverlay();
   const loadBtn=document.getElementById('mlbLoadBtn');
@@ -4047,6 +4071,7 @@ async function startKsLoad(){
   trackEvent('pick_load_start',{sport:'MLB',option:'Ks'});
   pickRandomRhythm();
   if(!_validatePlayerCountOrWarn(ksPickCount, 'pitchers')) return;
+  if(_shouldGateLoadWithUpgrade({sport:'MLB',option:'Ks',attemptedCount:ksPickCount,payload:{attemptedKs:ksPickCount}})) return;
   // ── Open full-screen overlay ──
   openPickOverlay();
   const loadBtn=document.getElementById('ksLoadBtn');
@@ -4344,13 +4369,7 @@ function _refreshFreePickConsumedState(d){
     try{ _lhMem.setItem('lhProfile', JSON.stringify(d)); }catch(_){}
   }
   _isPro = !!d.isPro;
-  // Keep one free pick always available on free tier.
-  _freePickUsed = false;
-  if(d.freePickUsed || d.freePickDate){
-    d.freePickUsed = false;
-    d.freePickDate = null;
-    try{ _lhMem.setItem('lhProfile', JSON.stringify(d)); }catch(_){}
-  }
+  _freePickUsed = !!(d.freePickUsed && d.freePickDate === day);
 }
 
 function hasLocalProfile(){
@@ -4545,16 +4564,19 @@ function showFreeBadge(){
 }
 
 function markFreePickUsed(){
-  // v1.23.8 behavior override: do not consume the free pick.
-  _freePickUsed = false;
+  if(_devMode) return; // dev mode: skip paywall entirely
+  if(_isPro) return;
+  if(_paywallBypassActive()) return;
+  _freePickUsed = true;
   const badge = document.getElementById('freeBadge');
-  if(badge) badge.style.display='inline-block';
+  if(badge) badge.style.display='none';
   try{
     const d = JSON.parse(_lhMem.getItem('lhProfile')||'{}');
-    d.freePickUsed = false;
-    d.freePickDate = null;
+    d.freePickUsed = true;
+    d.freePickDate = _localCalendarDay();
     _lhMem.setItem('lhProfile', JSON.stringify(d));
   }catch(e){}
+  // Keep the just-generated free pick visible; show paywall on the next gated action.
 }
 
 function _buildPaywallOverlayHTML(){
