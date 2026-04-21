@@ -2975,15 +2975,33 @@ async function startSoccerLoad(){
 
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 function pickRandom(arr){return arr[Math.floor(Math.random()*arr.length)];}
+/**
+ * Pick from the **full** pool (already-picked players can still appear in shuffle UI),
+ * then **respin** (re-draw) until we get someone who is not:
+ *   (1) already on the slip by name, (2) same team as a slip team, (3) opponent already on slip.
+ * If many random tries fail, fall back to the old filtered cascade (unused only, then relax).
+ */
 function pickDiversifiedPlayer(pool, usedPlayersSet, usedTeamsSet){
-  const base=(pool||[]).filter(function(x){return !usedPlayersSet.has(x.player);});
+  const arr=(pool||[]).filter(function(x){return x&&x.player;});
+  if(!arr.length) return null;
+  function teamOk(x){
+    const ta=x.teamAbbr||x.team||'';
+    return !ta||!usedTeamsSet.has(ta);
+  }
+  function oppOk(x){
+    const opp=x.oppTeamAbbr||'';
+    return !opp||!usedTeamsSet.has(opp);
+  }
+  const MAX_TRY=56;
+  for(let k=0;k<MAX_TRY;k++){
+    const c=pickRandom(arr);
+    if(usedPlayersSet.has(c.player)) continue;
+    if(teamOk(c)&&oppOk(c)) return c;
+  }
+  const base=arr.filter(function(x){return !usedPlayersSet.has(x.player);});
   if(!base.length) return null;
-  const noSameTeam=base.filter(function(x){
-    return !x.teamAbbr || !usedTeamsSet.has(x.teamAbbr);
-  });
-  const noOpponent=noSameTeam.filter(function(x){
-    return !x.oppTeamAbbr || !usedTeamsSet.has(x.oppTeamAbbr);
-  });
+  const noSameTeam=base.filter(function(x){return teamOk(x);});
+  const noOpponent=noSameTeam.filter(function(x){return oppOk(x);});
   if(noOpponent.length) return pickRandom(noOpponent);
   if(noSameTeam.length) return pickRandom(noSameTeam);
   return pickRandom(base);
