@@ -189,6 +189,7 @@ body.light .tabs{
 .btn-cta.orbit-ring::before{border-radius:14px}
 .picks-board-wrap.orbit-ring::before{border-radius:14px}
 .picks-board-wrap{margin-top:10px;position:relative;border-radius:14px}
+.picks-board-wrap.live-flash{animation:liveBoardFlash 1.15s ease-in-out infinite}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .panel{padding:14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
 .btnrow{display:flex;flex-wrap:wrap;gap:10px}
@@ -386,6 +387,7 @@ body.light .hr-env-pill.hr-env-unfavorable{background:rgba(239,68,68,.1);color:#
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes bar{0%{transform:translateX(-120%)}50%{transform:translateX(140%)}100%{transform:translateX(260%)} }
 @keyframes livePulse{0%{box-shadow:0 0 0 0 rgba(38,217,255,.65)}70%{box-shadow:0 0 0 7px rgba(38,217,255,0)}100%{box-shadow:0 0 0 0 rgba(38,217,255,0)}}
+@keyframes liveBoardFlash{0%,100%{box-shadow:0 0 0 0 rgba(38,217,255,0),inset 0 0 0 rgba(38,217,255,0)}50%{box-shadow:0 0 20px rgba(38,217,255,.26),inset 0 0 0 1px rgba(38,217,255,.28)}}
 @keyframes randomDotOrbit{to{offset-distance:100%}}
 .locked{opacity:.45;filter:grayscale(.15);background:rgba(255,255,255,.08)!important;color:var(--text)!important}
 .locked[disabled]{pointer-events:none}
@@ -3243,7 +3245,9 @@ function syncPicksBoardWrapOrbit(){
   if(!wrap) return;
   const el=document.getElementById('picks');
   const hasRows=el && el.querySelector('.item.expandable');
-  wrap.classList.toggle('orbit-ring', !!(hasRows && currentDisplayedPickPoolOpen()));
+  const liveNow = !!(hasRows && currentDisplayedPickPoolOpen());
+  wrap.classList.toggle('orbit-ring', liveNow);
+  wrap.classList.toggle('live-flash', liveNow);
 }
 function gameStartText(g){const d = g?.gameDate ? new Date(g.gameDate) : null; return d ? d.toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}) : ''; }
 function gameVenueText(g){return g?.venue?.name || ''; }
