@@ -315,9 +315,12 @@ body.light .tabs{
   box-shadow:0 24px 80px rgba(0,0,0,.7);
 }
 .stripe-modal-close{
-  position:absolute;top:16px;right:16px;background:none;border:none;
+  position:absolute;top:16px;right:16px;z-index:2;
+  background:none;border:none;padding:0;
   color:#56627a;font-size:1.3rem;cursor:pointer;line-height:1;
+  transition:color .15s,opacity .15s;
 }
+.stripe-modal-close:hover{color:#9fb0d0;}
 .stripe-modal-head{text-align:center;margin-bottom:8px}
 .stripe-modal-trophy{font-size:2rem;margin-bottom:6px}
 .stripe-modal-title{font-size:1.3rem;font-weight:900;color:#eef3ff;margin-bottom:4px}
@@ -339,6 +342,14 @@ body.light .tabs{
 .stripe-modal-note{text-align:center;font-size:.78rem;color:#56627a;margin-bottom:18px}
 .stripe-modal-secure{text-align:center;margin-top:14px;font-size:.75rem;color:#56627a}
 .stripe-modal-secure strong{color:#9fb0d0}
+.stripe-modal-version{
+  text-align:right;
+  margin-top:12px;
+  padding-top:10px;
+  border-top:1px solid rgba(38,53,95,.55);
+  font-size:10px;font-weight:800;letter-spacing:.03em;
+  color:#56627a;
+}
 .age-modal-icon{font-size:2rem;margin-bottom:10px}
 .age-modal-title{font-size:1.15rem;font-weight:900;color:#eef3ff;margin-bottom:10px}
 .paywall-overlay-card{
@@ -359,6 +370,7 @@ body.light .stripe-modal-card{
 body.light .stripe-modal-title{color:#1d2b46!important}
 body.light .stripe-modal-sub{color:#4b5f84!important}
 body.light .stripe-modal-close{color:#5a6f93!important}
+body.light .po-close{color:#5a6f93!important}
 body.light .stripe-modal-list{
   background:#f5f8ff!important;
   border-color:#d6def0!important;
@@ -369,6 +381,8 @@ body.light .stripe-modal-price-sub{color:#5a6f93!important}
 body.light .stripe-modal-note{color:#5a6f93!important}
 body.light .stripe-modal-secure{color:#5a6f93!important}
 body.light .stripe-modal-secure strong{color:#3156c6!important}
+body.light .stripe-modal-version{color:#5a6f93!important;border-top-color:#d6def0!important}
+body.light .po-footer-version{color:#5a6f93!important;border-top-color:#d6def0!important;background:linear-gradient(180deg,rgba(255,255,255,.92),#eef3ff)!important}
 body.light #ageGateModal{background:rgba(234,240,251,.92)!important}
 body.light .age-modal-card{
   background:linear-gradient(160deg,#ffffff,#eef3ff)!important;
@@ -591,8 +605,8 @@ body.light .po-paywall-panel{
   box-shadow:0 12px 28px rgba(20,33,61,.12);
 }
 .po-header{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:18px 18px 10px;
+  display:flex;align-items:center;justify-content:flex-start;
+  padding:18px 52px 10px 18px;
   border-bottom:1px solid var(--line);
   position:sticky;top:0;
   background:linear-gradient(180deg,#07111f,rgba(7,17,31,.92));
@@ -605,15 +619,27 @@ body.light .po-paywall-panel{
   margin:10px auto 0;
   flex-shrink:0;
 }
-.po-title{font-weight:900;font-size:1.1rem;color:var(--text);}
+.po-title{font-weight:900;font-size:1.1rem;color:var(--text);padding-right:6px;}
+/* Match Stripe upgrade modal close (top-right ✕). */
 .po-close{
-  border:0;border-radius:50%;width:36px;height:36px;
-  background:rgba(255,255,255,.1);color:var(--text);
-  font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;
-  transition:background .2s;
+  position:absolute;top:16px;right:16px;z-index:2;
+  border:0;background:none;padding:0;
+  color:#56627a;font-size:1.3rem;line-height:1;cursor:pointer;
+  width:auto;height:auto;display:block;
+  transition:color .15s,opacity .15s;
 }
-.po-close:hover{background:rgba(255,255,255,.2);}
+.po-close:hover{color:#9fb0d0;background:none;}
 .po-body{padding:16px 18px 40px;flex:1;}
+.po-footer-version{
+  flex-shrink:0;
+  margin-top:auto;
+  padding:10px 16px calc(12px + env(safe-area-inset-bottom,0px));
+  text-align:right;
+  font-size:10px;font-weight:800;letter-spacing:.03em;
+  color:var(--muted);
+  border-top:1px solid var(--line);
+  background:linear-gradient(180deg,rgba(7,17,31,.88),#07111f);
+}
 .po-cards{display:flex;flex-direction:column;gap:10px;margin-top:4px;}
 .po-skeleton{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:16px;padding:14px 16px;}
 .po-skel-line{border-radius:6px;background:linear-gradient(90deg,rgba(255,255,255,.07) 25%,rgba(255,255,255,.13) 50%,rgba(255,255,255,.07) 75%);background-size:200% 100%;animation:skelShim 1.2s ease-in-out infinite;}
@@ -4231,11 +4257,19 @@ function initLegalModalStyling(){
   });
 }
 function syncAppVersionBadge(){
+  const label = APP_VERSION;
+  const tip = 'Release '+APP_VERSION+(APP_BUILD_TAG ? ' • file '+APP_BUILD_TAG : '');
   const el = document.getElementById('appVersion');
-  if(!el) return;
-  el.classList.remove('is-hidden');
-  el.textContent = APP_VERSION;
-  el.setAttribute('title', 'Release '+APP_VERSION+(APP_BUILD_TAG ? ' • file '+APP_BUILD_TAG : ''));
+  if(el){
+    el.textContent = label;
+    el.setAttribute('title', tip);
+  }
+  ['appVersionPickOverlay','appVersionStripeModal'].forEach(function(id){
+    const n = document.getElementById(id);
+    if(!n) return;
+    n.textContent = label;
+    n.setAttribute('title', tip);
+  });
 }
 /** #appVersion may appear after this script; run sync once the node exists. */
 function scheduleSyncAppVersionBadge(){
@@ -4825,6 +4859,7 @@ function getRhythmSuspense(i){
     <button id="checkoutBtn" class="btn-cta btn-cta-lg orbit-ring" onclick="startCheckout()" style="width:100%;transition:opacity .2s">Subscribe for $4.99/mo 🚀</button>
     <div id="checkoutError" style="color:#f87171;font-size:.82rem;text-align:center;margin-top:8px;min-height:18px"></div>
     <div class="stripe-modal-secure">Secured by <strong>Stripe</strong> · 256-bit SSL encryption</div>
+    <div class="stripe-modal-version" id="appVersionStripeModal" aria-hidden="true"></div>
   </div>
 </div>
 
@@ -5122,6 +5157,7 @@ function copyPicksFromOverlay(){
     <div class="po-cards" id="poCards"></div>
     <button class="po-share" id="poShareBtn" style="display:none" onclick="copyPicksFromOverlay()">⎘ Copy Picks</button>
   </div>
+  <div class="po-footer-version" id="appVersionPickOverlay" aria-hidden="true"></div>
 </div>
 
 <script data-pplx-inline-edit>
