@@ -3043,24 +3043,54 @@ function pickDiversifiedPlayer(pool, usedPlayersSet, usedTeamsSet){
   if(noSameTeam.length) return pickRandom(noSameTeam);
   return pickRandom(base);
 }
-/** Visible slot phase: reject = lock on name → end thunk → restart timing; hard cap then silent pick. */
+function poStopSkeletonShuffle(sk){
+  if(!sk||sk._shuffleIntervalId==null) return;
+  try{ clearInterval(sk._shuffleIntervalId); }catch(_){}
+  sk._shuffleIntervalId=null;
+}
+/** Same 110ms name reel as startNameShuffle, one card — used after a slot reject so we return to the fast spin. */
+function poRestartSkeletonFastShuffle(sk, skIndex, poolArr, token, getActiveToken){
+  const activeToken=getActiveToken||(function(){ return mlbToken; });
+  if(!sk) return;
+  poStopSkeletonShuffle(sk);
+  const rows=(poolArr||[]).filter(function(x){ return x&&x.player; }).map(function(x){
+    return { player:x.player, abbr:x.teamAbbr||x.team||'' };
+  });
+  if(!rows.length) return;
+  let names=shuffleArray(rows.slice());
+  let idx=skIndex*3;
+  const t=setInterval(function(){
+    if(token!==activeToken()){ poStopSkeletonShuffle(sk); return; }
+    if(!sk.classList.contains('po-skeleton')){ poStopSkeletonShuffle(sk); return; }
+    const entry=names[idx%names.length];
+    const nameEl=sk.querySelector('.po-skel-name');
+    if(nameEl){
+      nameEl.innerHTML=
+        '<span class="shuffle-name" style="font-size:.85rem;font-weight:700;color:var(--text)">'+
+        entry.player+'</span>'+teamPill(entry.abbr);
+    }
+    idx++;
+    if(idx>names.length*6) names=shuffleArray(names.slice());
+  },110);
+  sk._shuffleIntervalId=t;
+}
+/** Visible slot phase: reject = lock → pause → fast original spin again → next hold (delay stays original; no speed-ramp). */
 async function slotMachineResolvePick(pool, usedPlayersSet, usedTeamsSet, skIndex, token, getActiveToken){
   const activeToken=getActiveToken||(function(){ return mlbToken; });
   const arr=(pool||[]).filter(function(x){return x&&x.player;});
   if(!arr.length) return null;
   const sk=document.getElementById('poSkel-'+skIndex);
   const MAX_VISIBLE_TRIES=22;
+  const ORIGINAL_SLOT_DELAY=58;
+  const REJECT_SPIN_MS=520;
   function skLockOff(){
     try{
       if(!sk) return;
       sk.classList.remove('po-skel-reject','po-skel-lock');
     }catch(_){}
   }
-  if(sk&&sk._shuffleIntervalId!=null){
-    try{ clearInterval(sk._shuffleIntervalId); }catch(_){}
-    sk._shuffleIntervalId=null;
-  }
-  let delay=58;
+  poStopSkeletonShuffle(sk);
+  let delay=ORIGINAL_SLOT_DELAY;
   for(let step=0; step<MAX_VISIBLE_TRIES; step++){
     if(token!==activeToken()){ skLockOff(); return null; }
     const cand=pickRandom(arr);
@@ -3079,7 +3109,10 @@ async function slotMachineResolvePick(pool, usedPlayersSet, usedTeamsSet, skInde
     playSlotLockEndSfx();
     await sleep(240);
     skLockOff();
-    delay=Math.max(52, Math.min(100, Math.floor(delay*0.48)+20));
+    poRestartSkeletonFastShuffle(sk, skIndex, arr, token, activeToken);
+    await sleep(REJECT_SPIN_MS);
+    poStopSkeletonShuffle(sk);
+    delay=ORIGINAL_SLOT_DELAY;
   }
   skLockOff();
   return pickDiversifiedPlayer(pool, usedPlayersSet, usedTeamsSet);
@@ -4509,9 +4542,37 @@ function initLegalModalStyling(){
     if(closeBtn) closeBtn.classList.add('legal-modal-close');
   });
 }
+function getDisplayedAppVersion(){
+  if(window.__PUBLISHED_APP_VERSION) return String(window.__PUBLISHED_APP_VERSION);
+  return typeof APP_VERSION !== 'undefined' ? APP_VERSION : '';
+}
+function fetchPublishedAppVersion(){
+  const url = 'version.json?bust=' + encodeURIComponent(String(Date.now()));
+  fetch(url, { cache: 'no-store', credentials: 'same-origin' })
+    .then(function (r) {
+      if (!r.ok) return null;
+      return r.json();
+    })
+    .then(function (j) {
+      if (!j || typeof j !== 'object') return;
+      const raw = j.v != null ? String(j.v) : j.version != null ? String(j.version) : '';
+      if (!raw) return;
+      const v = raw.trim();
+      if (!/^v\d+\.\d+\.\d+[a-z]?$/i.test(v)) return;
+      if (v !== window.__PUBLISHED_APP_VERSION) {
+        window.__PUBLISHED_APP_VERSION = v;
+        syncAppVersionBadge();
+      }
+    })
+    .catch(function () {});
+}
 function syncAppVersionBadge(){
-  const label = APP_VERSION;
-  const tip = 'Release '+APP_VERSION+(APP_BUILD_TAG ? ' • file '+APP_BUILD_TAG : '');
+  const label = getDisplayedAppVersion() || (typeof APP_VERSION !== 'undefined' ? APP_VERSION : '');
+  const tip =
+    'Release ' +
+    label +
+    (APP_BUILD_TAG ? ' • file ' + APP_BUILD_TAG : '') +
+    (window.__PUBLISHED_APP_VERSION ? ' • server' : '');
   const el = document.getElementById('appVersion');
   if(el){
     el.textContent = label;
@@ -4526,7 +4587,10 @@ function syncAppVersionBadge(){
 }
 /** #appVersion may appear after this script; run sync once the node exists. */
 function scheduleSyncAppVersionBadge(){
-  const run=function(){ syncAppVersionBadge(); };
+  const run=function(){
+    syncAppVersionBadge();
+    fetchPublishedAppVersion();
+  };
   if(document.getElementById('appVersion')){ run(); return; }
   if(document.readyState==='loading'){
     document.addEventListener('DOMContentLoaded', run, {once:true});
@@ -4534,6 +4598,14 @@ function scheduleSyncAppVersionBadge(){
     setTimeout(run, 0);
   }
 }
+(function armPublishedVersionPolling(){
+  if(window.__PROP_VERSION_FETCH_ARMED) return;
+  window.__PROP_VERSION_FETCH_ARMED = true;
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState==='visible') fetchPublishedAppVersion();
+  });
+  setInterval(fetchPublishedAppVersion, 90000);
+})();
 function ageGateNo(){
   window.location.href = 'https://www.sesamestreet.org/games';
 }
