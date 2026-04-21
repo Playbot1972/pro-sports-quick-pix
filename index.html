@@ -3245,9 +3245,9 @@ function syncPicksBoardWrapOrbit(){
   if(!wrap) return;
   const el=document.getElementById('picks');
   const hasRows=el && el.querySelector('.item.expandable');
-  const liveNow = !!(hasRows && currentDisplayedPickPoolOpen());
-  wrap.classList.toggle('orbit-ring', liveNow);
-  wrap.classList.toggle('live-flash', liveNow);
+  const loadedNow = !!hasRows;
+  wrap.classList.toggle('orbit-ring', loadedNow);
+  wrap.classList.toggle('live-flash', loadedNow);
 }
 function gameStartText(g){const d = g?.gameDate ? new Date(g.gameDate) : null; return d ? d.toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}) : ''; }
 function gameVenueText(g){return g?.venue?.name || ''; }
