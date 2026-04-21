@@ -18,37 +18,13 @@
 <!-- Google Analytics 4 — replace G-XXXXXXXXXX with your real Measurement ID -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
 <script>
-  // Keep the public app version semantic; build tag is auto-generated.
-  const APP_VERSION = 'v1.23.8';
+  // Public version: use letter suffixes for QA (see release.py --part letter).
+  const APP_VERSION = 'v1.23.8a';
   const APP_BUILD_TAG = (function(){
     const d = new Date(document.lastModified || Date.now());
-    if(Number.isNaN(d.getTime())) return 'build-auto';
-    const y = d.getFullYear();
-    const m = String(d.getMonth()+1).padStart(2,'0');
-    const day = String(d.getDate()).padStart(2,'0');
-    const hh = String(d.getHours()).padStart(2,'0');
-    const mm = String(d.getMinutes()).padStart(2,'0');
-    const ss = String(d.getSeconds()).padStart(2,'0');
-    return `${y}${m}${day}-${hh}${mm}${ss}`;
+    if(Number.isNaN(d.getTime())) return '';
+    return d.toISOString().slice(0,19).replace('T',' ');
   })();
-  const APP_BUILD_SEQ = (function(){
-    try{
-      const seqKey = 'lhBuildSeq';
-      const tagKey = 'lhBuildTag';
-      const prevTag = localStorage.getItem(tagKey) || '';
-      let seq = parseInt(localStorage.getItem(seqKey) || '0', 10);
-      if(!Number.isFinite(seq) || seq < 0) seq = 0;
-      if(prevTag !== APP_BUILD_TAG){
-        seq += 1;
-        localStorage.setItem(seqKey, String(seq));
-        localStorage.setItem(tagKey, APP_BUILD_TAG);
-      }
-      return seq || 1;
-    }catch(_){
-      return 1;
-    }
-  })();
-  const APP_VERSION_DISPLAY = `${APP_VERSION}+b${APP_BUILD_SEQ}`;
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
@@ -115,7 +91,7 @@ body.light{--card:#ffffff;--card2:#f3f6ff;--text:#14213d;--muted:#56627a;--line:
 }
 .inline-note{margin-top:14px;font-size:.83rem;color:#9fb0d0}
 .inline-note-muted{color:#56627a;display:none}
-.account-strip{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.04)}
+.account-strip{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.04);overflow:visible}
 .account-copy{font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.01em}
 .account-copy strong{color:var(--text);font-weight:800}
 .navbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;padding:9px 10px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.04)}
@@ -253,6 +229,10 @@ body.light .tabs{
 }
 .account-strip .live-board-pill.is-on{
   opacity:1;
+}
+/* Rotating orb around LIVE BOARD pill (same pattern as .orbit-ring; pill-shaped path). */
+.account-strip #liveBoardStripPill.orbit-ring::before{
+  offset-path:inset(-3px round 999px);
 }
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .panel{padding:14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
@@ -3315,7 +3295,10 @@ function syncPicksBoardWrapOrbit(){
   const loadedNow = !!hasRows;
   wrap.classList.toggle('orbit-ring', loadedNow);
   wrap.classList.toggle('live-flash', loadedNow);
-  if(stripPill) stripPill.classList.toggle('is-on', loadedNow);
+  if(stripPill){
+    stripPill.classList.toggle('is-on', loadedNow);
+    stripPill.classList.toggle('orbit-ring', loadedNow);
+  }
 }
 function gameStartText(g){const d = g?.gameDate ? new Date(g.gameDate) : null; return d ? d.toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}) : ''; }
 function gameVenueText(g){return g?.venue?.name || ''; }
@@ -4252,8 +4235,8 @@ function syncAppVersionBadge(){
   const el = document.getElementById('appVersion');
   if(!el) return;
   el.classList.remove('is-hidden');
-  el.textContent = APP_VERSION_DISPLAY;
-  el.setAttribute('title', 'Release '+APP_VERSION+' • build '+APP_BUILD_SEQ+' • '+APP_BUILD_TAG);
+  el.textContent = APP_VERSION;
+  el.setAttribute('title', 'Release '+APP_VERSION+(APP_BUILD_TAG ? ' • file '+APP_BUILD_TAG : ''));
 }
 /** #appVersion may appear after this script; run sync once the node exists. */
 function scheduleSyncAppVersionBadge(){
@@ -5459,7 +5442,7 @@ scheduleSyncAppVersionBadge();
 _syncDevClearBtnStyle();
 syncPicksBoardWrapOrbit();
 </script>
-<div class="app-version" id="appVersion">v-auto</div>
+<div class="app-version" id="appVersion">v1.23.8a</div>
 <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 <div class="toast-stack center" id="toastStackCenter" aria-live="polite" aria-atomic="true"></div>
 </body>
