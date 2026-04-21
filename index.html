@@ -2998,13 +2998,6 @@ function _playPickTickSfx(opts){
     if(p&&typeof p.catch==='function') p.catch(function(){});
   }catch(_){}
 }
-function playPickTickReject(){
-  _playPickTickSfx({volume:0.26, rate:0.84+Math.random()*0.1});
-}
-/** Short “reel locked / no match” thunk before a new spin segment. */
-function playSlotLockEndSfx(){
-  _playPickTickSfx({volume:0.24, rate:0.58+Math.random()*0.06});
-}
 function isDiversifiedPickAllowed(c, usedPlayersSet, usedTeamsSet){
   if(!c||!c.player) return false;
   if(usedPlayersSet&&usedPlayersSet.has(c.player)) return false;
@@ -3048,41 +3041,16 @@ function poStopSkeletonShuffle(sk){
   try{ clearInterval(sk._shuffleIntervalId); }catch(_){}
   sk._shuffleIntervalId=null;
 }
-/** Same 110ms name reel as startNameShuffle, one card — used after a slot reject so we return to the fast spin. */
-function poRestartSkeletonFastShuffle(sk, skIndex, poolArr, token, getActiveToken){
-  const activeToken=getActiveToken||(function(){ return mlbToken; });
-  if(!sk) return;
-  poStopSkeletonShuffle(sk);
-  const rows=(poolArr||[]).filter(function(x){ return x&&x.player; }).map(function(x){
-    return { player:x.player, abbr:x.teamAbbr||x.team||'' };
-  });
-  if(!rows.length) return;
-  let names=shuffleArray(rows.slice());
-  let idx=skIndex*3;
-  const t=setInterval(function(){
-    if(token!==activeToken()){ poStopSkeletonShuffle(sk); return; }
-    if(!sk.classList.contains('po-skeleton')){ poStopSkeletonShuffle(sk); return; }
-    const entry=names[idx%names.length];
-    const nameEl=sk.querySelector('.po-skel-name');
-    if(nameEl){
-      nameEl.innerHTML=
-        '<span class="shuffle-name" style="font-size:.85rem;font-weight:700;color:var(--text)">'+
-        entry.player+'</span>'+teamPill(entry.abbr);
-    }
-    idx++;
-    if(idx>names.length*6) names=shuffleArray(names.slice());
-  },110);
-  sk._shuffleIntervalId=t;
-}
-/** Visible slot phase: reject = lock → pause → fast original spin again → next hold (delay stays original; no speed-ramp). */
+/**
+ * One visible hold: prefer a pick that already passes diversification (minimal/no reject loop).
+ * If no strict pick exists, use the same relaxed cascade as pickDiversifiedPlayer once.
+ */
 async function slotMachineResolvePick(pool, usedPlayersSet, usedTeamsSet, skIndex, token, getActiveToken){
   const activeToken=getActiveToken||(function(){ return mlbToken; });
   const arr=(pool||[]).filter(function(x){return x&&x.player;});
   if(!arr.length) return null;
   const sk=document.getElementById('poSkel-'+skIndex);
-  const MAX_VISIBLE_TRIES=22;
-  const ORIGINAL_SLOT_DELAY=58;
-  const REJECT_SPIN_MS=520;
+  const HOLD_MS=58;
   function skLockOff(){
     try{
       if(!sk) return;
@@ -3090,32 +3058,26 @@ async function slotMachineResolvePick(pool, usedPlayersSet, usedTeamsSet, skInde
     }catch(_){}
   }
   poStopSkeletonShuffle(sk);
-  let delay=ORIGINAL_SLOT_DELAY;
-  for(let step=0; step<MAX_VISIBLE_TRIES; step++){
-    if(token!==activeToken()){ skLockOff(); return null; }
-    const cand=pickRandom(arr);
-    const nameEl=sk&&sk.querySelector('.po-skel-name');
-    if(nameEl){
-      const ab=cand.teamAbbr||cand.team||'';
-      nameEl.innerHTML='<span class="shuffle-name" style="font-size:.85rem;font-weight:700;color:var(--text)">'+
-        cand.player+'</span>'+teamPill(ab);
-    }
-    _playPickTickSfx({volume:0.11, rate:1.04+Math.random()*0.14});
-    await sleep(delay);
-    if(isDiversifiedPickAllowed(cand, usedPlayersSet, usedTeamsSet)){ skLockOff(); return cand; }
-    if(step===MAX_VISIBLE_TRIES-1) break;
-    if(sk) sk.classList.add('po-skel-reject','po-skel-lock');
-    await sleep(110);
-    playSlotLockEndSfx();
-    await sleep(240);
-    skLockOff();
-    poRestartSkeletonFastShuffle(sk, skIndex, arr, token, activeToken);
-    await sleep(REJECT_SPIN_MS);
-    poStopSkeletonShuffle(sk);
-    delay=ORIGINAL_SLOT_DELAY;
+  if(token!==activeToken()){ skLockOff(); return null; }
+  const valid=arr.filter(function(c){ return isDiversifiedPickAllowed(c, usedPlayersSet, usedTeamsSet); });
+  let cand=null;
+  if(valid.length) cand=pickRandom(valid);
+  else{
+    cand=pickDiversifiedPlayer(pool, usedPlayersSet, usedTeamsSet);
+    if(!cand) cand=arr.length?pickRandom(arr):null;
   }
+  if(!cand){ skLockOff(); return null; }
+  const nameEl=sk&&sk.querySelector('.po-skel-name');
+  if(nameEl){
+    const ab=cand.teamAbbr||cand.team||'';
+    nameEl.innerHTML='<span class="shuffle-name" style="font-size:.85rem;font-weight:700;color:var(--text)">'+
+      cand.player+'</span>'+teamPill(ab);
+  }
+  _playPickTickSfx({volume:0.11, rate:1.04+Math.random()*0.14});
+  await sleep(HOLD_MS);
+  if(token!==activeToken()){ skLockOff(); return null; }
   skLockOff();
-  return pickDiversifiedPlayer(pool, usedPlayersSet, usedTeamsSet);
+  return cand;
 }
 function _withOppTeamFromPool(list){
   const arr=Array.isArray(list)?list:[];
