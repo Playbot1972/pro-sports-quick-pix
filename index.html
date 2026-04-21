@@ -187,7 +187,22 @@ body.light .tabs{
 .navitem.orbit-ring::before{border-radius:10px}
 #pickCountRow .btn.orbit-ring::before{border-radius:12px}
 .btn-cta.orbit-ring::before{border-radius:14px}
-.picks-board-wrap.orbit-ring::before{border-radius:14px}
+.picks-board-wrap.orbit-ring{
+  box-shadow:0 0 0 1px rgba(37,201,255,.34),0 0 22px rgba(37,201,255,.2);
+}
+.picks-board-wrap.orbit-ring::before{
+  border-radius:14px;
+  animation:randomDotOrbit 4.8s linear infinite;
+}
+.picks-board-wrap.orbit-ring::after{
+  content:'';
+  position:absolute;
+  inset:-2px;
+  border-radius:14px;
+  border:1px solid rgba(37,201,255,.45);
+  pointer-events:none;
+  animation:liveBoardBorderPulse 1.2s ease-in-out infinite;
+}
 .picks-board-wrap{margin-top:10px;position:relative;border-radius:14px}
 .picks-board-wrap.live-flash{animation:liveBoardFlash 1.15s ease-in-out infinite}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -387,7 +402,8 @@ body.light .hr-env-pill.hr-env-unfavorable{background:rgba(239,68,68,.1);color:#
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes bar{0%{transform:translateX(-120%)}50%{transform:translateX(140%)}100%{transform:translateX(260%)} }
 @keyframes livePulse{0%{box-shadow:0 0 0 0 rgba(38,217,255,.65)}70%{box-shadow:0 0 0 7px rgba(38,217,255,0)}100%{box-shadow:0 0 0 0 rgba(38,217,255,0)}}
-@keyframes liveBoardFlash{0%,100%{box-shadow:0 0 0 0 rgba(38,217,255,0),inset 0 0 0 rgba(38,217,255,0)}50%{box-shadow:0 0 20px rgba(38,217,255,.26),inset 0 0 0 1px rgba(38,217,255,.28)}}
+@keyframes liveBoardFlash{0%,100%{box-shadow:0 0 0 1px rgba(37,201,255,.3),0 0 12px rgba(38,217,255,.15),inset 0 0 0 rgba(38,217,255,0)}50%{box-shadow:0 0 0 1px rgba(37,201,255,.55),0 0 26px rgba(38,217,255,.35),inset 0 0 0 1px rgba(38,217,255,.32)}}
+@keyframes liveBoardBorderPulse{0%,100%{opacity:.45}50%{opacity:1}}
 @keyframes randomDotOrbit{to{offset-distance:100%}}
 .locked{opacity:.45;filter:grayscale(.15);background:rgba(255,255,255,.08)!important;color:var(--text)!important}
 .locked[disabled]{pointer-events:none}
@@ -3244,7 +3260,7 @@ function syncPicksBoardWrapOrbit(){
   const wrap=document.getElementById('picksBoardWrap');
   if(!wrap) return;
   const el=document.getElementById('picks');
-  const hasRows=el && el.querySelector('.item.expandable');
+  const hasRows=el && el.querySelector('.item');
   const loadedNow = !!hasRows;
   wrap.classList.toggle('orbit-ring', loadedNow);
   wrap.classList.toggle('live-flash', loadedNow);
