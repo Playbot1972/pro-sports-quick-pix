@@ -182,11 +182,17 @@ body.light .tabs{
 .navitem.orbit-ring::before{border-radius:10px}
 #pickCountRow .btn.orbit-ring::before{border-radius:12px}
 .btn-cta.orbit-ring::before{border-radius:14px}
+.picks-board-wrap{
+  overflow:visible;
+}
 .picks-board-wrap.orbit-ring{
-  box-shadow:0 0 0 1px rgba(37,201,255,.34),0 0 22px rgba(37,201,255,.2);
+  box-shadow:0 0 0 1px rgba(37,201,255,.5),0 0 28px rgba(38,217,255,.32),0 0 48px rgba(38,217,255,.12);
 }
 .picks-board-wrap.orbit-ring::before{
+  width:8px;
+  height:8px;
   border-radius:14px;
+  box-shadow:0 0 0 1px rgba(37,201,255,.35),0 0 10px rgba(37,201,255,.85);
   animation:randomDotOrbit 4.8s linear infinite;
 }
 .picks-board-wrap.orbit-ring::after{
@@ -199,33 +205,35 @@ body.light .tabs{
   animation:liveBoardBorderPulse 1.2s ease-in-out infinite;
 }
 .picks-board-wrap{margin-top:10px;position:relative;border-radius:14px}
-.picks-board-wrap.live-flash{animation:liveBoardFlash 1.15s ease-in-out infinite}
+.picks-board-wrap.live-flash{animation:liveBoardFlash 1.35s ease-in-out infinite}
 .live-board-pill{
   display:none;
   align-items:center;
   gap:6px;
-  padding:4px 10px;
+  padding:5px 11px;
   border-radius:999px;
-  border:1px solid rgba(38,217,255,.45);
-  background:rgba(38,217,255,.1);
-  color:#bff4ff;
+  border:1px solid rgba(38,217,255,.55);
+  background:rgba(38,217,255,.16);
+  color:#dffcff;
   font-size:11px;
   font-weight:900;
   letter-spacing:.03em;
+  text-shadow:0 0 12px rgba(38,217,255,.25);
 }
 .live-board-pill .dot{
-  width:7px;
-  height:7px;
+  width:8px;
+  height:8px;
   border-radius:50%;
-  background:#26d9ff;
+  background:#4ae8ff;
+  box-shadow:0 0 0 1px rgba(255,255,255,.25),0 0 10px rgba(38,217,255,.75);
 }
 .live-board-pill.is-on{
   display:inline-flex;
-  animation:liveBoardPillFlash 1s ease-in-out infinite;
+  animation:liveBoardPillFlash 1.05s ease-in-out infinite;
 }
 .account-strip .live-board-pill{
   display:inline-flex;
-  opacity:.55;
+  opacity:.82;
 }
 .account-strip .live-board-pill.is-on{
   opacity:1;
@@ -264,21 +272,24 @@ body.light .tabs{
   position:fixed;
   right:10px;
   bottom:calc(10px + env(safe-area-inset-bottom, 0px));
-  z-index:10060;
-  padding:4px 8px;
+  z-index:10120;
+  padding:5px 10px;
   border-radius:999px;
-  border:1px solid rgba(255,255,255,.14);
-  background:rgba(6,11,22,.78);
-  color:var(--muted);
-  font-size:10px;
+  border:1px solid rgba(110,231,255,.38);
+  background:rgba(6,11,22,.88);
+  -webkit-backdrop-filter:blur(10px);
+  backdrop-filter:blur(10px);
+  color:#b8d4f0;
+  font-size:11px;
   font-weight:800;
-  letter-spacing:.03em;
+  letter-spacing:.04em;
   user-select:none;
   opacity:1;
   transform:translateY(0);
+  box-shadow:0 4px 18px rgba(0,0,0,.35),0 0 0 1px rgba(0,0,0,.2);
   transition:opacity .25s ease,transform .25s ease,visibility .25s ease;
 }
-.toast-stack{position:fixed;right:12px;bottom:38px;z-index:9500;display:grid;gap:8px;pointer-events:none}
+.toast-stack{position:fixed;right:12px;bottom:44px;z-index:9400;display:grid;gap:8px;pointer-events:none}
 .toast-stack.center{
   right:auto;
   left:50%;
@@ -347,8 +358,8 @@ body.light .tabs{
   margin-top:12px;
   padding-top:10px;
   border-top:1px solid rgba(38,53,95,.55);
-  font-size:10px;font-weight:800;letter-spacing:.03em;
-  color:#56627a;
+  font-size:11px;font-weight:800;letter-spacing:.04em;
+  color:#8fa3c4;
 }
 .age-modal-icon{font-size:2rem;margin-bottom:10px}
 .age-modal-title{font-size:1.15rem;font-weight:900;color:#eef3ff;margin-bottom:10px}
@@ -444,9 +455,9 @@ body.light .hr-env-pill.hr-env-unfavorable{background:rgba(239,68,68,.1);color:#
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes bar{0%{transform:translateX(-120%)}50%{transform:translateX(140%)}100%{transform:translateX(260%)} }
 @keyframes livePulse{0%{box-shadow:0 0 0 0 rgba(38,217,255,.65)}70%{box-shadow:0 0 0 7px rgba(38,217,255,0)}100%{box-shadow:0 0 0 0 rgba(38,217,255,0)}}
-@keyframes liveBoardFlash{0%,100%{box-shadow:0 0 0 1px rgba(37,201,255,.3),0 0 12px rgba(38,217,255,.15),inset 0 0 0 rgba(38,217,255,0)}50%{box-shadow:0 0 0 1px rgba(37,201,255,.55),0 0 26px rgba(38,217,255,.35),inset 0 0 0 1px rgba(38,217,255,.32)}}
-@keyframes liveBoardBorderPulse{0%,100%{opacity:.45}50%{opacity:1}}
-@keyframes liveBoardPillFlash{0%,100%{box-shadow:0 0 0 0 rgba(38,217,255,0);filter:brightness(1)}50%{box-shadow:0 0 16px rgba(38,217,255,.45);filter:brightness(1.25)}}
+@keyframes liveBoardFlash{0%,100%{box-shadow:0 0 0 1px rgba(37,201,255,.42),0 0 16px rgba(38,217,255,.22),inset 0 0 0 rgba(38,217,255,0)}50%{box-shadow:0 0 0 1px rgba(37,201,255,.72),0 0 36px rgba(38,217,255,.48),inset 0 0 0 1px rgba(38,217,255,.4)}}
+@keyframes liveBoardBorderPulse{0%,100%{opacity:.62}50%{opacity:1}}
+@keyframes liveBoardPillFlash{0%,100%{box-shadow:0 0 0 0 rgba(38,217,255,0);filter:brightness(1)}50%{box-shadow:0 0 0 1px rgba(38,217,255,.35),0 0 20px rgba(38,217,255,.55);filter:brightness(1.22)}}
 @keyframes randomDotOrbit{to{offset-distance:100%}}
 .locked{opacity:.45;filter:grayscale(.15);background:rgba(255,255,255,.08)!important;color:var(--text)!important}
 .locked[disabled]{pointer-events:none}
@@ -580,7 +591,7 @@ body.light .slip-btn.slip-btn-dev-active{
 #freeBadge{display:none;padding:4px 10px;border-radius:999px;background:linear-gradient(90deg,rgba(110,231,255,.15),rgba(139,92,246,.15));border:1px solid rgba(110,231,255,.25);font-size:11px;font-weight:800;color:#6ee7ff;margin-left:8px;vertical-align:middle}
 
 /* ── FULL-SCREEN PICK OVERLAY ── */
-/* Above .app-version (8999) + feedback tab/panel (9000–9001); below toasts (9500) + modals (9999+). */
+/* Above feedback tab/panel; below .app-version (10120) + modals (10000+). */
 #pickOverlay{
   position:fixed;inset:0;z-index:9200;
   isolation:isolate;
@@ -635,10 +646,10 @@ body.light .po-paywall-panel{
   margin-top:auto;
   padding:10px 16px calc(12px + env(safe-area-inset-bottom,0px));
   text-align:right;
-  font-size:10px;font-weight:800;letter-spacing:.03em;
-  color:var(--muted);
+  font-size:11px;font-weight:800;letter-spacing:.04em;
+  color:#9fb5d8;
   border-top:1px solid var(--line);
-  background:linear-gradient(180deg,rgba(7,17,31,.88),#07111f);
+  background:linear-gradient(180deg,rgba(7,17,31,.92),#07111f);
 }
 .po-cards{display:flex;flex-direction:column;gap:10px;margin-top:4px;}
 .po-skeleton{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:16px;padding:14px 16px;}
