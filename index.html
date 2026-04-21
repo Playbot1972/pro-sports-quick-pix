@@ -432,6 +432,7 @@ body.light .paywall-overlay-note{color:#5a6f93}
 .rowtop-left{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
 .rowtop-name{min-width:0;font-weight:700}
 .mlb-headshot,.nba-headshot,.nhl-headshot,.nfl-headshot,.soccer-headshot{width:38px;height:38px;border-radius:10px;object-fit:cover;flex-shrink:0;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.22)}
+.soccer-headshot.headshot-fallback-initials{object-fit:contain;background:#1e293b}
 .chev{font-size:14px;color:var(--muted)}
 .muted{font-size:13px;color:var(--muted)}
 .team-pill{display:inline-flex;align-items:center;justify-content:center;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:900;margin-left:8px;line-height:1;color:#fff;vertical-align:middle;white-space:nowrap}
@@ -3216,6 +3217,80 @@ function mlbHeadshotUrl(playerId){
   if(!id || id !== id) return '';
   return 'https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_76,h_76,q_auto:best/v1/people/'+id+'/headshot/67/current';
 }
+/** Soccer-only: escape double-quoted HTML attributes (URLs, base64). */
+function _soccerHsAttr(s){
+  return String(s==null?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+}
+function _soccerHeadshotInitialsFromName(displayName){
+  const parts=String(displayName||'?').trim().split(/\s+/).filter(Boolean);
+  const a=(parts[0]&&parts[0][0])||'?';
+  const b=(parts.length>1&&parts[parts.length-1][0])||'';
+  function L(ch){
+    ch=String(ch||'').toUpperCase();
+    return /^[A-Z0-9]$/.test(ch)?ch:'';
+  }
+  const s=(L(a)+L(b)).slice(0,2);
+  return s.length?s:'?';
+}
+function _soccerHeadshotInitialsDataUrl(displayName){
+  const letters=_soccerHeadshotInitialsFromName(displayName);
+  const svg='<svg xmlns="http://www.w3.org/2000/svg" width="76" height="76" viewBox="0 0 76 76"><rect fill="#2a3444" width="76" height="76" rx="18"/><text x="38" y="44" text-anchor="middle" fill="#9fb0d0" font-size="26" font-family="system-ui,-apple-system,sans-serif" font-weight="800">'+letters+'</text></svg>';
+  return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+}
+function _soccerHeadshotUseInitials(img){
+  if(!img||img.nodeName!=='IMG')return;
+  img.onerror=null;
+  const name=img.getAttribute('data-player-name')||'?';
+  img.src=_soccerHeadshotInitialsDataUrl(name);
+  img.classList.add('headshot-fallback-initials');
+}
+/** Soccer: try each candidate URL (API headshot, /full/.png, combiner, .webp); then initials. */
+function _soccerHeadshotCycle(img){
+  if(!img||img.nodeName!=='IMG')return;
+  const b64=img.getAttribute('data-soccer-hs-b64');
+  let parts=[];
+  try{ parts=JSON.parse(atob(b64)); }catch(_){}
+  if(!Array.isArray(parts)) parts=[];
+  const idx=parseInt(img.getAttribute('data-soccer-hs-idx')||'0',10);
+  const next=idx+1;
+  if(next<parts.length){
+    img.setAttribute('data-soccer-hs-idx',String(next));
+    img.src=parts[next];
+    return;
+  }
+  _soccerHeadshotUseInitials(img);
+}
+function _soccerHeadshotCandidateList(p){
+  const out=[];
+  const seen={};
+  function add(u){
+    if(!u||typeof u!=='string')return;
+    u=String(u).replace(/^http:\/\//i,'https://');
+    if(seen[u])return;
+    seen[u]=1;
+    out.push(u);
+  }
+  if(p&&p.headshotUrl) add(String(p.headshotUrl));
+  const raw=p&&p.espnId!=null?String(p.espnId):'';
+  const id=raw.replace(/[^0-9]/g,'');
+  if(id){
+    const rel='/i/headshots/soccer/players/full/'+id+'.png';
+    add('https://a.espncdn.com'+rel);
+    add('https://a.espncdn.com/combiner/i?img='+rel+'&w=350&h=254&scale=crop');
+    add('https://a.espncdn.com/i/headshots/soccer/players/full/'+id+'.webp');
+  }
+  return out;
+}
+function soccerHeadshotImgHtml(p){
+  const name=(p&&p.player)||'?';
+  const list=_soccerHeadshotCandidateList(p);
+  if(!list.length){
+    return '<img class="soccer-headshot headshot-fallback-initials" src="'+_soccerHsAttr(_soccerHeadshotInitialsDataUrl(name))+'" alt="" width="38" height="38" decoding="async" data-player-name="'+_soccerHsAttr(name)+'">';
+  }
+  let b64='';
+  try{ b64=btoa(JSON.stringify(list)); }catch(_){ return '<img class="soccer-headshot headshot-fallback-initials" src="'+_soccerHsAttr(_soccerHeadshotInitialsDataUrl(name))+'" alt="" width="38" height="38" decoding="async" data-player-name="'+_soccerHsAttr(name)+'">'; }
+  return '<img class="soccer-headshot" src="'+_soccerHsAttr(list[0])+'" alt="" width="38" height="38" loading="lazy" decoding="async" data-soccer-hs-b64="'+_soccerHsAttr(b64)+'" data-soccer-hs-idx="0" data-player-name="'+_soccerHsAttr(name)+'" onerror="_soccerHeadshotCycle(this)">';
+}
 /** Left column for pick rows: optional headshot + name + team pill + chevron. */
 function mlbRowTopPlayerHtml(p, chevHtml){
   const chev = chevHtml != null ? chevHtml : "<span class=\"chev\">▾</span>";
@@ -3277,21 +3352,10 @@ function nflRowTopPlayerHtml(p, chevHtml){
     : '';
   return '<span class="rowtop-left">'+img+'<span class="rowtop-name">'+p.player+' '+teamPill(team)+' '+chev+'</span></span>';
 }
-function soccerHeadshotUrl(p){
-  const direct = p && p.headshotUrl ? String(p.headshotUrl) : '';
-  if(direct) return direct.replace(/^http:\/\//,'https://');
-  const rawId = p && p.espnId != null ? String(p.espnId) : '';
-  const id = rawId.replace(/[^0-9]/g,'');
-  if(!id) return '';
-  return 'https://a.espncdn.com/i/headshots/soccer/players/full/'+id+'.png';
-}
 function soccerRowTopPlayerHtml(p, chevHtml){
   const chev = chevHtml != null ? chevHtml : "<span class=\"chev\">▾</span>";
   const team = p.teamAbbr || '';
-  const url = soccerHeadshotUrl(p);
-  const img = url
-    ? '<img class="soccer-headshot" src="'+url+'" alt="" width="38" height="38" loading="lazy" decoding="async" onerror="this.onerror=null;this.src=\'https://a.espncdn.com/i/headshots/soccer/players/full/0.png\'">'
-    : '';
+  const img = soccerHeadshotImgHtml(p);
   return '<span class="rowtop-left">'+img+'<span class="rowtop-name">'+p.player+' '+teamPill(team)+' '+chev+'</span></span>';
 }
 function isPitcher(pos){return String(pos||'').toUpperCase()==='P';}
