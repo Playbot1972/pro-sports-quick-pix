@@ -10,6 +10,7 @@
 <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
 <link rel="dns-prefetch" href="https://assets.mixkit.co">
 <link rel="dns-prefetch" href="https://site.api.espn.com">
+<link rel="dns-prefetch" href="https://api.open-meteo.com">
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://assets.mixkit.co" crossorigin>
@@ -18,7 +19,7 @@
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
 <script>
   // Bump APP_VERSION whenever behavior or user-visible copy changes; keep in sync with #appVersion markup below.
-  const APP_VERSION = 'v1.23.1';
+  const APP_VERSION = 'v1.23.4';
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
@@ -349,6 +350,14 @@ body.light .paywall-overlay-note{color:#5a6f93}
 .chev{font-size:14px;color:var(--muted)}
 .muted{font-size:13px;color:var(--muted)}
 .team-pill{display:inline-flex;align-items:center;justify-content:center;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:900;margin-left:8px;line-height:1;color:#fff;vertical-align:middle;white-space:nowrap}
+.rowtop-meta{display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
+.hr-env-pill{font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:3px 7px;border-radius:999px;border:1px solid rgba(255,255,255,.16);white-space:nowrap;line-height:1.2}
+.hr-env-pill.hr-env-favorable{background:rgba(52,211,153,.14);color:#6ee7b4;border-color:rgba(52,211,153,.38)}
+.hr-env-pill.hr-env-neutral{background:rgba(148,163,184,.12);color:#cbd5e1;border-color:rgba(148,163,184,.3)}
+.hr-env-pill.hr-env-unfavorable{background:rgba(248,113,113,.12);color:#fca5a5;border-color:rgba(248,113,113,.38)}
+body.light .hr-env-pill.hr-env-favorable{background:rgba(16,185,129,.12);color:#047857;border-color:rgba(16,185,129,.35)}
+body.light .hr-env-pill.hr-env-neutral{background:rgba(100,116,139,.1);color:#475569;border-color:rgba(100,116,139,.28)}
+body.light .hr-env-pill.hr-env-unfavorable{background:rgba(239,68,68,.1);color:#b91c1c;border-color:rgba(239,68,68,.32)}
 
 .loader{display:none;align-items:center;gap:12px;margin-top:10px;color:var(--muted);padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08)}
 .spinner{width:20px;height:20px;border:3px solid rgba(255,255,255,.22);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;box-shadow:0 0 0 2px rgba(110,231,255,.08) inset}
@@ -2936,6 +2945,251 @@ function syncPicksBoardWrapOrbit(){
 function gameStartText(g){const d = g?.gameDate ? new Date(g.gameDate) : null; return d ? d.toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}) : ''; }
 function gameVenueText(g){return g?.venue?.name || ''; }
 function gameKey(g){return String(g?.gamePk || g?.gamePk || '');}
+/**
+ * HR environment (entertainment / educational): weighted carry index + 3-tier rating.
+ *   Each factor is a multiplier near 1.0 (park, temp, humidor-scaled RH, wind, pressure, thin-air bump).
+ *   Combined index (weights sum to 1.0 on deltas from neutral):
+ *     M_total = clamp( 1
+ *       + wPark·(M_park−1) + wWind·(M_wind−1) + wTemp·(M_temp−1)
+ *       + wPress·(M_press−1) + wElev·(M_elevThin−1) + wHum·(M_humidor−1) )
+ *   Defaults: wPark 0.42, wWind 0.22, wTemp 0.13, wPress 0.10, wElev 0.08, wHum 0.05
+ *   (park + wind dominate; humidor already shrinks RH so its weight stays small.)
+ *   Weather missing: M_total = M_park only. Rating: Favorable / Neutral / Unfavorable from M_total.
+ */
+const _HR_ENV_W={park:0.42,wind:0.22,temp:0.13,press:0.1,elev:0.08,hum:0.05};
+function _weightedHrCarryTotal(park,mTemp,mHumidor,mWind,mPress,mElevThin){
+  const w=_HR_ENV_W;
+  const t=1
+    +w.park*(park-1)
+    +w.wind*(mWind-1)
+    +w.temp*(mTemp-1)
+    +w.press*(mPress-1)
+    +w.elev*(mElevThin-1)
+    +w.hum*(mHumidor-1);
+  return Math.min(1.32,Math.max(0.72,t));
+}
+function _hrEnvWeightsSummaryHtml(){
+  const w=_HR_ENV_W;
+  return'<div class="muted" style="font-size:10px;opacity:.82;margin-top:4px">Weights (Δ from 1.0): park '+Math.round(w.park*100)+'%, wind '+Math.round(w.wind*100)+'%, temp '+Math.round(w.temp*100)+'%, pressure '+Math.round(w.press*100)+'%, altitude '+Math.round(w.elev*100)+'%, humidity (humidor) '+Math.round(w.hum*100)+'%</div>';
+}
+const MLB_STADIUM_HR_ENV_BY_HOME_ABBR=(function(){
+  function T(lat,lon,parkHr,cfDeg,outdoor){
+    return{lat,lon,parkHr,cfDeg,outdoor:outdoor==null?1:outdoor};
+  }
+  const m={
+    ARI:T(33.4453,-112.0471,1.03,88,0.75),ATL:T(33.7554,-84.401,1.03,95,1),BAL:T(39.2839,-76.6217,1.15,85,1),
+    BOS:T(42.3467,-71.0974,1.05,45,1),CHC:T(41.9484,-87.6553,0.98,95,1),CWS:T(41.8299,-87.6338,1.09,92,1),
+    CIN:T(39.0974,-84.5066,1.15,88,1),CLE:T(41.4962,-81.6852,0.97,90,1),COL:T(39.7559,-104.9942,1.2,88,1),
+    DET:T(42.339,-83.0485,0.94,90,1),HOU:T(29.7573,-95.3554,1.01,92,0.65),KC:T(39.0517,-94.4803,0.97,88,1),
+    LAA:T(33.8003,-117.8827,1.02,88,1),LAD:T(34.0739,-118.24,1.07,90,1),MIA:T(25.7781,-80.2197,0.88,88,0.55),
+    MIL:T(43.028,-87.9712,1.06,92,0.6),MIN:T(44.9817,-93.2778,0.89,88,1),NYM:T(40.7571,-73.8458,0.97,90,0.65),
+    NYY:T(40.8296,-73.9262,1.09,72,1),PHI:T(39.9059,-75.1666,1.1,88,1),PIT:T(40.4469,-80.0058,0.9,88,1),
+    SDP:T(32.7073,-117.157,0.95,90,1),SEA:T(47.5914,-122.3325,0.91,88,0.6),SFG:T(37.7786,-122.3893,0.84,85,1),
+    STL:T(38.6226,-90.1928,0.91,88,1),TBR:T(27.7682,-82.6534,0.9,90,0.12),TEX:T(32.7512,-97.0828,1.0,88,0.65),
+    TOR:T(43.6414,-79.3894,1.08,90,0.55),WSN:T(38.873,-77.0075,0.99,88,1),
+    ATH:T(36.1028,-115.1782,1.07,88,1),OAK:T(36.1028,-115.1782,1.07,88,1),LV:T(36.1028,-115.1782,1.07,88,1)
+  };
+  m.AZ=m.ARI;m.SD=m.SDP;m.SF=m.SFG;m.TB=m.TBR;m.WAS=m.WSN;m.WSH=m.WSN;
+  return m;
+})();
+function _mlbStadiumEnvForHomeAbbr(abbr){
+  const a=String(abbr||'').toUpperCase();
+  return MLB_STADIUM_HR_ENV_BY_HOME_ABBR[a]||null;
+}
+function _openMeteoHourIndexForGame(isoDateStr,hourlyTimes){
+  if(!isoDateStr||!Array.isArray(hourlyTimes)||!hourlyTimes.length) return 0;
+  const t=new Date(isoDateStr).getTime();
+  if(Number.isNaN(t)) return 0;
+  let best=0,bd=Infinity;
+  for(let i=0;i<hourlyTimes.length;i++){
+    const tt=new Date(hourlyTimes[i]).getTime();
+    if(Number.isNaN(tt)) continue;
+    const d=Math.abs(tt-t);
+    if(d<bd){bd=d;best=i;}
+  }
+  return best;
+}
+async function _fetchOpenMeteoHrSnapshot(lat,lon,gameIso){
+  const u='https://api.open-meteo.com/v1/forecast?latitude='+encodeURIComponent(lat)+'&longitude='+encodeURIComponent(lon)
+    +'&hourly=temperature_2m,relative_humidity_2m,windspeed_10m,winddirection_10m,surface_pressure'
+    +'&temperature_unit=fahrenheit&windspeed_unit=mph&forecast_days=3';
+  const j=await fetchJson(u);
+  const h=j.hourly||{};
+  const times=h.time||[];
+  const idx=_openMeteoHourIndexForGame(gameIso,times);
+  const elev=typeof j.elevation==='number'&&!Number.isNaN(j.elevation)?j.elevation:null;
+  return{
+    tempF:parseFloat(h.temperature_2m&&h.temperature_2m[idx]),
+    rh:parseFloat(h.relative_humidity_2m&&h.relative_humidity_2m[idx]),
+    windMph:parseFloat(h.windspeed_10m&&h.windspeed_10m[idx]),
+    windFromDeg:parseFloat(h.winddirection_10m&&h.winddirection_10m[idx]),
+    pressureHpa:parseFloat(h.surface_pressure&&h.surface_pressure[idx]),
+    elevationM:elev,
+    hourLabel:times[idx]||''
+  };
+}
+function _deriveHrEnvRating(total, hasFullWeather){
+  const hi=hasFullWeather?1.014:1.038;
+  const lo=hasFullWeather?0.986:0.962;
+  if(total>=hi) return'favorable';
+  if(total<=lo) return'unfavorable';
+  return'neutral';
+}
+function _hrEnvRatingTitle(r){
+  if(r==='favorable') return'Conditions lean toward fly-ball carry vs league-average (edu).';
+  if(r==='unfavorable') return'Conditions lean against carry vs league-average (edu).';
+  return'Near league-average carry for this snapshot (edu).';
+}
+function mlbHrEnvRatingPillHtml(p){
+  const r=p.hrEnvRating||'neutral';
+  const cls=r==='favorable'?'hr-env-favorable':r==='unfavorable'?'hr-env-unfavorable':'hr-env-neutral';
+  const lab=r==='favorable'?'Favorable':r==='unfavorable'?'Unfavorable':'Neutral';
+  const esc=String(p.hrEnvRatingTitle||_hrEnvRatingTitle(r)).replace(/"/g,'&quot;');
+  return`<span class="hr-env-pill ${cls}" title="${esc}">${lab}</span>`;
+}
+function _computeHrCarryMultipliers(st, wx){
+  const park=st.parkHr;
+  const outScale=st.outdoor!=null?st.outdoor:1;
+  if(!wx||wx.tempF==null||Number.isNaN(wx.tempF)){
+    const r=_deriveHrEnvRating(park,false);
+    return{
+      hrCarryMult:park,
+      hrCarryPark:park,
+      hrCarryTemp:1,
+      hrCarryHum:1,
+      hrCarryHumidor:1,
+      hrCarryWind:1,
+      hrCarryPress:1,
+      hrCarryElev:1,
+      hrCarryPct:Math.round((park-1)*100),
+      hrCarrySummary:'Park-only carry ×'+park.toFixed(2)+' (weather n/a)',
+      hrCarryWxLine:'',
+      hrEnvRating:r,
+      hrEnvRatingTitle:_hrEnvRatingTitle(r),
+      hrEnvBulletsHtml:'<div class="muted" style="font-size:11px;margin-top:4px">• <strong>No live weather</strong> — carry equals venue index ×'+park.toFixed(2)+' only.</div><div class="muted" style="font-size:10px;opacity:.82;margin-top:4px">When weather loads, factors blend by:</div>'+_hrEnvWeightsSummaryHtml()
+    };
+  }
+  const T=wx.tempF;
+  const RH=Number.isFinite(wx.rh)?wx.rh:50;
+  const W=Number.isFinite(wx.windMph)?Math.max(0,wx.windMph):0;
+  const P=wx.pressureHpa;
+  const elevM=wx.elevationM;
+  const mTemp=1+Math.min(0.08,Math.max(-0.05,outScale*((T-70)*0.0022)));
+  const mHumRaw=1+Math.min(0.03,Math.max(-0.03,outScale*((50-RH)*0.00035)));
+  const humidorScale=0.22;
+  const mHumidor=1+(mHumRaw-1)*humidorScale;
+  let mWind=1;
+  if(wx.windFromDeg!=null&&Number.isFinite(wx.windFromDeg)&&Number.isFinite(W)){
+    const toward=(wx.windFromDeg+180)%360;
+    const align=Math.cos(((toward-st.cfDeg)*Math.PI)/180);
+    const delta=outScale*align*Math.min(W,35)*0.0045;
+    mWind=1+Math.min(0.14,Math.max(-0.12,delta));
+  }
+  let mPress=1;
+  if(P!=null&&Number.isFinite(P)&&P>960){
+    const d=1013.25-P;
+    mPress=1+Math.min(0.055,Math.max(-0.042,outScale*d*0.0001));
+  }
+  let mElevThin=1;
+  if(elevM!=null&&Number.isFinite(elevM)&&park<1.12&&elevM>900){
+    mElevThin=1+Math.min(0.022,Math.max(0,outScale*(elevM-900)/42000));
+  }
+  const total=_weightedHrCarryTotal(park,mTemp,mHumidor,mWind,mPress,mElevThin);
+  const r=_deriveHrEnvRating(total,true);
+  const w=_HR_ENV_W;
+  const parts='Factors ×'+park.toFixed(2)+' / '+mTemp.toFixed(2)+' / '+mHumidor.toFixed(2)+' / '+mWind.toFixed(2)+' / '+mPress.toFixed(2)+(mElevThin>1.001?' / '+mElevThin.toFixed(2):'')
+    +' → weighted ×'+total.toFixed(3)+' (park '+Math.round(w.park*100)+'%, wind '+Math.round(w.wind*100)+'%, …)';
+  const wxBits=[];
+  if(Number.isFinite(T)) wxBits.push(Math.round(T)+'°F');
+  if(Number.isFinite(RH)) wxBits.push(Math.round(RH)+'% RH');
+  if(Number.isFinite(W)) wxBits.push(Math.round(W)+' mph from '+Math.round(wx.windFromDeg)+'°');
+  if(Number.isFinite(P)) wxBits.push(Math.round(P)+' hPa');
+  if(elevM!=null&&Number.isFinite(elevM)) wxBits.push('~'+Math.round(elevM*3.28084)+' ft elev');
+  let bullets='<div class="muted" style="font-size:11px;margin-top:4px">• <strong>Weighted carry</strong> — 1 + Σ weight×(factor−1); park &amp; wind weigh most.</div>';
+  bullets+=_hrEnvWeightsSummaryHtml();
+  bullets+='<div class="muted" style="font-size:11px;margin-top:4px">• <strong>Park &amp; design</strong> — fences, walls, dimensions, marine layer, altitude history → ×'+park.toFixed(2)+'</div>';
+  bullets+='<div class="muted" style="font-size:11px;margin-top:2px">• <strong>Temp</strong> — warmer air → less drag (×'+mTemp.toFixed(2)+')</div>';
+  bullets+='<div class="muted" style="font-size:11px;margin-top:2px">• <strong>Wind</strong> — toward CF helps / in hurts (×'+mWind.toFixed(2)+')</div>';
+  bullets+='<div class="muted" style="font-size:11px;margin-top:2px">• <strong>Pressure</strong> — lower hPa → slightly thinner air (×'+mPress.toFixed(2)+')</div>';
+  bullets+='<div class="muted" style="font-size:11px;margin-top:2px">• <strong>Humidity + humidor</strong> — raw RH micro-term ×'+humidorScale+' before '+Math.round(w.hum*100)+'% weight</div>';
+  if(mElevThin>1.001){
+    bullets+='<div class="muted" style="font-size:11px;margin-top:2px">• <strong>Altitude</strong> — small extra thin-air bump (×'+mElevThin.toFixed(2)+'); mile-high parks already in park index</div>';
+  }else if(elevM!=null&&elevM>400){
+    bullets+='<div class="muted" style="font-size:11px;margin-top:2px">• <strong>Altitude</strong> — ~'+Math.round(elevM*3.28084)+' ft; carry mostly in park index here</div>';
+  }
+  return{
+    hrCarryMult:total,
+    hrCarryPark:park,
+    hrCarryTemp:mTemp,
+    hrCarryHum:mHumRaw,
+    hrCarryHumidor:mHumidor,
+    hrCarryWind:mWind,
+    hrCarryPress:mPress,
+    hrCarryElev:mElevThin,
+    hrCarryPct:Math.round((total-1)*100),
+    hrCarrySummary:parts+' → ×'+total.toFixed(2),
+    hrCarryWxLine:wxBits.length?wxBits.join(' · '):'',
+    hrEnvRating:r,
+    hrEnvRatingTitle:_hrEnvRatingTitle(r),
+    hrEnvBulletsHtml:bullets
+  };
+}
+function mlbHrCarryDetailsHtml(p){
+  const r=p.hrEnvRating||'neutral';
+  const hCol=r==='favorable'?'#6ee7b4':r==='unfavorable'?'#fca5a5':'#cbd5e1';
+  const lab=r==='favorable'?'Favorable':r==='unfavorable'?'Unfavorable':'Neutral';
+  const pct=p.hrCarryPct!=null?p.hrCarryPct:0;
+  const sign=pct>0?'+':'';
+  const col=pct>3?'#34d399':pct<-3?'#f87171':'#94a3b8';
+  const sum=p.hrCarrySummary||'Carry context n/a';
+  const wx=p.hrCarryWxLine?`<div class='muted' style='font-size:11px;margin-top:2px'>${p.hrCarryWxLine}</div>`:'';
+  const bullets=p.hrEnvBulletsHtml||'';
+  return `<div class='muted' style='margin-top:6px'>Environment: <span style='font-weight:800;color:${hCol}'>${lab}</span> <span style='opacity:.75;font-size:11px'>(3-point)</span></div>${bullets}<div class='muted' style='margin-top:8px'><span style='font-weight:600;color:${col}'>Weighted carry index ${sign}${pct}%</span> vs neutral 1.00</div><div class='muted' style='font-size:11px;opacity:.9;margin-top:2px'>${sum}</div>${wx}<div class='muted' style='font-size:10px;opacity:.75;margin-top:6px'>Educational snapshot only — not a prediction or betting edge.</div>`;
+}
+async function enrichMlbHrCarryForPool(list){
+  const arr=Array.isArray(list)?list:[];
+  const byGame=new Map();
+  for(const p of arr){
+    const gk=String(p.gamePk||p.game&&p.game.gamePk||'');
+    if(!gk) continue;
+    if(!byGame.has(gk)) byGame.set(gk,{game:p.game,gameIso:p.game&&p.game.gameDate});
+  }
+  const jobs=[];
+  for(const [gk,v] of byGame){
+    jobs.push((async function(){
+      const g=v.game||{};
+      const homeAbbr=g.homeAbbr||'';
+      const st=_mlbStadiumEnvForHomeAbbr(homeAbbr);
+      const defaults={
+        hrCarryMult:1,
+        hrCarryPark:1,
+        hrCarryTemp:1,
+        hrCarryHum:1,
+        hrCarryHumidor:1,
+        hrCarryWind:1,
+        hrCarryPress:1,
+        hrCarryElev:1,
+        hrCarryPct:0,
+        hrCarrySummary:'Carry context n/a (unknown park)',
+        hrCarryWxLine:'',
+        hrEnvRating:'neutral',
+        hrEnvRatingTitle:_hrEnvRatingTitle('neutral'),
+        hrEnvBulletsHtml:'<div class="muted" style="font-size:11px;margin-top:4px">• Unknown ballpark — fences, altitude, and weather not matched to our venue table.</div>'
+      };
+      let extra=defaults;
+      if(st){
+        let wx=null;
+        try{ wx=await _fetchOpenMeteoHrSnapshot(st.lat,st.lon,g.gameDate||v.gameIso); }catch(_){ wx=null; }
+        extra=_computeHrCarryMultipliers(st,wx);
+      }
+      for(const q of arr){
+        if(String(q.gamePk||q.game&&q.game.gamePk||'')!==gk) continue;
+        Object.assign(q,extra);
+      }
+    })());
+  }
+  await Promise.all(jobs);
+}
 async function fetchJson(url){
   let lastErr;
   for(let i=0;i<2;i++){
@@ -3193,7 +3447,14 @@ async function getTodaysMlbHitters(){
   const gameMap={};
   for(const g of games){
     const gamePk=g.gamePk;
-    gameMap[String(gamePk)]={gamePk, gameDate:g.gameDate, status:g.status, venue:g.venue};
+    gameMap[String(gamePk)]={
+      gamePk,
+      gameDate:g.gameDate,
+      status:g.status,
+      venue:g.venue,
+      homeAbbr:g?.teams?.home?.team?.abbreviation||'',
+      awayAbbr:g?.teams?.away?.team?.abbreviation||''
+    };
     const boxUrl=`https://statsapi.mlb.com/api/v1/game/${gamePk}/boxscore`;
     try{
       const box=await fetchJson(boxUrl);
@@ -3375,7 +3636,7 @@ function renderMLB(){
   if(mlbLoading){
     document.getElementById('picks').innerHTML='<div class="muted">Loading MLB picks...</div>';
   } else if(mlbPicks.length>0){
-    document.getElementById('picks').innerHTML=mlbPicks.map((p,i)=>`<div class='item expandable' onclick="const d=this.querySelector('.details'); d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'>${mlbRowTopPlayerHtml(p)}<span class='muted'><span style='font-weight:700;color:#6ee7ff'>${(p.hr==null||p.hr==='–')?0:p.hr}</span> <span style='opacity:.6;font-size:11px'>HR</span></span></div><div class='details'>${p.pos?`<div class='muted'>Position: ${p.pos}</div>`:''}<div class='muted'>Season AVG: ${p.avg}</div><div class='muted'>Game status: ${gameStatusText(p.game)}</div><div class='muted'>Start time: ${gameStartText(p.game)}</div><div class='muted'>Venue: ${gameVenueText(p.game)}</div></div></div>`).join('');
+    document.getElementById('picks').innerHTML=mlbPicks.map((p,i)=>`<div class='item expandable' onclick="const d=this.querySelector('.details'); d.style.display=d.style.display==='block'?'none':'block'"><div class='rowtop'>${mlbRowTopPlayerHtml(p)}<div class='rowtop-meta'>${mlbHrEnvRatingPillHtml(p)}<span class='muted'><span style='font-weight:700;color:#6ee7ff'>${(p.hr==null||p.hr==='–')?0:p.hr}</span> <span style='opacity:.6;font-size:11px'>HR</span></span></div></div><div class='details'>${p.pos?`<div class='muted'>Position: ${p.pos}</div>`:''}<div class='muted'>Season AVG: ${p.avg}</div>${mlbHrCarryDetailsHtml(p)}<div class='muted'>Game status: ${gameStatusText(p.game)}</div><div class='muted'>Start time: ${gameStartText(p.game)}</div><div class='muted'>Venue: ${gameVenueText(p.game)}</div></div></div>`).join('');
   } else if(mlbLoaded&&mlbPicks.length===0){
     document.getElementById('picks').innerHTML='<div class="muted">No available picks.</div>';
   } else if(!mlbLoaded&&!mlbLoading&&mlbPicks.length===0){
@@ -3414,6 +3675,7 @@ async function startMLBLoad(){
     const pool=await getTodaysMlbHitters();
     if(token!==mlbToken) return;
     const poolDiv=_withOppTeamFromPool(pool);
+    try{ await enrichMlbHrCarryForPool(poolDiv); }catch(_){}
     mlbLivePool=poolDiv;
     mlbLoading=false;mlbLoaded=true;
     if(!pickCount || pickCount<1 || pickCount>3){
@@ -4360,11 +4622,12 @@ function poRevealCard(p, idx){
   card.innerHTML = `
     <div class="rowtop" onclick="const d=this.nextElementSibling;d.style.display=d.style.display==='block'?'none':'block'">
       ${mlbRowTopPlayerHtml(p,'<span class="chev">▾</span>')}
-      <span class="muted"><span style="font-weight:700;color:#6ee7ff">${(p.hr==null||p.hr==='–')?0:p.hr}</span> <span style="opacity:.6;font-size:11px">HR</span></span>
+      <div class="rowtop-meta">${mlbHrEnvRatingPillHtml(p)}<span class="muted"><span style="font-weight:700;color:#6ee7ff">${(p.hr==null||p.hr==='–')?0:p.hr}</span> <span style="opacity:.6;font-size:11px">HR</span></span></div>
     </div>
     <div class="details">
       <div class="muted">Position: ${p.pos||'—'}</div>
       <div class="muted">Season AVG: ${p.avg}</div>
+      ${mlbHrCarryDetailsHtml(p)}
       <div class="muted">Game status: ${gameStatusText(p.game)}</div>
       <div class="muted">Start time: ${gameStartText(p.game)}</div>
       <div class="muted">Venue: ${gameVenueText(p.game)}</div>
@@ -4796,7 +5059,7 @@ scheduleSyncAppVersionBadge();
 _syncDevClearBtnStyle();
 syncPicksBoardWrapOrbit();
 </script>
-<div class="app-version" id="appVersion">v1.23.1</div>
+<div class="app-version" id="appVersion">v1.23.4</div>
 <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 <div class="toast-stack center" id="toastStackCenter" aria-live="polite" aria-atomic="true"></div>
 </body>
