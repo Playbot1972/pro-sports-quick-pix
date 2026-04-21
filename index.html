@@ -18,16 +18,17 @@
 <!-- Google Analytics 4 — replace G-XXXXXXXXXX with your real Measurement ID -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
 <script>
-  // Auto version derived from file modified time (updates on each save/edit).
-  const APP_VERSION = (function(){
+  // Keep the public app version semantic; build tag is auto-generated.
+  const APP_VERSION = 'v1.23.8';
+  const APP_BUILD_TAG = (function(){
     const d = new Date(document.lastModified || Date.now());
-    if(Number.isNaN(d.getTime())) return 'v0.0.0-auto';
+    if(Number.isNaN(d.getTime())) return 'build-auto';
     const y = d.getFullYear();
     const m = String(d.getMonth()+1).padStart(2,'0');
     const day = String(d.getDate()).padStart(2,'0');
     const hh = String(d.getHours()).padStart(2,'0');
     const mm = String(d.getMinutes()).padStart(2,'0');
-    return `v${y}.${m}.${day}-${hh}${mm}`;
+    return `${y}${m}${day}-${hh}${mm}`;
   })();
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
@@ -228,7 +229,11 @@ body.light .tabs{
   font-weight:800;
   letter-spacing:.03em;
   user-select:none;
+  opacity:1;
+  transform:translateY(0);
+  transition:opacity .25s ease,transform .25s ease,visibility .25s ease;
 }
+.app-version.is-hidden{opacity:0;transform:translateY(4px);visibility:hidden;pointer-events:none}
 .toast-stack{position:fixed;right:12px;bottom:38px;z-index:9500;display:grid;gap:8px;pointer-events:none}
 .toast-stack.center{
   right:auto;
@@ -4149,12 +4154,23 @@ function initLegalModalStyling(){
 function syncAppVersionBadge(){
   const el = document.getElementById('appVersion');
   if(!el) return;
+  el.classList.remove('is-hidden');
   el.textContent = APP_VERSION;
-  el.setAttribute('title', 'Release '+APP_VERSION);
+  el.setAttribute('title', 'Release '+APP_VERSION+' • '+APP_BUILD_TAG);
 }
 /** #appVersion may appear after this script; run sync once the node exists. */
 function scheduleSyncAppVersionBadge(){
-  const run=function(){ syncAppVersionBadge(); };
+  let hideTimer = null;
+  const hideBadge = function(){
+    const el = document.getElementById('appVersion');
+    if(!el) return;
+    el.classList.add('is-hidden');
+  };
+  const run=function(){
+    if(hideTimer) clearTimeout(hideTimer);
+    syncAppVersionBadge();
+    hideTimer = setTimeout(hideBadge, 2600);
+  };
   if(document.getElementById('appVersion')){ run(); return; }
   if(document.readyState==='loading'){
     document.addEventListener('DOMContentLoaded', run, {once:true});
