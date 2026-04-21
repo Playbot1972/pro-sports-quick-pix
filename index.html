@@ -701,6 +701,10 @@ body.light .po-paywall-panel{
 }
 .po-cards{display:flex;flex-direction:column;gap:10px;margin-top:4px;}
 .po-skeleton{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:16px;padding:14px 16px;}
+.po-skeleton.po-skel-reject{
+  box-shadow:0 0 0 2px rgba(248,113,113,.5),inset 0 0 26px rgba(248,113,113,.1);
+  transition:box-shadow .1s ease;
+}
 .po-skel-line{border-radius:6px;background:linear-gradient(90deg,rgba(255,255,255,.07) 25%,rgba(255,255,255,.13) 50%,rgba(255,255,255,.07) 75%);background-size:200% 100%;animation:skelShim 1.2s ease-in-out infinite;}
 .po-skel-name{height:14px;width:60%;margin-bottom:10px;}
 .po-skel-stat{height:12px;width:30%;}
@@ -1815,7 +1819,7 @@ async function startHitsLoad(){
       if(token!==hitsToken)return;
       await sleep(Math.max(500,getRhythmSuspense(i)));
       if(token!==hitsToken)return;
-      const picked=pickDiversifiedPlayer(annotated,hitsUsed,selectedTeams);
+      const picked=await slotMachineResolvePick(annotated,hitsUsed,selectedTeams,i,token,()=>hitsToken);
       const choice=Object.assign({},picked||pickRandom(annotated));
       choice.dir=Math.random()<0.5?'Over':'Under';
       hitsPicks.push(choice);
@@ -1929,7 +1933,7 @@ async function startBasesLoad(){
       if(token!==basesToken)return;
       await sleep(Math.max(500,getRhythmSuspense(i)));
       if(token!==basesToken)return;
-      const picked=pickDiversifiedPlayer(annotated,basesUsed,selectedTeams);
+      const picked=await slotMachineResolvePick(annotated,basesUsed,selectedTeams,i,token,()=>basesToken);
       const choice=Object.assign({},picked||pickRandom(annotated));
       choice.dir=Math.random()<0.5?'Over':'Under';
       basesPicks.push(choice);
@@ -2043,7 +2047,7 @@ async function startRBILoad(){
       if(token!==rbiToken)return;
       await sleep(Math.max(500,getRhythmSuspense(i)));
       if(token!==rbiToken)return;
-      const picked=pickDiversifiedPlayer(annotated,rbiUsed,selectedTeams);
+      const picked=await slotMachineResolvePick(annotated,rbiUsed,selectedTeams,i,token,()=>rbiToken);
       const choice=Object.assign({},picked||pickRandom(annotated));
       choice.dir=Math.random()<0.5?'Over':'Under';
       rbiPicks.push(choice);
@@ -2280,7 +2284,7 @@ async function startNFLLoad(){
       if(token!==nflToken)return;
       await sleep(Math.max(500,getRhythmSuspense(i)));
       if(token!==nflToken)return;
-      const picked=pickDiversifiedPlayer(pool,nflUsed,selectedTeams);
+      const picked=await slotMachineResolvePick(pool,nflUsed,selectedTeams,i,token,()=>nflToken);
       const choice=Object.assign({},picked||pickRandom(pool));
       if(choice.statLabel!=='TDs') choice.dir=Math.random()<0.5?'Over':'Under';
       nflPicks.push(choice);
@@ -2485,7 +2489,7 @@ async function startNBALoad(){
       if(token!==nbaToken)return;
       await sleep(Math.max(500,getRhythmSuspense(i)));
       if(token!==nbaToken)return;
-      const picked=pickDiversifiedPlayer(pool,nbaUsed,selectedTeams);
+      const picked=await slotMachineResolvePick(pool,nbaUsed,selectedTeams,i,token,()=>nbaToken);
       const choice=Object.assign({},picked||pickRandom(pool));
       choice.dir=Math.random()<0.5?'Over':'Under';
       nbaPicks.push(choice);
@@ -2706,7 +2710,7 @@ async function startNHLLoad(){
       if(token!==nhlToken)return;
       await sleep(Math.max(500,getRhythmSuspense(i)));
       if(token!==nhlToken)return;
-      const picked=pickDiversifiedPlayer(pool,nhlUsed,selectedTeams);
+      const picked=await slotMachineResolvePick(pool,nhlUsed,selectedTeams,i,token,()=>nhlToken);
       const choice=Object.assign({},picked||pickRandom(pool));
       choice.dir=Math.random()<0.5?'Over':'Under';
       nhlPicks.push(choice);
@@ -2943,7 +2947,7 @@ async function startSoccerLoad(){
       if(token!==soccerToken)return;
       await sleep(Math.max(500,getRhythmSuspense(i)));
       if(token!==soccerToken)return;
-      const picked=pickDiversifiedPlayer(pool,soccerUsed,selectedTeams);
+      const picked=await slotMachineResolvePick(pool,soccerUsed,selectedTeams,i,token,()=>soccerToken);
       const choice=Object.assign({},picked||pickRandom(pool));
       choice.dir=Math.random()<0.5?'Over':'Under';
       soccerPicks.push(choice);
@@ -2975,6 +2979,31 @@ async function startSoccerLoad(){
 
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 function pickRandom(arr){return arr[Math.floor(Math.random()*arr.length)];}
+function _playPickTickSfx(opts){
+  const tickEl=document.getElementById('pickTickSfx');
+  if(!tickEl) return;
+  const vol=opts&&opts.volume!=null?opts.volume:0.13;
+  const rate=opts&&opts.rate!=null?opts.rate:(1.06+Math.random()*0.14);
+  try{
+    tickEl.pause(); tickEl.currentTime=0;
+    tickEl.volume=vol;
+    tickEl.playbackRate=rate;
+    const p=tickEl.play();
+    if(p&&typeof p.catch==='function') p.catch(function(){});
+  }catch(_){}
+}
+function playPickTickReject(){
+  _playPickTickSfx({volume:0.26, rate:0.84+Math.random()*0.1});
+}
+function isDiversifiedPickAllowed(c, usedPlayersSet, usedTeamsSet){
+  if(!c||!c.player) return false;
+  if(usedPlayersSet&&usedPlayersSet.has(c.player)) return false;
+  const ta=c.teamAbbr||c.team||'';
+  if(ta&&usedTeamsSet&&usedTeamsSet.has(ta)) return false;
+  const opp=c.oppTeamAbbr||'';
+  if(opp&&usedTeamsSet&&usedTeamsSet.has(opp)) return false;
+  return true;
+}
 /**
  * Pick from the **full** pool (already-picked players can still appear in shuffle UI),
  * then **respin** (re-draw) until we get someone who is not:
@@ -2984,6 +3013,10 @@ function pickRandom(arr){return arr[Math.floor(Math.random()*arr.length)];}
 function pickDiversifiedPlayer(pool, usedPlayersSet, usedTeamsSet){
   const arr=(pool||[]).filter(function(x){return x&&x.player;});
   if(!arr.length) return null;
+  for(let k=0;k<56;k++){
+    const c=pickRandom(arr);
+    if(isDiversifiedPickAllowed(c, usedPlayersSet, usedTeamsSet)) return c;
+  }
   function teamOk(x){
     const ta=x.teamAbbr||x.team||'';
     return !ta||!usedTeamsSet.has(ta);
@@ -2992,12 +3025,6 @@ function pickDiversifiedPlayer(pool, usedPlayersSet, usedTeamsSet){
     const opp=x.oppTeamAbbr||'';
     return !opp||!usedTeamsSet.has(opp);
   }
-  const MAX_TRY=56;
-  for(let k=0;k<MAX_TRY;k++){
-    const c=pickRandom(arr);
-    if(usedPlayersSet.has(c.player)) continue;
-    if(teamOk(c)&&oppOk(c)) return c;
-  }
   const base=arr.filter(function(x){return !usedPlayersSet.has(x.player);});
   if(!base.length) return null;
   const noSameTeam=base.filter(function(x){return teamOk(x);});
@@ -3005,6 +3032,40 @@ function pickDiversifiedPlayer(pool, usedPlayersSet, usedTeamsSet){
   if(noOpponent.length) return pickRandom(noOpponent);
   if(noSameTeam.length) return pickRandom(noSameTeam);
   return pickRandom(base);
+}
+/** Visible slot phase: slowing reel, brief stall + hard tick on each reject, then continues. */
+async function slotMachineResolvePick(pool, usedPlayersSet, usedTeamsSet, skIndex, token, getActiveToken){
+  const activeToken=getActiveToken||(function(){ return mlbToken; });
+  const arr=(pool||[]).filter(function(x){return x&&x.player;});
+  if(!arr.length) return null;
+  const sk=document.getElementById('poSkel-'+skIndex);
+  function skRejectOff(){ try{ if(sk) sk.classList.remove('po-skel-reject'); }catch(_){} }
+  if(sk&&sk._shuffleIntervalId!=null){
+    try{ clearInterval(sk._shuffleIntervalId); }catch(_){}
+    sk._shuffleIntervalId=null;
+  }
+  let delay=58;
+  for(let step=0; step<120; step++){
+    if(token!==activeToken()){ skRejectOff(); return null; }
+    const cand=pickRandom(arr);
+    const nameEl=sk&&sk.querySelector('.po-skel-name');
+    if(nameEl){
+      const ab=cand.teamAbbr||cand.team||'';
+      nameEl.innerHTML='<span class="shuffle-name" style="font-size:.85rem;font-weight:700;color:var(--text)">'+
+        cand.player+'</span>'+teamPill(ab);
+    }
+    _playPickTickSfx({volume:0.11, rate:1.04+Math.random()*0.14});
+    await sleep(delay);
+    if(isDiversifiedPickAllowed(cand, usedPlayersSet, usedTeamsSet)){ skRejectOff(); return cand; }
+    if(sk) sk.classList.add('po-skel-reject');
+    playPickTickReject();
+    const stall=158+Math.min(step,10)*26;
+    await sleep(stall);
+    skRejectOff();
+    delay=Math.min(380, delay+24+Math.floor(step/4)*6);
+  }
+  skRejectOff();
+  return pickDiversifiedPlayer(pool, usedPlayersSet, usedTeamsSet);
 }
 function _withOppTeamFromPool(list){
   const arr=Array.isArray(list)?list:[];
@@ -4272,7 +4333,7 @@ async function startMLBLoad(){
       // Spin this card for at least 500ms before revealing
       await sleep(Math.max(500, getRhythmSuspense(i)));
       if(token!==mlbToken) return;
-      const picked=pickDiversifiedPlayer(poolDiv,mlbHitterUsed,selectedTeams);
+      const picked=await slotMachineResolvePick(poolDiv,mlbHitterUsed,selectedTeams,i,token,()=>mlbToken);
       let choice=Object.assign({},picked||pickRandom(poolDiv));
       mlbPicks.push(choice);
       mlbTeamsUsed.push(choice.team);
@@ -4363,7 +4424,7 @@ async function startKsLoad(){
       if(token!==ksToken) return;
       await sleep(Math.max(500, getRhythmSuspense(i)));
       if(token!==ksToken) return;
-      const picked=pickDiversifiedPlayer(pool,ksPitcherUsed,selectedTeams);
+      const picked=await slotMachineResolvePick(pool,ksPitcherUsed,selectedTeams,i,token,()=>ksToken);
       const choice=Object.assign({},picked||pickRandom(pool));
       choice.dir=Math.random()<0.5?'Over':'Under';
       ksPicks.push(choice);
@@ -4472,8 +4533,8 @@ function startNameShuffle(pool, token, getActiveToken){
     let names = shuffleArray(pool.map(x => ({player: x.player, abbr: x.teamAbbr || x.team})));
     let idx = si * 3;
     const t = setInterval(() => {
-      if(token !== activeToken()){ clearInterval(t); return; }
-      if(!sk.classList.contains('po-skeleton')){ clearInterval(t); return; }
+      if(token !== activeToken()){ clearInterval(t); if(sk) sk._shuffleIntervalId=null; return; }
+      if(!sk.classList.contains('po-skeleton')){ clearInterval(t); if(sk) sk._shuffleIntervalId=null; return; }
       const entry = names[idx % names.length];
       const nameEl = sk.querySelector('.po-skel-name');
       if(nameEl) nameEl.innerHTML =
@@ -4482,6 +4543,7 @@ function startNameShuffle(pool, token, getActiveToken){
       idx++;
       if(idx > names.length * 6) names = shuffleArray(names);
     }, 110);
+    sk._shuffleIntervalId=t;
     timers.push(t);
   }
   skeletons.forEach((sk, si) => {
