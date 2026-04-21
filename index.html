@@ -2750,9 +2750,11 @@ async function getTodaysSoccerPlayers(option){
     for(const roster of rosters){
       const teamAbbr=roster.team&&roster.team.abbreviation||'';
       for(const entry of (roster.roster||[])){
-        const name=entry.athlete&&entry.athlete.displayName||'';
-        const espnId=entry.athlete&&entry.athlete.id!=null?Number(entry.athlete.id):'';
-        const pos=entry.athlete&&entry.athlete.position&&entry.athlete.position.abbreviation||'';
+        const athlete=entry.athlete||{};
+        const name=athlete.displayName||'';
+        const espnId=athlete.id!=null?String(athlete.id):'';
+        const headshotUrl=athlete.headshot&&athlete.headshot.href?String(athlete.headshot.href).replace(/^http:\/\//,'https://'):'';
+        const pos=athlete.position&&athlete.position.abbreviation||'';
         if(!name||seen.has(name))continue;
         seen.add(name);
         const statsArr=entry.stats||[];
@@ -2787,7 +2789,7 @@ async function getTodaysSoccerPlayers(option){
           line=statVal>0?Math.round(statVal*2)/2:0.5;
           seasonAvg=statVal+' SOT';
         } else {continue;}
-        players.push({player:name,espnId,teamAbbr,oppTeamAbbr:teamOppMap[teamAbbr]||'',pos,statLabel:option,line,seasonAvg,game:teamGameMap[teamAbbr]||eventGame});
+        players.push({player:name,espnId,headshotUrl,teamAbbr,oppTeamAbbr:teamOppMap[teamAbbr]||'',pos,statLabel:option,line,seasonAvg,game:teamGameMap[teamAbbr]||eventGame});
       }
     }
     // Fallback: try boxscore.players if rosters empty
@@ -2797,11 +2799,13 @@ async function getTodaysSoccerPlayers(option){
         const teamAbbr=teamBlock.team&&teamBlock.team.abbreviation||'';
         for(const group of (teamBlock.statistics||[])){
           for(const athlete of (group.athletes||[])){
-            const name=athlete.athlete&&athlete.athlete.displayName||'';
-            const espnId=athlete.athlete&&athlete.athlete.id!=null?Number(athlete.athlete.id):'';
+            const ath=athlete.athlete||{};
+            const name=ath.displayName||'';
+            const espnId=ath.id!=null?String(ath.id):'';
+            const headshotUrl=ath.headshot&&ath.headshot.href?String(ath.headshot.href).replace(/^http:\/\//,'https://'):'';
             if(!name||seen.has(name))continue;
             seen.add(name);
-            players.push({player:name,espnId,teamAbbr,oppTeamAbbr:teamOppMap[teamAbbr]||'',pos:'',statLabel:option,line:0.5,seasonAvg:'—',game:teamGameMap[teamAbbr]||eventGame});
+            players.push({player:name,espnId,headshotUrl,teamAbbr,oppTeamAbbr:teamOppMap[teamAbbr]||'',pos:'',statLabel:option,line:0.5,seasonAvg:'—',game:teamGameMap[teamAbbr]||eventGame});
           }
         }
       }
@@ -3273,15 +3277,18 @@ function nflRowTopPlayerHtml(p, chevHtml){
     : '';
   return '<span class="rowtop-left">'+img+'<span class="rowtop-name">'+p.player+' '+teamPill(team)+' '+chev+'</span></span>';
 }
-function soccerHeadshotUrl(espnId){
-  const id = Number(espnId);
-  if(!id || id !== id) return '';
+function soccerHeadshotUrl(p){
+  const direct = p && p.headshotUrl ? String(p.headshotUrl) : '';
+  if(direct) return direct.replace(/^http:\/\//,'https://');
+  const rawId = p && p.espnId != null ? String(p.espnId) : '';
+  const id = rawId.replace(/[^0-9]/g,'');
+  if(!id) return '';
   return 'https://a.espncdn.com/i/headshots/soccer/players/full/'+id+'.png';
 }
 function soccerRowTopPlayerHtml(p, chevHtml){
   const chev = chevHtml != null ? chevHtml : "<span class=\"chev\">▾</span>";
   const team = p.teamAbbr || '';
-  const url = soccerHeadshotUrl(p.espnId);
+  const url = soccerHeadshotUrl(p);
   const img = url
     ? '<img class="soccer-headshot" src="'+url+'" alt="" width="38" height="38" loading="lazy" decoding="async" onerror="this.onerror=null;this.src=\'https://a.espncdn.com/i/headshots/soccer/players/full/0.png\'">'
     : '';
