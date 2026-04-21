@@ -226,6 +226,37 @@ body.light .tabs{
   animation:liveBoardFlash 1.35s ease-in-out infinite;
   animation-delay:var(--flash-delay,0s);
 }
+/* Full-screen pick overlay: orbits on each skeleton / revealed card (visible while SFX runs). */
+#poCards{overflow:visible}
+#poCards > .po-card.orbit-ring{
+  position:relative;
+  overflow:visible;
+  box-shadow:0 0 0 1px rgba(37,201,255,.38),0 0 14px rgba(38,217,255,.22),0 0 26px rgba(38,217,255,.08);
+}
+#poCards > .po-card.orbit-ring::before{
+  width:7px;
+  height:7px;
+  border-radius:16px;
+  box-shadow:0 0 0 1px rgba(37,201,255,.35),0 0 9px rgba(37,201,255,.8);
+  offset-path:inset(2px round 16px);
+  offset-distance:0%;
+  offset-rotate:0deg;
+  animation-name:randomDotOrbit;
+  animation-duration:var(--orbit-duration,4.65s);
+  animation-timing-function:linear;
+  animation-iteration-count:infinite;
+  animation-delay:var(--orbit-delay,0s);
+}
+#poCards > .po-card.orbit-ring::after{
+  content:'';
+  position:absolute;
+  inset:-1px;
+  border-radius:17px;
+  border:1px solid rgba(37,201,255,.4);
+  pointer-events:none;
+  animation:liveBoardBorderPulse 1.2s ease-in-out infinite;
+  animation-delay:var(--flash-delay,0s);
+}
 .live-board-pill{
   display:none;
   align-items:center;
@@ -1734,6 +1765,7 @@ function poRevealHitsCard(p,idx){
       <div class="muted">AVG: ${p.avg}</div>
     </div>`;
   if(!sk) document.getElementById('poCards').appendChild(card);
+  syncPoCardsOrbit();
 }
 async function startHitsLoad(){
   pickRandomRhythm();
@@ -1852,6 +1884,7 @@ function poRevealBasesCard(p,idx){
       <div class="muted">AVG: ${p.avg}</div>
     </div>`;
   if(!sk) document.getElementById('poCards').appendChild(card);
+  syncPoCardsOrbit();
 }
 async function startBasesLoad(){
   pickRandomRhythm();
@@ -1965,6 +1998,7 @@ function poRevealRBICard(p,idx){
       <div class="muted">AVG: ${p.avg}</div>
     </div>`;
   if(!sk) document.getElementById('poCards').appendChild(card);
+  syncPoCardsOrbit();
 }
 async function startRBILoad(){
   pickRandomRhythm();
@@ -2207,6 +2241,7 @@ function poRevealNFLCard(p, idx){
     </div>`;
   }
   if(!sk) document.getElementById('poCards').appendChild(card);
+  syncPoCardsOrbit();
 }
 async function startNFLLoad(){
   pickRandomRhythm();
@@ -2411,6 +2446,7 @@ function poRevealNBACard(p, idx){
       <div class="muted">Venue: ${gameVenueText(p.game)||'—'}</div>
     </div>`;
   if(!sk) document.getElementById('poCards').appendChild(card);
+  syncPoCardsOrbit();
 }
 async function startNBALoad(){
   pickRandomRhythm();
@@ -2631,6 +2667,7 @@ function poRevealNHLCard(p, idx){
       <div class="muted">Venue: ${gameVenueText(p.game)||'—'}</div>
     </div>`;
   if(!sk) document.getElementById('poCards').appendChild(card);
+  syncPoCardsOrbit();
 }
 async function startNHLLoad(){
   pickRandomRhythm();
@@ -2867,6 +2904,7 @@ function poRevealSoccerCard(p, idx){
       <div class="muted">Venue: ${gameVenueText(p.game)||'—'}</div>
     </div>`;
   if(!sk) document.getElementById('poCards').appendChild(card);
+  syncPoCardsOrbit();
 }
 async function startSoccerLoad(){
   pickRandomRhythm();
@@ -3431,6 +3469,17 @@ function syncPicksBoardWrapOrbit(){
     stripPill.classList.toggle('is-on', loadedNow);
     stripPill.classList.toggle('orbit-ring', loadedNow);
   }
+}
+/** Orb on each overlay pick card (skeleton shuffle + revealed); visible while overlay covers main #picks. */
+function syncPoCardsOrbit(){
+  const el=document.getElementById('poCards');
+  if(!el) return;
+  Array.from(el.querySelectorAll(':scope > .po-card')).forEach(function(node, i){
+    node.classList.add('orbit-ring');
+    node.style.setProperty('--orbit-delay', ((i * 0.41) % 3.4) + 's');
+    node.style.setProperty('--orbit-duration', (4.05 + (i % 8) * 0.28) + 's');
+    node.style.setProperty('--flash-delay', ((i * 0.67) % 2.6) + 's');
+  });
 }
 function gameStartText(g){const d = g?.gameDate ? new Date(g.gameDate) : null; return d ? d.toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}) : ''; }
 function gameVenueText(g){return g?.venue?.name || ''; }
@@ -4252,6 +4301,7 @@ function poRevealKsCard(p, idx){
       <div class="muted">ERA: ${p.era}</div>
     </div>`;
   if(!sk) document.getElementById('poCards').appendChild(card);
+  syncPoCardsOrbit();
 }
 
 async function startKsLoad(){
@@ -5125,6 +5175,7 @@ function poSeedSkeletons(count){
     sk.innerHTML = '<div class="po-skel-name" style="height:18px;margin-bottom:10px"></div><div class="po-skel-line po-skel-stat"></div>';
     container.appendChild(sk);
   }
+  syncPoCardsOrbit();
 }
 
 function poRevealCard(p, idx){
@@ -5147,6 +5198,7 @@ function poRevealCard(p, idx){
       <div class="muted">Venue: ${gameVenueText(p.game)}</div>
     </div>`;
   if(!sk) document.getElementById('poCards').appendChild(card);
+  syncPoCardsOrbit();
 }
 
 
