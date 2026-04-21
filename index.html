@@ -18,8 +18,17 @@
 <!-- Google Analytics 4 — replace G-XXXXXXXXXX with your real Measurement ID -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
 <script>
-  // Bump APP_VERSION whenever behavior or user-visible copy changes; keep in sync with #appVersion markup below.
-  const APP_VERSION = 'v1.23.7';
+  // Auto version derived from file modified time (updates on each save/edit).
+  const APP_VERSION = (function(){
+    const d = new Date(document.lastModified || Date.now());
+    if(Number.isNaN(d.getTime())) return 'v0.0.0-auto';
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,'0');
+    const day = String(d.getDate()).padStart(2,'0');
+    const hh = String(d.getHours()).padStart(2,'0');
+    const mm = String(d.getMinutes()).padStart(2,'0');
+    return `v${y}.${m}.${day}-${hh}${mm}`;
+  })();
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
@@ -4319,7 +4328,13 @@ function _refreshFreePickConsumedState(d){
     try{ _lhMem.setItem('lhProfile', JSON.stringify(d)); }catch(_){}
   }
   _isPro = !!d.isPro;
-  _freePickUsed = !!(d.freePickUsed && d.freePickDate === day);
+  // Keep one free pick always available on free tier.
+  _freePickUsed = false;
+  if(d.freePickUsed || d.freePickDate){
+    d.freePickUsed = false;
+    d.freePickDate = null;
+    try{ _lhMem.setItem('lhProfile', JSON.stringify(d)); }catch(_){}
+  }
 }
 
 function hasLocalProfile(){
@@ -4514,19 +4529,16 @@ function showFreeBadge(){
 }
 
 function markFreePickUsed(){
-  if(_devMode) return; // dev mode: skip paywall entirely
-  if(_isPro) return;
-  if(_paywallBypassActive()) return;
-  _freePickUsed = true;
+  // v1.23.8 behavior override: do not consume the free pick.
+  _freePickUsed = false;
   const badge = document.getElementById('freeBadge');
-  if(badge) badge.style.display='none';
+  if(badge) badge.style.display='inline-block';
   try{
     const d = JSON.parse(_lhMem.getItem('lhProfile')||'{}');
-    d.freePickUsed = true;
-    d.freePickDate = _localCalendarDay();
+    d.freePickUsed = false;
+    d.freePickDate = null;
     _lhMem.setItem('lhProfile', JSON.stringify(d));
   }catch(e){}
-  setTimeout(showUpgradeWall, 4000);
 }
 
 function _buildPaywallOverlayHTML(){
@@ -5337,7 +5349,7 @@ scheduleSyncAppVersionBadge();
 _syncDevClearBtnStyle();
 syncPicksBoardWrapOrbit();
 </script>
-<div class="app-version" id="appVersion">v1.23.7</div>
+<div class="app-version" id="appVersion">v-auto</div>
 <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 <div class="toast-stack center" id="toastStackCenter" aria-live="polite" aria-atomic="true"></div>
 </body>
