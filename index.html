@@ -693,6 +693,25 @@ body.light .hr-env-pill.hr-env-unfavorable{background:rgba(239,68,68,.1);color:#
 @keyframes liveBoardBorderPulse{0%,100%{opacity:.62}50%{opacity:1}}
 @keyframes liveBoardPillFlash{0%,100%{box-shadow:0 0 0 0 rgba(38,217,255,0);filter:brightness(1)}50%{box-shadow:0 0 0 1px rgba(38,217,255,.35),0 0 20px rgba(38,217,255,.55);filter:brightness(1.22)}}
 @keyframes randomDotOrbit{to{offset-distance:100%}}
+/* Quick double flash (sport → tabs → counts → Spin); mirrors snappy theme-toggle feedback */
+@keyframes uiDoubleFlash{
+  0%,100%{filter:brightness(1);box-shadow:none}
+  15%{filter:brightness(1.32);box-shadow:0 0 0 2px rgba(38,217,255,.55),0 0 16px rgba(38,217,255,.22)}
+  32%{filter:brightness(1);box-shadow:none}
+  48%{filter:brightness(1.32);box-shadow:0 0 0 2px rgba(38,217,255,.55),0 0 16px rgba(38,217,255,.22)}
+  65%{filter:brightness(1);box-shadow:none}
+}
+@keyframes uiDoubleFlashLight{
+  0%,100%{filter:brightness(1);box-shadow:none}
+  15%{filter:brightness(0.9);box-shadow:0 0 0 2px rgba(74,103,216,.42),0 0 12px rgba(74,103,216,.18)}
+  32%{filter:brightness(1);box-shadow:none}
+  48%{filter:brightness(0.9);box-shadow:0 0 0 2px rgba(74,103,216,.42),0 0 12px rgba(74,103,216,.18)}
+  65%{filter:brightness(1);box-shadow:none}
+}
+.ui-double-flash{
+  animation:uiDoubleFlash 0.52s ease-in-out both;
+}
+body.light .ui-double-flash{animation-name:uiDoubleFlashLight}
 .locked{opacity:.45;filter:grayscale(.15);background:rgba(255,255,255,.08)!important;color:var(--text)!important}
 .locked[disabled]{pointer-events:none}
 .trust-banner{margin:14px 0 16px;padding:14px 16px;border:1px solid rgba(110,231,255,.25);border-radius:16px;background:linear-gradient(180deg,rgba(17,28,51,.95),rgba(24,39,71,.95));box-shadow:0 10px 28px rgba(0,0,0,.18);color:#e8eeff}
@@ -1762,6 +1781,7 @@ function randomSport(){
   currentOption = sports[s].options[0];
   renderTabs();
   renderSport();
+  _flashAllMarketTabs();
   if(current==='MLB' || current==='NFL' || current==='NBA'){
     _snapActiveSportNavLeft();
     _snapActiveMarketTabLeft();
@@ -1776,7 +1796,33 @@ function randomSubOption(){
   setOption(o);
   if(current==='MLB' || current==='NFL' || current==='NBA') _snapActiveMarketTabLeft();
 }
-function setSport(s){_trackSectionSwitch(s);current=s;currentOption=sports[s].options[0];renderTabs();renderSport();}
+function uiDoubleFlash(el){
+  if(!el) return;
+  try{
+    if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  }catch(_){}
+  el.classList.remove('ui-double-flash');
+  void el.offsetWidth;
+  el.classList.add('ui-double-flash');
+  window.setTimeout(function(){ try{ el.classList.remove('ui-double-flash'); }catch(_){} }, 560);
+}
+function _flashAllMarketTabs(){
+  requestAnimationFrame(function(){
+    document.querySelectorAll('#tabs .tab').forEach(function(n){ uiDoubleFlash(n); });
+  });
+}
+function _flashPickCountButtons(){
+  requestAnimationFrame(function(){
+    document.querySelectorAll('#pickCountRow .btn').forEach(function(n){ uiDoubleFlash(n); });
+  });
+}
+function _flashPickSpinButton(){
+  requestAnimationFrame(function(){
+    var b=document.querySelector('.pick-actions-stacked .pick-load-btn');
+    if(b) uiDoubleFlash(b);
+  });
+}
+function setSport(s){_trackSectionSwitch(s);current=s;currentOption=sports[s].options[0];renderTabs();renderSport();_flashAllMarketTabs();}
 function _snapActiveMarketTabLeft(){
   const tabsEl=document.getElementById('tabs');
   if(!tabsEl) return;
@@ -2014,7 +2060,7 @@ function showToast(message, kind, placement){
     setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, 180);
   }, 2200);
 }
-function setOption(o){currentOption=o;renderTabs();renderSport();}
+function setOption(o){currentOption=o;renderTabs();renderSport();_flashPickCountButtons();}
 function _shouldGateLoadWithUpgrade(meta){
   if(_devMode || _isPro) return false;
   const attempted = Number(meta && meta.attemptedCount) || 1;
@@ -2031,7 +2077,7 @@ function _shouldGateLoadWithUpgrade(meta){
   showUpgradeWall((meta && meta.payload) || {});
   return true;
 }
-function setCount(n){if(_isUiPickLocked()) return; pickCount=n;renderSport();}
+function setCount(n){if(_isUiPickLocked()) return; pickCount=n;renderSport();_flashPickSpinButton();}
 function renderPicks(list){document.getElementById('picksTitle').textContent='Quick Picks';document.getElementById('picks').innerHTML=list.length?list.map(p=>`<div class='item'><span>${p}</span><span class='muted'>${currentOption}</span></div>`).join(''):'<div class="muted">No picks available yet.</div>';syncPicksBoardWrapOrbit();}
 /** Sync fallback when Clipboard API is missing, insecure (e.g. file://), or rejects. */
 function _copyTextExecCommand(text){
@@ -2089,7 +2135,7 @@ function copyPicks(){
   }
 }
 function clearMLB(){mlbToken++;mlbLoaded=false;mlbLoading=false;mlbPicks=[];mlbTeamsUsed=[];mlbHitterUsed=new Set();mlbLivePool=[];mlbHrPickSlotCount=0;pickLocked=false;pickCount=0;currentOption='HR';renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Choose a count and tap Spin.</div>';syncPicksBoardWrapOrbit();}
-function setKsCount(n){if(_isUiPickLocked()) return; ksPickCount=n; renderSport();}
+function setKsCount(n){if(_isUiPickLocked()) return; ksPickCount=n; renderSport();_flashPickSpinButton();}
 function renderKsPicks(){
   document.getElementById('picksTitle').textContent='⚾ Lucky Pitchers';
   if(ksLoading){
@@ -2120,7 +2166,7 @@ function _validatePlayerCountOrWarn(n, noun){
 // ─────────────────────────────────────────────────────────────────────────────
 // MLB HITS
 // ─────────────────────────────────────────────────────────────────────────────
-function setHitsCount(n){if(_isUiPickLocked())return;hitsPickCount=n;renderSport();}
+function setHitsCount(n){if(_isUiPickLocked())return;hitsPickCount=n;renderSport();_flashPickSpinButton();}
 function renderHitsPicks(){
   document.getElementById('picksTitle').textContent='💥 Hits Picks';
   if(hitsLoading){
@@ -2239,7 +2285,7 @@ async function startHitsLoad(){
 // ─────────────────────────────────────────────────────────────────────────────
 // MLB TOTAL BASES
 // ─────────────────────────────────────────────────────────────────────────────
-function setBasesCount(n){if(_isUiPickLocked())return;basesPickCount=n;renderSport();}
+function setBasesCount(n){if(_isUiPickLocked())return;basesPickCount=n;renderSport();_flashPickSpinButton();}
 function renderBasesPicks(){
   document.getElementById('picksTitle').textContent='🎯 Total Bases Picks';
   if(basesLoading){
@@ -2353,7 +2399,7 @@ async function startBasesLoad(){
 // ─────────────────────────────────────────────────────────────────────────────
 // MLB RBI
 // ─────────────────────────────────────────────────────────────────────────────
-function setRBICount(n){if(_isUiPickLocked())return;rbiPickCount=n;renderSport();}
+function setRBICount(n){if(_isUiPickLocked())return;rbiPickCount=n;renderSport();_flashPickSpinButton();}
 function renderRBIPicks(){
   document.getElementById('picksTitle').textContent='💪 RBI Picks';
   if(rbiLoading){
@@ -2467,7 +2513,7 @@ async function startRBILoad(){
 // ─────────────────────────────────────────────────────────────────────────────
 // NFL
 // ─────────────────────────────────────────────────────────────────────────────
-function setNFLCount(n){if(_isUiPickLocked())return;nflPickCount=n;renderSport();}
+function setNFLCount(n){if(_isUiPickLocked())return;nflPickCount=n;renderSport();_flashPickSpinButton();}
 function renderNFLPicks(){
   document.getElementById('picksTitle').textContent='🏈 NFL Picks';
   if(nflLoading){
@@ -2704,7 +2750,7 @@ async function startNFLLoad(){
 // ─────────────────────────────────────────────────────────────────────────────
 // NBA
 // ─────────────────────────────────────────────────────────────────────────────
-function setNBACount(n){if(_isUiPickLocked())return;nbaPickCount=n;renderSport();}
+function setNBACount(n){if(_isUiPickLocked())return;nbaPickCount=n;renderSport();_flashPickSpinButton();}
 function renderNBAPicks(){
   document.getElementById('picksTitle').textContent='🏀 NBA Picks';
   if(nbaLoading){
@@ -2909,7 +2955,7 @@ async function startNBALoad(){
 // ─────────────────────────────────────────────────────────────────────────────
 // NHL
 // ─────────────────────────────────────────────────────────────────────────────
-function setNHLCount(n){if(_isUiPickLocked())return;nhlPickCount=n;renderSport();}
+function setNHLCount(n){if(_isUiPickLocked())return;nhlPickCount=n;renderSport();_flashPickSpinButton();}
 function renderNHLPicks(){
   document.getElementById('picksTitle').textContent='🏒 NHL Picks';
   if(nhlLoading){
@@ -3130,7 +3176,7 @@ async function startNHLLoad(){
 // ─────────────────────────────────────────────────────────────────────────────
 // SOCCER (MLS)
 // ─────────────────────────────────────────────────────────────────────────────
-function setSoccerCount(n){if(_isUiPickLocked())return;soccerPickCount=n;renderSport();}
+function setSoccerCount(n){if(_isUiPickLocked())return;soccerPickCount=n;renderSport();_flashPickSpinButton();}
 function renderSoccerPicks(){
   document.getElementById('picksTitle').textContent='⚽ Soccer Picks';
   if(soccerLoading){
@@ -4940,6 +4986,7 @@ function toggleTheme(){
       btn.textContent = '☀️ Light mode';
       btn.setAttribute('aria-label', 'Switch to light mode');
     }
+    uiDoubleFlash(btn);
   }
 }
 
