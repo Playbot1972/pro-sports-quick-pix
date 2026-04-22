@@ -304,7 +304,10 @@ body.light .tabs{
 .pick-title-chip{display:inline-flex;align-items:center;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:900;background:rgba(37,201,255,.12);border:1px solid rgba(37,201,255,.35);color:#dff8ff;letter-spacing:.02em}
 #picksTitle{font-size:16px;letter-spacing:.01em}
 #freeBadge{margin-left:8px}
-.slip-actions{position:sticky;bottom:10px;z-index:16;margin-top:12px;padding:10px;border-radius:12px;border:1px solid var(--line);background:linear-gradient(180deg,rgba(15,23,40,.95),rgba(18,29,51,.95));display:flex;gap:8px;justify-content:flex-end;backdrop-filter:blur(8px)}
+.slip-actions{position:sticky;bottom:10px;z-index:16;margin-top:12px;padding:10px;border-radius:12px;border:1px solid var(--line);background:linear-gradient(180deg,rgba(15,23,40,.95),rgba(18,29,51,.95));display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end;backdrop-filter:blur(8px)}
+.slip-actions-trailing{display:flex;gap:8px;align-items:center;margin-left:auto}
+.slip-hr-favorable-only-label{display:none;align-items:center;gap:6px;font-size:11px;font-weight:800;color:var(--muted);cursor:pointer;user-select:none;max-width:min(220px,46vw);line-height:1.25}
+.slip-hr-favorable-only-label input{width:15px;height:15px;accent-color:#34d399;cursor:pointer;flex-shrink:0;margin:0}
 .slip-btn{border-radius:10px;border:1px solid rgba(255,255,255,.14);padding:10px 12px;font-size:12px;font-weight:800;cursor:pointer;background:rgba(255,255,255,.05);color:var(--text);touch-action:manipulation}
 .slip-btn.primary{border-color:rgba(37,201,255,.5);background:linear-gradient(180deg,rgba(37,201,255,.28),rgba(37,201,255,.14));color:#dff8ff}
 .slip-btn:disabled{opacity:.45;cursor:not-allowed}
@@ -563,6 +566,7 @@ body.light .slip-actions{
   background:linear-gradient(180deg,#ffffff,#eef3ff);
   border-color:#cfd8ea;
 }
+body.light .slip-hr-favorable-only-label{color:#475569}
 body.light .slip-btn{
   background:#f2f6ff;
   border-color:#cfd8ea;
@@ -945,8 +949,14 @@ window.safeHeadshot = function(obj){
       </div>
     </div>
     <div class="slip-actions">
-      <button type="button" id="slipClearBtn" class="slip-btn" onclick="clearCurrentSportPicks()">Clear Current</button>
-      <button type="button" id="slipCopyBtn" class="slip-btn primary" onclick="copyCurrentSportPicks()">Copy Slip</button>
+      <label id="slipHrFavorableOnlyWrap" class="slip-hr-favorable-only-label" for="slipHrFavorableOnly" title="When checked, HR loads and swipe replacements only use hitters rated Favorable for carry environment.">
+        <input type="checkbox" id="slipHrFavorableOnly" onchange="onSlipHrFavorableOnlyChange()" />
+        <span>Favorable env. only</span>
+      </label>
+      <div class="slip-actions-trailing">
+        <button type="button" id="slipClearBtn" class="slip-btn" onclick="clearCurrentSportPicks()">Clear Current</button>
+        <button type="button" id="slipCopyBtn" class="slip-btn primary" onclick="copyCurrentSportPicks()">Copy Slip</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1289,6 +1299,7 @@ function stopPickSfxNow(){
 
 const sports={MLB:{icon:'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Major_League_Baseball_logo.svg/1280px-Major_League_Baseball_logo.svg.png',desc:'Load live lineup hitters for today, then picks appear one at a time.',options:['HR','Hits','Total Bases','RBI','Ks'],color:'#6ee7ff'},NFL:{icon:'https://upload.wikimedia.org/wikipedia/en/a/a2/National_Football_League_logo.svg',desc:'Starter options: passing yards, rushing yards, receiving yards, receptions, TDs.',options:['TDs','Rush Yds','Rec Yds','Receptions','Pass Yds'],color:'#34d399'},NBA:{icon:'https://upload.wikimedia.org/wikipedia/en/0/03/National_Basketball_Association_logo.svg',desc:'Starter options: points, rebounds, assists, threes, PRA.',options:['Points','Assists','Rebounds','3PM','PRA'],color:'#f59e0b'},NHL:{icon:'https://media.nhl.com/site/asset/public/images/2022/01/NewShield-02023704-10094134.jpg',desc:'Starter options: shots on goal, goals, assists, goalie saves, points.',options:['Goals','Shots','Assists','Points','Goalie Saves'],color:'#60a5fa'},Soccer:{icon:'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Soccerball.svg/3840px-Soccerball.svg.png',desc:'Starter options: shots, shots on target, goals, assists, goalkeeper saves.',options:['Goals','Assists','Shots','SOT','GK Saves'],color:'#f472b6'}};
 let current='MLB', currentOption='HR', pickCount=0, pickLocked=false, mlbLoaded=false, mlbPicks=[], mlbToken=0, mlbLoading=false, mlbTeamsUsed=[], mlbHitterUsed=new Set(), mlbLivePool=[], mlbHrPickSlotCount=0;
+let mlbHrFavorableOnly=(function(){ try{ return _lhMem.getItem('mlbHrFavorableOnly')==='1'; }catch(_){ return false; } })();
 let ksLoaded=false, ksPicks=[], ksToken=0, ksLoading=false, ksPickCount=0, ksPitcherUsed=new Set(), ksLivePool=[];
 let hitsLoaded=false, hitsPicks=[], hitsToken=0, hitsLoading=false, hitsPickCount=0, hitsUsed=new Set(), hitsLivePool=[];
 let basesLoaded=false, basesPicks=[], basesToken=0, basesLoading=false, basesPickCount=0, basesUsed=new Set(), basesLivePool=[];
@@ -1610,6 +1621,23 @@ function clearCurrentSportPicks(){
   if(current==='NHL'){ clearNHL(); return; }
   if(current==='Soccer'){ clearSoccer(); return; }
 }
+function onSlipHrFavorableOnlyChange(){
+  const el=document.getElementById('slipHrFavorableOnly');
+  if(!el) return;
+  mlbHrFavorableOnly=!!el.checked;
+  try{ _lhMem.setItem('mlbHrFavorableOnly', mlbHrFavorableOnly?'1':'0'); }catch(_){}
+}
+function syncSlipHrFavorableOnlyUi(){
+  const wrap=document.getElementById('slipHrFavorableOnlyWrap');
+  const el=document.getElementById('slipHrFavorableOnly');
+  if(!wrap||!el) return;
+  const show=current==='MLB'&&currentOption==='HR';
+  wrap.style.display=show?'inline-flex':'none';
+  if(show){
+    el.checked=!!mlbHrFavorableOnly;
+    el.disabled=!!pickLocked;
+  }
+}
 function syncSlipActions(){
   const copyBtn = document.getElementById('slipCopyBtn');
   const clearBtn = document.getElementById('slipClearBtn');
@@ -1619,6 +1647,7 @@ function syncSlipActions(){
   clearBtn.disabled = false;
   clearBtn.classList.toggle('slip-btn-dim', !has);
   _syncDevClearBtnStyle();
+  syncSlipHrFavorableOnlyUi();
 }
 function showToast(message, kind, placement){
   const stack = (placement==='center' ? document.getElementById('toastStackCenter') : document.getElementById('toastStack'));
@@ -3616,11 +3645,18 @@ function gameKey(g){return String(g?.gamePk || g?.gamePk || '');}
  *     M_total = clamp( 1
  *       + wPark·(M_park−1) + wWind·(M_wind−1) + wTemp·(M_temp−1)
  *       + wPress·(M_press−1) + wElev·(M_elevThin−1) + wHum·(M_humidor−1) )
- *   Defaults: wPark 0.42, wWind 0.22, wTemp 0.13, wPress 0.10, wElev 0.08, wHum 0.05
- *   (park + wind dominate; humidor already shrinks RH so its weight stays small.)
+ *   Defaults: wPark 0.80 (stadium); wind/temp/press/elev/hum share the other 0.20 in the
+ *   same relative mix as before (22:13:10:8:5) so weather still nudges carry without overpowering venue.
  *   Weather missing: M_total = M_park only. Rating: Favorable / Neutral / Unfavorable from M_total.
  */
-const _HR_ENV_W={park:0.42,wind:0.22,temp:0.13,press:0.1,elev:0.08,hum:0.05};
+const _HR_ENV_W=(function(){
+  const park=0.8;
+  const rest=0.2;
+  const rel={wind:0.22,temp:0.13,press:0.1,elev:0.08,hum:0.05};
+  const s=rel.wind+rel.temp+rel.press+rel.elev+rel.hum;
+  const r=rest/s;
+  return{park:park,wind:rel.wind*r,temp:rel.temp*r,press:rel.press*r,elev:rel.elev*r,hum:rel.hum*r};
+})();
 function _weightedHrCarryTotal(park,mTemp,mHumidor,mWind,mPress,mElevThin){
   const w=_HR_ENV_W;
   const t=1
@@ -4325,10 +4361,11 @@ function renderMLB(){
   const loadBtn=document.getElementById('mlbLoadBtn');
   if(loadBtn) loadBtn.disabled=!(pickCount>=1&&pickCount<=3)||pickLocked;
   syncPicksBoardWrapOrbit();
+  syncSlipHrFavorableOnlyUi();
 }
 
 async function startMLBLoad(){
-  trackEvent('pick_load_start',{sport:'MLB',option:'HR',count:pickCount});
+  trackEvent('pick_load_start',{sport:'MLB',option:'HR',count:pickCount,favorableEnvOnly:!!mlbHrFavorableOnly});
   pickRandomRhythm();
   if(!pickCount||pickCount<1||pickCount>3){
     document.getElementById('picks').innerHTML='<div class="muted">Please choose number of batters.</div>';
@@ -4351,14 +4388,8 @@ async function startMLBLoad(){
   try{
     const pool=await getTodaysMlbHitters();
     if(token!==mlbToken) return;
-    const poolDiv=_withOppTeamFromPool(pool);
-    try{ await enrichMlbHrCarryForPool(poolDiv); }catch(_){}
-    mlbLivePool=poolDiv;
-    mlbLoading=false;mlbLoaded=true;
-    if(!pickCount || pickCount<1 || pickCount>3){
-      mlbPicks=[];renderMLB();return;
-    }
     if(!pool.length){
+      mlbLoading=false;
       document.getElementById('picks').innerHTML='<div class="muted">No live hitters found for today.</div>';
       poSetError('No live hitters found for today.');
       showToast('No live hitters found for today.', 'error', 'center');
@@ -4369,18 +4400,43 @@ async function startMLBLoad(){
       closePickOverlay();
       renderMLB();return;
     }
+    const poolDiv=_withOppTeamFromPool(pool);
+    try{ await enrichMlbHrCarryForPool(poolDiv); }catch(_){}
+    let poolForHr=poolDiv;
+    if(mlbHrFavorableOnly){
+      poolForHr=poolDiv.filter(function(p){ return (p.hrEnvRating||'')==='favorable'; });
+      if(!poolForHr.length){
+        mlbLoading=false;
+        document.getElementById('picks').innerHTML='<div class="muted">No hitters with a Favorable carry environment today. Uncheck &quot;Favorable env. only&quot; next to Clear, or try again later.</div>';
+        poSetError('No Favorable-environment hitters in today’s pool.');
+        showToast('No Favorable-environment hitters today.', 'error', 'center');
+        pickLocked=false;
+        if(loadBtn) loadBtn.disabled=false;
+        stopPickSfxNow();
+        stopMoneyTransformButton();
+        closePickOverlay();
+        mlbLivePool=[];
+        renderMLB();
+        return;
+      }
+    }
+    mlbLivePool=poolForHr;
+    mlbLoading=false;mlbLoaded=true;
+    if(!pickCount || pickCount<1 || pickCount>3){
+      mlbPicks=[];renderMLB();return;
+    }
     const max=Math.min(pickCount,3);
     // Seed overlay with skeleton cards before names are known
     poSeedSkeletons(max);
-    shuffler=startNameShuffle(poolDiv, token);
+    shuffler=startNameShuffle(poolForHr, token);
     const selectedTeams=new Set();
     for(let i=0;i<max;i++){
       if(token!==mlbToken) return;
       // Spin this card for at least 500ms before revealing
       await sleep(Math.max(500, getRhythmSuspense(i)));
       if(token!==mlbToken) return;
-      const picked=await slotMachineResolvePick(poolDiv,mlbHitterUsed,selectedTeams,i,token,()=>mlbToken);
-      let choice=Object.assign({},picked||pickRandom(poolDiv));
+      const picked=await slotMachineResolvePick(poolForHr,mlbHitterUsed,selectedTeams,i,token,()=>mlbToken);
+      let choice=Object.assign({},picked||pickRandom(poolForHr));
       mlbPicks.push(choice);
       mlbTeamsUsed.push(choice.team);
       mlbHitterUsed.add(choice.player);
