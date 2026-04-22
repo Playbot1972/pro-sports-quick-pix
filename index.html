@@ -505,7 +505,35 @@ body.light .tabs{
   font-size:11px;font-weight:800;letter-spacing:.04em;
   color:#8fa3c4;
 }
-.age-modal-icon{font-size:2rem;margin-bottom:10px}
+.age-modal-icon{
+  margin:0 auto 12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.age-modal-icon.age-modal-strike-badge{
+  width:3.75rem;
+  height:3.75rem;
+  border-radius:50%;
+  border:2px solid rgba(248,113,113,.55);
+  background:rgba(248,113,113,.12);
+  box-sizing:border-box;
+}
+.age-modal-strike-badge .age-struck-num{
+  font-size:1.45rem;
+  font-weight:900;
+  letter-spacing:-0.03em;
+  color:#fecdd3;
+  line-height:1;
+  text-decoration:line-through;
+  text-decoration-thickness:3px;
+  text-decoration-color:#f87171;
+}
+body.light .age-modal-strike-badge{
+  border-color:rgba(220,38,38,.42);
+  background:rgba(254,226,226,.4);
+}
+body.light .age-modal-strike-badge .age-struck-num{color:#b91c1c;text-decoration-color:#dc2626}
 .age-modal-title{font-size:1.15rem;font-weight:900;color:#eef3ff;margin-bottom:10px}
 .paywall-overlay-card{
   text-align:center;padding:28px 18px 40px;max-width:420px;margin:0 auto;
@@ -614,6 +642,18 @@ body.light .hr-env-pill.hr-env-unfavorable{background:rgba(239,68,68,.1);color:#
 .trust-badge.orbit-ring{position:relative;overflow:visible;display:inline-flex;align-items:center;justify-content:center}
 .trust-badge.orbit-ring::before{border-radius:999px;offset-path:inset(2px round 999px)}
 .trust-badge{padding:8px 12px;border-radius:999px;background:linear-gradient(90deg,#6ee7ff,#8b5cf6);color:#08101f;font-weight:900;letter-spacing:.5px;font-size:13px;}
+button.trust-badge.trust-badge-agebtn{
+  margin:0;
+  font:inherit;
+  appearance:none;
+  -webkit-appearance:none;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
+button.trust-badge.trust-badge-agebtn::-moz-focus-inner{border:0;padding:0}
 /* Fixed light copy on dark strip — body.light --text is dark and was making this line look black */
 .trust-text{color:#dce6ff;font-size:14px;line-height:1.4;font-weight:600;}
 .trust-links{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;}
@@ -768,6 +808,11 @@ body.light .slip-btn.slip-btn-dev-active{
 }
 .ob-age-actions{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px;justify-content:center}
 .ob-btn.ob-age-yes-split{width:auto;flex:1;min-width:120px;margin-top:0}
+.ob-btn.ob-age-yes-split.orbit-ring{position:relative;overflow:visible;}
+.ob-btn.ob-age-yes-split.orbit-ring::before{
+  border-radius:14px;
+  offset-path:inset(2px round 14px);
+}
 .ob-age-no-btn{flex:1;min-width:120px;margin-top:0;padding:13px 16px;border-radius:14px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#eef3ff;font-weight:800;font-size:.95rem;cursor:pointer;font-family:inherit}
 #logoutConfirmModal .ob-age-no-btn.orbit-ring::before{
   border-radius:14px;
@@ -988,13 +1033,14 @@ window.safeHeadshot = function(obj){
     <!-- STEP 1: Age Gate (same Yes / No as trust-banner Age Check) -->
     <div class="ob-step active" id="ob-step1">
       <div class="ob-sub">Free daily HR picks powered by live MLB lineups.<br>You must be 21+ to continue.</div>
+      <div class="age-modal-icon age-modal-strike-badge" aria-hidden="true"><span class="age-struck-num">20</span></div>
       <p class="ob-age-q ob-age-q--withpill">
         <span class="ob-age-q-line">Are you</span>
         <span class="ob-age-21pill orbit-ring">21 or older</span>
         <span class="ob-age-q-line">and using this app only where it is legal for you?</span>
       </p>
       <div class="ob-age-actions">
-        <button type="button" class="ob-btn ob-age-yes-split" onclick="_ageYesTripleOrProceed(false)">Yes</button>
+        <button type="button" class="ob-btn ob-age-yes-split orbit-ring" onclick="_ageYesTripleOrProceed(false)">Yes</button>
         <button type="button" class="ob-age-no-btn" onclick="ageGateNo()">No</button>
       </div>
       <div class="ob-legal">For entertainment purposes only. Not affiliated with MLB. Results are not guaranteed. Please gamble responsibly.</div>
@@ -1058,7 +1104,7 @@ window.safeHeadshot = function(obj){
 
   <div class="trust-banner">
     <div class="trust-row">
-      <div class="trust-badge orbit-ring">21+ ONLY</div>
+      <button type="button" class="trust-badge orbit-ring trust-badge-agebtn" onclick="openAgeGate()" title="Age check" aria-label="Age check — 21 plus only">21+ ONLY</button>
       <div class="trust-text" id="legalStateLine">Your state only where legal. Results are not guaranteed. For entertainment only.</div>
     </div>
     <div class="trust-links">
@@ -5696,7 +5742,7 @@ function getRhythmSuspense(i){
 <!-- AGE CHECK (trust banner link) -->
 <div id="ageGateModal" style="display:none;position:fixed;inset:0;z-index:10002;background:rgba(7,17,31,.96);align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(8px)">
   <div class="age-modal-card">
-    <div class="age-modal-icon">🔞</div>
+    <div class="age-modal-icon age-modal-strike-badge" aria-hidden="true"><span class="age-struck-num">20</span></div>
     <div class="age-modal-title">Age check</div>
     <p class="ob-age-q ob-age-q--withpill">
       <span class="ob-age-q-line">Are you</span>
@@ -5704,7 +5750,7 @@ function getRhythmSuspense(i){
       <span class="ob-age-q-line">and using this app only where it is legal for you?</span>
     </p>
     <div class="ob-age-actions">
-      <button type="button" class="ob-btn ob-age-yes-split" onclick="_ageYesTripleOrProceed(true)">Yes</button>
+      <button type="button" class="ob-btn ob-age-yes-split orbit-ring" onclick="_ageYesTripleOrProceed(true)">Yes</button>
       <button type="button" class="ob-age-no-btn" onclick="ageGateNo()">No</button>
     </div>
   </div>
