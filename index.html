@@ -21,6 +21,7 @@
 <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
 <link rel="dns-prefetch" href="https://assets.mixkit.co">
 <link rel="dns-prefetch" href="https://site.api.espn.com">
+<link rel="dns-prefetch" href="https://statsapi.mlb.com">
 <link rel="dns-prefetch" href="https://api.open-meteo.com">
 <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com">
 <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossorigin>
@@ -875,6 +876,7 @@ body.light .pick-title-chip{
   border-color:rgba(74,103,216,.4);
 }
 body.light .pick-head{border-bottom-color:var(--line)}
+body.light #mlbDataSourceSel{background:#fff;color:#14213d;border-color:#cfd8ea}
 body.light .topbar-btn{
   background:rgba(255,255,255,.9);
   border-color:#cfd8ea;
@@ -1896,23 +1898,23 @@ function renderSport(){
       document.getElementById('picks').innerHTML=_oosPicksLine('MLB');
     }else if(currentOption==='Ks'){
       const _ksCnt=[1,2,3].map(n=>`<button type='button' class='btn ${ksPickCount===n?'orbit-ring':'btn2'} ${((_isUiPickLocked()||_paywalled)&&ksPickCount!==n)?'locked':''}' ${_isUiPickLocked()?'disabled':''} onclick="setKsCount(${n})">${n} Pitcher${n>1?'s':''}${((n>1||_paywalled)&&!_isPro)&&!_devMode?' 🔒':''}</button>`).join('');
-      document.getElementById('mlbControls').innerHTML=`<div class='pick-actions-stacked'><div id='pickCountRow' class='pick-count-tight pick-count-tight--stacked'>${_ksCnt}</div><div class='pick-load-row btnrow'><button type='button' class='btn pick-load-btn' id='ksLoadBtn' onclick='moneyTransformButton(this);startKsLoad()' ${(ksPickCount>=1&&!_isUiPickLocked()&&!_paywalled)?'':'disabled'}>Spin</button>${ksLoaded||ksPicks.length?"<button type='button' class='btn btn2' onclick='clearKs()'>Clear</button>":''}</div></div><div class='muted'>Loads today's MLB probable starters with K/9 data.</div><div class='muted' style='margin-top:6px'>Date: ${todayStr}</div>`;
+      document.getElementById('mlbControls').innerHTML=`<div class='pick-actions-stacked'><div id='pickCountRow' class='pick-count-tight pick-count-tight--stacked'>${_ksCnt}</div><div class='pick-load-row btnrow'><button type='button' class='btn pick-load-btn' id='ksLoadBtn' onclick='moneyTransformButton(this);startKsLoad()' ${(ksPickCount>=1&&!_isUiPickLocked()&&!_paywalled)?'':'disabled'}>Spin</button>${ksLoaded||ksPicks.length?"<button type='button' class='btn btn2' onclick='clearKs()'>Clear</button>":''}</div></div><div class='muted'>Loads today's MLB probable starters with K/9 data (MLB Stats API).</div><div class='muted' style='margin-top:6px'>Date: ${todayStr}</div>${_mlbDataSourceSelectHtml()}<div class='muted' style='margin-top:4px;font-size:10px;opacity:.85'>Pitcher pool is always MLB Stats; the row above applies to HR / Hits / Bases / RBI.</div>`;
       renderKsPicks();
     } else if(currentOption==='Hits'){
       const _hitsCnt=[1,2,3].map(n=>`<button type='button' class='btn ${hitsPickCount===n?'orbit-ring':'btn2'} ${((_isUiPickLocked()||_paywalled)&&hitsPickCount!==n)?'locked':''}' ${_isUiPickLocked()?'disabled':''} onclick="setHitsCount(${n})">${n} Batter${n>1?'s':''}${((n>1||_paywalled)&&!_isPro)&&!_devMode?' 🔒':''}</button>`).join('');
-      document.getElementById('mlbControls').innerHTML=`<div class='pick-actions-stacked'><div id='pickCountRow' class='pick-count-tight pick-count-tight--stacked'>${_hitsCnt}</div><div class='pick-load-row btnrow'><button type='button' class='btn pick-load-btn' id='hitsLoadBtn' onclick='moneyTransformButton(this);startHitsLoad()' ${(hitsPickCount>=1&&!_isUiPickLocked()&&!_paywalled)?'':'disabled'}>Spin</button>${hitsLoaded||hitsPicks.length?"<button type='button' class='btn btn2' onclick='clearHits()'>Clear</button>":''}</div></div><div class='muted'>Loads today's MLB hitters with season hit totals.</div><div class='muted' style='margin-top:6px'>Date: ${todayStr}</div>`;
+      document.getElementById('mlbControls').innerHTML=`<div class='pick-actions-stacked'><div id='pickCountRow' class='pick-count-tight pick-count-tight--stacked'>${_hitsCnt}</div><div class='pick-load-row btnrow'><button type='button' class='btn pick-load-btn' id='hitsLoadBtn' onclick='moneyTransformButton(this);startHitsLoad()' ${(hitsPickCount>=1&&!_isUiPickLocked()&&!_paywalled)?'':'disabled'}>Spin</button>${hitsLoaded||hitsPicks.length?"<button type='button' class='btn btn2' onclick='clearHits()'>Clear</button>":''}</div></div><div class='muted'>Loads today's MLB hitters with season hit totals.</div><div class='muted' style='margin-top:6px'>Date: ${todayStr}</div>${_mlbDataSourceSelectHtml()}`;
       renderHitsPicks();
     } else if(currentOption==='Total Bases'){
       const _basesCnt=[1,2,3].map(n=>`<button type='button' class='btn ${basesPickCount===n?'orbit-ring':'btn2'} ${((_isUiPickLocked()||_paywalled)&&basesPickCount!==n)?'locked':''}' ${_isUiPickLocked()?'disabled':''} onclick="setBasesCount(${n})">${n} Batter${n>1?'s':''}${((n>1||_paywalled)&&!_isPro)&&!_devMode?' 🔒':''}</button>`).join('');
-      document.getElementById('mlbControls').innerHTML=`<div class='pick-actions-stacked'><div id='pickCountRow' class='pick-count-tight pick-count-tight--stacked'>${_basesCnt}</div><div class='pick-load-row btnrow'><button type='button' class='btn pick-load-btn' id='basesLoadBtn' onclick='moneyTransformButton(this);startBasesLoad()' ${(basesPickCount>=1&&!_isUiPickLocked()&&!_paywalled)?'':'disabled'}>Spin</button>${basesLoaded||basesPicks.length?"<button type='button' class='btn btn2' onclick='clearBases()'>Clear</button>":''}</div></div><div class='muted'>Loads today's MLB hitters with total bases data.</div><div class='muted' style='margin-top:6px'>Date: ${todayStr}</div>`;
+      document.getElementById('mlbControls').innerHTML=`<div class='pick-actions-stacked'><div id='pickCountRow' class='pick-count-tight pick-count-tight--stacked'>${_basesCnt}</div><div class='pick-load-row btnrow'><button type='button' class='btn pick-load-btn' id='basesLoadBtn' onclick='moneyTransformButton(this);startBasesLoad()' ${(basesPickCount>=1&&!_isUiPickLocked()&&!_paywalled)?'':'disabled'}>Spin</button>${basesLoaded||basesPicks.length?"<button type='button' class='btn btn2' onclick='clearBases()'>Clear</button>":''}</div></div><div class='muted'>Loads today's MLB hitters with total bases data.</div><div class='muted' style='margin-top:6px'>Date: ${todayStr}</div>${_mlbDataSourceSelectHtml()}`;
       renderBasesPicks();
     } else if(currentOption==='RBI'){
       const _rbiCnt=[1,2,3].map(n=>`<button type='button' class='btn ${rbiPickCount===n?'orbit-ring':'btn2'} ${((_isUiPickLocked()||_paywalled)&&rbiPickCount!==n)?'locked':''}' ${_isUiPickLocked()?'disabled':''} onclick="setRBICount(${n})">${n} Batter${n>1?'s':''}${((n>1||_paywalled)&&!_isPro)&&!_devMode?' 🔒':''}</button>`).join('');
-      document.getElementById('mlbControls').innerHTML=`<div class='pick-actions-stacked'><div id='pickCountRow' class='pick-count-tight pick-count-tight--stacked'>${_rbiCnt}</div><div class='pick-load-row btnrow'><button type='button' class='btn pick-load-btn' id='rbiLoadBtn' onclick='moneyTransformButton(this);startRBILoad()' ${(rbiPickCount>=1&&!_isUiPickLocked()&&!_paywalled)?'':'disabled'}>Spin</button>${rbiLoaded||rbiPicks.length?"<button type='button' class='btn btn2' onclick='clearRBI()'>Clear</button>":''}</div></div><div class='muted'>Loads today's MLB hitters with RBI totals.</div><div class='muted' style='margin-top:6px'>Date: ${todayStr}</div>`;
+      document.getElementById('mlbControls').innerHTML=`<div class='pick-actions-stacked'><div id='pickCountRow' class='pick-count-tight pick-count-tight--stacked'>${_rbiCnt}</div><div class='pick-load-row btnrow'><button type='button' class='btn pick-load-btn' id='rbiLoadBtn' onclick='moneyTransformButton(this);startRBILoad()' ${(rbiPickCount>=1&&!_isUiPickLocked()&&!_paywalled)?'':'disabled'}>Spin</button>${rbiLoaded||rbiPicks.length?"<button type='button' class='btn btn2' onclick='clearRBI()'>Clear</button>":''}</div></div><div class='muted'>Loads today's MLB hitters with RBI totals.</div><div class='muted' style='margin-top:6px'>Date: ${todayStr}</div>${_mlbDataSourceSelectHtml()}`;
       renderRBIPicks();
     } else {
       const _hrCnt=[1,2,3].map(n=>`<button type='button' class='btn ${pickCount===n?'orbit-ring':'btn2'} ${((_isUiPickLocked()||_paywalled)&&pickCount!==n)?'locked':''}' ${_isUiPickLocked()?'disabled':''} onclick="setCount(${n})">${n} Batter${n>1?'s':''}${((n>1||_paywalled)&&!_isPro)&&!_devMode?' 🔒':''}</button>`).join('');
-      document.getElementById('mlbControls').innerHTML=`<div class='pick-actions-stacked'><div id='pickCountRow' class='pick-count-tight pick-count-tight--stacked'>${_hrCnt}</div><div class='pick-load-row btnrow'><button type='button' class='btn pick-load-btn' id='mlbLoadBtn' onclick='moneyTransformButton(this);startMLBLoad()' ${(pickCount>=1&&pickCount<=3&&!_isUiPickLocked()&&!_paywalled)?'':'disabled'}>Spin</button>${mlbLoaded||mlbPicks.length?"<button type='button' class='btn btn2' onclick='clearMLB()'>Clear</button>":''}</div></div><div class='muted'>Loads today's active MLB hitters from the official MLB Stats API.</div><div class='muted' id='lineupDateText' style='margin-top:6px'>Date: ${todayStr}</div>`;
+      document.getElementById('mlbControls').innerHTML=`<div class='pick-actions-stacked'><div id='pickCountRow' class='pick-count-tight pick-count-tight--stacked'>${_hrCnt}</div><div class='pick-load-row btnrow'><button type='button' class='btn pick-load-btn' id='mlbLoadBtn' onclick='moneyTransformButton(this);startMLBLoad()' ${(pickCount>=1&&pickCount<=3&&!_isUiPickLocked()&&!_paywalled)?'':'disabled'}>Spin</button>${mlbLoaded||mlbPicks.length?"<button type='button' class='btn btn2' onclick='clearMLB()'>Clear</button>":''}</div></div><div class='muted'>Loads today's MLB hitters from the free MLB Stats API and/or ESPN (no keys).</div><div class='muted' id='lineupDateText' style='margin-top:6px'>Date: ${todayStr}</div>${_mlbDataSourceSelectHtml()}`;
       renderMLB();
     }
   } else if(current==='NFL'){
@@ -4396,6 +4398,159 @@ async function getScoreboardEventsNearby(baseUrl, backDays, aheadDays){
   }
   return events;
 }
+/** MLB hitter pool: free public MLB Stats API vs ESPN — persisted locally (no keys). */
+function getMlbDataSourcePref(){
+  try{
+    const v=_lhMem.getItem('mlbDataSource');
+    if(v==='mlb'||v==='espn'||v==='auto') return v;
+  }catch(_){}
+  return 'auto';
+}
+function setMlbDataSourcePref(v){
+  const ok=(v==='mlb'||v==='espn'||v==='auto')?v:'auto';
+  try{ _lhMem.setItem('mlbDataSource', ok); }catch(_){}
+}
+function onMlbDataSourceChange(sel){
+  const v=sel&&sel.value||'auto';
+  setMlbDataSourcePref(v);
+  const label=v==='auto'?'Auto (MLB Stats first, ESPN if empty)':v==='mlb'?'MLB Stats API only':'ESPN only';
+  showToast('MLB hitter pool: '+label,'','center');
+}
+function _mlbDataSourceSelectHtml(){
+  const cur=getMlbDataSourcePref();
+  return '<div class="muted" style="font-size:11px;margin-top:10px;text-align:center;line-height:1.45">Free data (no API key): <select id="mlbDataSourceSel" onchange="onMlbDataSourceChange(this)" title="Where to build today’s MLB hitter pool for HR / Hits / Bases / RBI" style="margin-left:4px;padding:4px 8px;border-radius:8px;border:1px solid rgba(110,231,255,.25);background:rgba(0,0,0,.18);color:inherit;font-size:11px;max-width:min(100%,20rem);vertical-align:middle">'
+    +'<option value="auto"'+(cur==='auto'?' selected':'')+'>Auto — MLB Stats first, ESPN if empty</option>'
+    +'<option value="mlb"'+(cur==='mlb'?' selected':'')+'>MLB Stats API only</option>'
+    +'<option value="espn"'+(cur==='espn'?' selected':'')+'>ESPN only</option>'
+    +'</select></div>';
+}
+function _espnMlbGameMeta(ev){
+  const comp=ev&&ev.competitions&&ev.competitions[0]||{};
+  let homeAbbr='',awayAbbr='';
+  for(const c of (comp.competitors||[])){
+    const ab=c&&c.team&&c.team.abbreviation||'';
+    if(!ab) continue;
+    const ha=String(c.homeAway||'').toLowerCase();
+    if(ha==='home') homeAbbr=ab;
+    else if(ha==='away') awayAbbr=ab;
+  }
+  const base=_espnEventGame(ev);
+  return Object.assign({},base,{gamePk:String(ev&&ev.id||''),homeAbbr,awayAbbr});
+}
+function _espnBattingStatIndex(keys,want){
+  const w=String(want||'').toLowerCase();
+  const aliases={hr:['hr','home runs','home_runs','homeruns'],hits:['hits','hit','h'],avg:['avg','ba','avg.'],rbi:['rbi'],slg:['slg']};
+  const wantList=aliases[w]||[w];
+  const arr=Array.isArray(keys)?keys:[];
+  for(let i=0;i<arr.length;i++){
+    const k=String(arr[i]==null?'':arr[i]).trim().toLowerCase().replace(/\s+/g,'_');
+    for(let j=0;j<wantList.length;j++){
+      if(k===wantList[j]) return i;
+    }
+  }
+  return -1;
+}
+function _espnPosIsPitcher(pos){
+  const u=String(pos||'').toUpperCase();
+  return u==='P'||u==='SP'||u==='RP'||u==='LP'||u==='MR'||u==='SU'||u==='CL';
+}
+async function getTodaysMlbHittersEspn(){
+  const events=await getScoreboardEventsNearby('https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard',1,1);
+  if(!events||!events.length) return [];
+  const teamOppMap=_teamOpponentMapFromEvents(events);
+  const pools=[];
+  const seen=new Set();
+  for(const ev of events){
+    if(!ev||ev.id==null) continue;
+    const gameObj=_espnMlbGameMeta(ev);
+    const sumUrl='https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/summary?event='+encodeURIComponent(ev.id);
+    let sum;
+    try{ sum=await fetchJson(sumUrl); }catch(_){ continue; }
+    const boxPlayers=(sum&&sum.boxscore&&sum.boxscore.players)||[];
+    for(const teamBlock of boxPlayers){
+      const teamAbbr=teamBlock&&teamBlock.team&&teamBlock.team.abbreviation||'';
+      if(!teamAbbr) continue;
+      const teamName=(teamBlock.team.displayName||teamBlock.team.name||teamAbbr);
+      const teamId=teamBlock.team.id;
+      const stats=teamBlock.statistics||[];
+      let usedBatting=false;
+      for(const group of stats){
+        if(usedBatting) break;
+        const gname=String(group&&group.name||'').toLowerCase();
+        if(gname.indexOf('bat')===-1&&gname.indexOf('hit')===-1) continue;
+        const keys=group.keys||[];
+        const iHr=_espnBattingStatIndex(keys,'hr');
+        if(iHr<0) continue;
+        const iAvg=_espnBattingStatIndex(keys,'avg');
+        const iHits=_espnBattingStatIndex(keys,'hits');
+        const iRbi=_espnBattingStatIndex(keys,'rbi');
+        const iSlg=_espnBattingStatIndex(keys,'slg');
+        for(const row of (group.athletes||[])){
+          const athlete=row&&row.athlete||{};
+          const name=normalizeName(athlete.displayName||'');
+          if(!name) continue;
+          const pos=(athlete.position&&athlete.position.abbreviation)||'';
+          if(_espnPosIsPitcher(pos)) continue;
+          const vals=row.stats||[];
+          const hr=parseFloat(vals[iHr]||0)||0;
+          const avgStr=iAvg>=0&&vals[iAvg]!=null?String(vals[iAvg]):'.---';
+          const hits=iHits>=0?parseInt(vals[iHits],10)||0:0;
+          const rbi=iRbi>=0?parseInt(vals[iRbi],10)||0:0;
+          const slgStr=iSlg>=0&&vals[iSlg]!=null?String(vals[iSlg]):'.---';
+          const k=name+'::'+teamAbbr;
+          if(seen.has(k)) continue;
+          seen.add(k);
+          const espnId=athlete.id!=null?String(athlete.id):'';
+          pools.push({
+            player:name,
+            playerId: parseInt(espnId,10)||0,
+            espnAthleteId: espnId,
+            team: teamName,
+            teamAbbr,
+            oppTeamAbbr: teamOppMap[teamAbbr]||'',
+            teamId: teamId!=null?Number(teamId):null,
+            order: 99,
+            gamePk: String(ev.id),
+            game: gameObj,
+            hr,
+            avg: avgStr,
+            hits,
+            seasonHits: hits,
+            slg: slgStr,
+            rbi,
+            seasonRbi: rbi,
+            pos
+          });
+        }
+        usedBatting=true;
+      }
+    }
+  }
+  const unique=new Map();
+  pools.forEach(function(x){
+    const k=x.player+'::'+x.teamAbbr;
+    if(!unique.has(k)) unique.set(k,x);
+  });
+  return [...unique.values()].sort(function(a,b){return a.player.localeCompare(b.player);});
+}
+async function getTodaysMlbHitters(){
+  const pref=getMlbDataSourcePref();
+  if(pref==='espn'){
+    try{ return await getTodaysMlbHittersEspn(); }catch(_){ return []; }
+  }
+  if(pref==='mlb'){
+    try{ return await getTodaysMlbHittersRaw(); }catch(_){ return []; }
+  }
+  try{
+    const mlb=await getTodaysMlbHittersRaw();
+    if(mlb&&mlb.length) return mlb;
+  }catch(_){}
+  try{
+    const esp=await getTodaysMlbHittersEspn();
+    if(esp&&esp.length) return esp;
+  }catch(_){}
+  return [];
+}
 function _espnEventGame(ev){
   const comp = ev && ev.competitions && ev.competitions[0] || {};
   return {
@@ -4594,7 +4749,7 @@ async function _buildRosterFallbackPlayers(sportPath, events, option, defaults){
   }
   return out;
 }
-async function getTodaysMlbHitters(){
+async function getTodaysMlbHittersRaw(){
   const today=todayStr;
   const scheduleUrl=`https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${today}&hydrate=team`;
   const sched=await fetchJson(scheduleUrl);
