@@ -548,6 +548,7 @@ body.light .age-modal-card{
 }
 body.light .age-modal-card .ob-age-q{color:#32466c}
 body.light .age-modal-card .ob-age-q strong{color:#1d2b46}
+body.light .age-modal-card .ob-age-q-line{color:#5a6f93}
 body.light .age-modal-title{color:#1d2b46!important}
 body.light .age-modal-card .ob-age-no-btn{
   background:#f3f7ff;
@@ -608,7 +609,10 @@ body.light .hr-env-pill.hr-env-unfavorable{background:rgba(239,68,68,.1);color:#
 .locked{opacity:.45;filter:grayscale(.15);background:rgba(255,255,255,.08)!important;color:var(--text)!important}
 .locked[disabled]{pointer-events:none}
 .trust-banner{margin:14px 0 16px;padding:14px 16px;border:1px solid rgba(110,231,255,.25);border-radius:16px;background:linear-gradient(180deg,rgba(17,28,51,.95),rgba(24,39,71,.95));box-shadow:0 10px 28px rgba(0,0,0,.18);color:#e8eeff}
-.trust-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.trust-row{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;text-align:center}
+.trust-text{flex:1 1 220px;min-width:0;max-width:36rem}
+.trust-badge.orbit-ring{position:relative;overflow:visible;display:inline-flex;align-items:center;justify-content:center}
+.trust-badge.orbit-ring::before{border-radius:999px;offset-path:inset(2px round 999px)}
 .trust-badge{padding:8px 12px;border-radius:999px;background:linear-gradient(90deg,#6ee7ff,#8b5cf6);color:#08101f;font-weight:900;letter-spacing:.5px;font-size:13px;}
 /* Fixed light copy on dark strip — body.light --text is dark and was making this line look black */
 .trust-text{color:#dce6ff;font-size:14px;line-height:1.4;font-weight:600;}
@@ -681,6 +685,7 @@ body.light .slip-btn.slip-btn-dev-active{
   .title{font-size:22px}
   .topbar{padding:11px 12px}
   .tabs{top:72px}
+  .ob-age-21pill{font-size:0.98rem;padding:9px 22px;min-height:42px}
   .tab{font-size:13px}
   .btn{font-size:14px}
   .pick-actions-stacked #pickCountRow.pick-count-tight--stacked{column-gap:8px}
@@ -730,6 +735,37 @@ body.light .slip-btn.slip-btn-dev-active{
 .ob-btn:disabled{opacity:.45;cursor:not-allowed}
 .ob-age-q{color:#9fb0d0;font-size:.92rem;line-height:1.5;margin:0 0 22px;text-align:center}
 .ob-age-q strong{color:#eef3ff}
+.ob-age-q--withpill{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:12px;
+  margin:0 0 24px;
+  font-size:.92rem;
+}
+.ob-age-q-line{color:#9fb0d0;line-height:1.45;max-width:20rem;margin:0}
+.ob-age-21pill{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:46px;
+  padding:10px 28px;
+  border-radius:999px;
+  font-size:1.05rem;
+  font-weight:900;
+  letter-spacing:.04em;
+  color:#06111c;
+  line-height:1.15;
+  text-align:center;
+  background:linear-gradient(90deg,#6ee7ff,#8b5cf6);
+  border:1px solid rgba(255,255,255,.28);
+  box-shadow:0 0 0 1px rgba(37,201,255,.35),0 10px 28px rgba(0,0,0,.3);
+}
+.ob-age-21pill.orbit-ring{position:relative;overflow:visible;}
+.ob-age-21pill.orbit-ring::before{
+  border-radius:999px;
+  offset-path:inset(2px round 999px);
+}
 .ob-age-actions{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px;justify-content:center}
 .ob-btn.ob-age-yes-split{width:auto;flex:1;min-width:120px;margin-top:0}
 .ob-age-no-btn{flex:1;min-width:120px;margin-top:0;padding:13px 16px;border-radius:14px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#eef3ff;font-weight:800;font-size:.95rem;cursor:pointer;font-family:inherit}
@@ -952,7 +988,11 @@ window.safeHeadshot = function(obj){
     <!-- STEP 1: Age Gate (same Yes / No as trust-banner Age Check) -->
     <div class="ob-step active" id="ob-step1">
       <div class="ob-sub">Free daily HR picks powered by live MLB lineups.<br>You must be 21+ to continue.</div>
-      <p class="ob-age-q">Are you <strong>21 or older</strong> and using this app only where it is legal for you?</p>
+      <p class="ob-age-q ob-age-q--withpill">
+        <span class="ob-age-q-line">Are you</span>
+        <span class="ob-age-21pill orbit-ring">21 or older</span>
+        <span class="ob-age-q-line">and using this app only where it is legal for you?</span>
+      </p>
       <div class="ob-age-actions">
         <button type="button" class="ob-btn ob-age-yes-split" onclick="_ageYesTripleOrProceed(false)">Yes</button>
         <button type="button" class="ob-age-no-btn" onclick="ageGateNo()">No</button>
@@ -1018,7 +1058,7 @@ window.safeHeadshot = function(obj){
 
   <div class="trust-banner">
     <div class="trust-row">
-      <div class="trust-badge">21+ ONLY</div>
+      <div class="trust-badge orbit-ring">21+ ONLY</div>
       <div class="trust-text" id="legalStateLine">Your state only where legal. Results are not guaranteed. For entertainment only.</div>
     </div>
     <div class="trust-links">
@@ -5658,7 +5698,11 @@ function getRhythmSuspense(i){
   <div class="age-modal-card">
     <div class="age-modal-icon">🔞</div>
     <div class="age-modal-title">Age check</div>
-    <p class="ob-age-q">Are you <strong>21 or older</strong> and using this app only where it is legal for you?</p>
+    <p class="ob-age-q ob-age-q--withpill">
+      <span class="ob-age-q-line">Are you</span>
+      <span class="ob-age-21pill orbit-ring">21 or older</span>
+      <span class="ob-age-q-line">and using this app only where it is legal for you?</span>
+    </p>
     <div class="ob-age-actions">
       <button type="button" class="ob-btn ob-age-yes-split" onclick="_ageYesTripleOrProceed(true)">Yes</button>
       <button type="button" class="ob-age-no-btn" onclick="ageGateNo()">No</button>
