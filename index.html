@@ -512,28 +512,45 @@ body.light .tabs{
   justify-content:center;
 }
 .age-modal-icon.age-modal-strike-badge{
+  position:relative;
   width:3.75rem;
   height:3.75rem;
   border-radius:50%;
   border:2px solid rgba(248,113,113,.55);
   background:rgba(248,113,113,.12);
   box-sizing:border-box;
+  overflow:hidden;
+}
+/* Diagonal slash: top-left of circle → bottom-right (standard “no” strike) */
+.age-modal-strike-badge::after{
+  content:'';
+  position:absolute;
+  left:50%;
+  top:50%;
+  z-index:2;
+  width:145%;
+  height:2.5px;
+  border-radius:2px;
+  background:#f87171;
+  transform:translate(-50%,-50%) rotate(45deg);
+  pointer-events:none;
+  box-shadow:0 0 1px rgba(0,0,0,.2);
 }
 .age-modal-strike-badge .age-struck-num{
+  position:relative;
+  z-index:1;
   font-size:1.45rem;
   font-weight:900;
   letter-spacing:-0.03em;
   color:#fecdd3;
   line-height:1;
-  text-decoration:line-through;
-  text-decoration-thickness:3px;
-  text-decoration-color:#f87171;
 }
 body.light .age-modal-strike-badge{
   border-color:rgba(220,38,38,.42);
   background:rgba(254,226,226,.4);
 }
-body.light .age-modal-strike-badge .age-struck-num{color:#b91c1c;text-decoration-color:#dc2626}
+body.light .age-modal-strike-badge::after{background:#dc2626}
+body.light .age-modal-strike-badge .age-struck-num{color:#b91c1c}
 .age-modal-title{font-size:1.15rem;font-weight:900;color:#eef3ff;margin-bottom:10px}
 .paywall-overlay-card{
   text-align:center;padding:28px 18px 40px;max-width:420px;margin:0 auto;
