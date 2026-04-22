@@ -82,20 +82,24 @@ body.light .site-footer{border-top-color:var(--line)}
 .ad-sense-wrap ins.adsbygoogle{display:block;margin:0 auto}
 body.light .ad-sense-wrap{border-color:#cfd8ea;background:rgba(246,248,255,.6)}
 .topbar{
-  display:flex;align-items:flex-start;justify-content:space-between;gap:14px;
-  flex-wrap:nowrap;padding:12px 14px;border:1px solid var(--line);border-radius:14px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  flex-wrap:wrap;padding:12px 14px;border:1px solid var(--line);border-radius:14px;
   background:linear-gradient(180deg,var(--card),var(--card2));box-shadow:0 10px 28px rgba(0,0,0,.32);
 }
-.topbar-main{flex:1 1 auto;min-width:0;text-align:left}
-.topbar-actions{
+.topbar-left{
+  display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;
+  flex:1 1 auto;min-width:0;
+}
+.topbar-right{
   display:flex;align-items:center;justify-content:flex-end;gap:10px;
-  flex-wrap:wrap;flex-shrink:0;
+  flex-wrap:wrap;flex-shrink:0;margin-left:auto;
 }
 .topbar-btn{
   padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.18);
   background:rgba(255,255,255,.08);color:inherit;font-weight:700;font-size:12px;cursor:pointer;
   font-family:inherit;
 }
+/* Theme + Log out: identical footprint (log out stays top-right) */
 .topbar-btn.topbar-action-btn{
   box-sizing:border-box;
   min-width:124px;
@@ -106,7 +110,6 @@ body.light .ad-sense-wrap{border-color:#cfd8ea;background:rgba(246,248,255,.6)}
   justify-content:center;
   white-space:nowrap;
 }
-.topbar-hint{max-width:200px;text-align:right;line-height:1.25;font-size:11px;font-weight:700}
 .topbar-btn:hover{border-color:rgba(255,255,255,.28);background:rgba(255,255,255,.12)}
 .btn-cta{
   border:0;border-radius:14px;cursor:pointer;font-weight:900;color:#07111f;
@@ -769,8 +772,7 @@ body.light .topbar-btn:hover{
 @media (max-width:900px){
   .grid{grid-template-columns:1fr}
   .title{font-size:22px}
-  .topbar{padding:11px 12px;flex-wrap:wrap}
-  .topbar-actions{flex:1 1 100%;justify-content:flex-end;padding-top:4px;gap:8px}
+  .topbar{padding:11px 12px}
   .topbar-btn.topbar-action-btn{min-width:108px;min-height:38px;font-size:11px;padding:8px 10px}
   .tabs{top:72px}
   .ob-age-21pill{font-size:0.98rem;padding:9px 22px;min-height:42px}
@@ -1133,14 +1135,16 @@ window.safeHeadshot = function(obj){
 -->
 <div class="wrap">
   <div class="topbar">
-    <div class="topbar-main">
-      <div class="title">Pro Sports Quick Pix</div>
-      <div class="subtitle" id="taglineSubtitle">Daily sports picks powered by professional sports lineups. <span class="dev-tap" data-dev-word="free" onclick="_devTapSubtitleWord(event,'free')" role="button" tabindex="0">Free</span> <span class="dev-tap" data-dev-word="fast" onclick="_devTapSubtitleWord(event,'fast')" role="button" tabindex="0">Fast</span>. <span class="dev-tap" data-dev-word="sharp" onclick="_devTapSubtitleWord(event,'sharp')" role="button" tabindex="0">Sharp</span>.</div>
-    </div>
-    <div class="topbar-actions">
+    <div class="topbar-left">
       <button type="button" id="themeToggle" class="topbar-btn topbar-action-btn" onclick="toggleTheme()" aria-label="Switch to light mode">☀️ Light mode</button>
+      <div>
+        <div class="title">Pro Sports Quick Pix</div>
+        <div class="subtitle" id="taglineSubtitle">Daily sports picks powered by professional sports lineups. <span class="dev-tap" data-dev-word="free" onclick="_devTapSubtitleWord(event,'free')" role="button" tabindex="0">Free</span> <span class="dev-tap" data-dev-word="fast" onclick="_devTapSubtitleWord(event,'fast')" role="button" tabindex="0">Fast</span>. <span class="dev-tap" data-dev-word="sharp" onclick="_devTapSubtitleWord(event,'sharp')" role="button" tabindex="0">Sharp</span>.</div>
+      </div>
+    </div>
+    <div class="topbar-right">
       <button type="button" id="logoutBtn" class="topbar-btn topbar-action-btn">Log in</button>
-      <span class="badge topbar-hint" id="sportHintBadge">Choose a sport tab</span>
+      <div class="badge" id="sportHintBadge">Choose a sport tab</div>
     </div>
   </div>
   <div class="account-strip">
