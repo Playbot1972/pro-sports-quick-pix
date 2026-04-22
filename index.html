@@ -715,9 +715,43 @@ button.trust-badge.trust-badge-agebtn{
 button.trust-badge.trust-badge-agebtn::-moz-focus-inner{border:0;padding:0}
 /* Fixed light copy on dark strip — body.light --text is dark and was making this line look black */
 .trust-text{color:#dce6ff;font-size:14px;line-height:1.4;font-weight:600;}
-.trust-links{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;}
-.trust-links a{color:#b8ddff;text-decoration:none;font-size:13px;font-weight:700;opacity:.95;}
-.trust-links a:hover{text-decoration:underline;opacity:1;}
+.trust-links{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  align-items:center;
+  column-gap:clamp(12px,2.4vw,24px);
+  row-gap:10px;
+  width:100%;
+  max-width:44rem;
+  margin:14px auto 0;
+  padding-top:14px;
+  border-top:1px solid rgba(110,231,255,.2);
+  text-align:center;
+}
+.trust-links a{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:36px;
+  padding:6px 12px;
+  border-radius:10px;
+  border:1px solid transparent;
+  box-sizing:border-box;
+  color:#b8ddff;
+  text-decoration:none;
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:.01em;
+  opacity:.95;
+  white-space:nowrap;
+}
+.trust-links a:hover{
+  opacity:1;
+  text-decoration:none;
+  background:rgba(110,231,255,.1);
+  border-color:rgba(110,231,255,.28);
+}
 body.light .trust-banner{
   background:linear-gradient(180deg,#ffffff,#f4f7ff);
   border-color:#d5def0;
@@ -725,7 +759,12 @@ body.light .trust-banner{
   color:#14213d;
 }
 body.light .trust-text{color:#24324f}
+body.light .trust-links{border-top-color:#d6def0}
 body.light .trust-links a{color:#3156c6}
+body.light .trust-links a:hover{
+  background:rgba(49,86,198,.08);
+  border-color:rgba(49,86,198,.22);
+}
 body.light .trust-badge{
   background:linear-gradient(90deg,#5b7cff,#7d5bff);
   color:#ffffff;
