@@ -321,18 +321,21 @@ body.light .tabs{
   margin:10px 0;
 }
 .pick-actions-stacked #pickCountRow.pick-count-tight--stacked{
-  display:flex;
-  flex-wrap:wrap;
-  gap:10px;
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  column-gap:10px;
+  row-gap:10px;
   width:100%;
   align-items:stretch;
+  box-sizing:border-box;
 }
 .pick-actions-stacked #pickCountRow.pick-count-tight--stacked .btn{
-  min-width:108px;
+  box-sizing:border-box;
+  min-width:0;
+  width:100%;
   min-height:58px;
   max-width:none;
-  flex:1 1 0;
-  padding:10px 10px;
+  padding:10px 6px;
   border-radius:12px;
   font-size:13px;
   display:flex;
@@ -667,7 +670,8 @@ body.light .slip-btn.slip-btn-dev-active{
   .tabs{top:72px}
   .tab{font-size:13px}
   .btn{font-size:14px}
-  .pick-actions-stacked #pickCountRow.pick-count-tight--stacked .btn{min-width:0;font-size:12px;padding:9px 8px;min-height:52px}
+  .pick-actions-stacked #pickCountRow.pick-count-tight--stacked{column-gap:8px}
+  .pick-actions-stacked #pickCountRow.pick-count-tight--stacked .btn{font-size:11px;padding:9px 4px;min-height:50px}
   .slip-btn{font-size:13px}
   .navitem{font-size:14px}
 }
