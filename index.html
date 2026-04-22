@@ -717,12 +717,12 @@ body.light .hr-env-pill.hr-env-unfavorable{background:rgba(239,68,68,.1);color:#
 body.light .ui-double-flash{animation-name:uiDoubleFlashLight}
 .locked{opacity:.45;filter:grayscale(.15);background:rgba(255,255,255,.08)!important;color:var(--text)!important}
 .locked[disabled]{pointer-events:none}
-.trust-banner{margin:14px 0 16px;padding:14px 16px;border:1px solid rgba(110,231,255,.25);border-radius:16px;background:linear-gradient(180deg,rgba(17,28,51,.95),rgba(24,39,71,.95));box-shadow:0 10px 28px rgba(0,0,0,.18);color:#e8eeff}
-.trust-row{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;text-align:center}
+.trust-banner{margin:6px 0 10px;padding:8px 12px 10px;border:1px solid rgba(110,231,255,.25);border-radius:14px;background:linear-gradient(180deg,rgba(17,28,51,.95),rgba(24,39,71,.95));box-shadow:0 10px 28px rgba(0,0,0,.18);color:#e8eeff}
+.trust-row{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;text-align:center}
 .trust-text{flex:1 1 220px;min-width:0;max-width:36rem}
 .trust-badge.orbit-ring{position:relative;overflow:visible;display:inline-flex;align-items:center;justify-content:center}
 .trust-badge.orbit-ring::before{border-radius:999px;offset-path:inset(2px round 999px)}
-.trust-badge{padding:8px 12px;border-radius:999px;background:linear-gradient(90deg,#6ee7ff,#8b5cf6);color:#08101f;font-weight:900;letter-spacing:.5px;font-size:13px;}
+.trust-badge{padding:6px 10px;border-radius:999px;background:linear-gradient(90deg,#6ee7ff,#8b5cf6);color:#08101f;font-weight:900;letter-spacing:.5px;font-size:12px;}
 button.trust-badge.trust-badge-agebtn{
   margin:0;
   font:inherit;
@@ -736,17 +736,17 @@ button.trust-badge.trust-badge-agebtn{
 }
 button.trust-badge.trust-badge-agebtn::-moz-focus-inner{border:0;padding:0}
 /* Fixed light copy on dark strip — body.light --text is dark and was making this line look black */
-.trust-text{color:#dce6ff;font-size:14px;line-height:1.4;font-weight:600;}
+.trust-text{color:#dce6ff;font-size:13px;line-height:1.32;font-weight:600;}
 .trust-links{
   display:flex;
   flex-direction:column;
   align-items:center;
-  gap:5px;
+  gap:2px;
   width:100%;
   max-width:44rem;
-  margin:14px auto 0;
-  padding-top:10px;
-  border-top:1px solid rgba(110,231,255,.2);
+  margin:5px 0 0;
+  padding:0;
+  border-top:none;
   text-align:center;
 }
 /* Kill whitespace text nodes between </a><a> — otherwise flex treats them as extra items → “double spaced” gaps */
@@ -798,7 +798,7 @@ body.light .trust-banner{
   color:#14213d;
 }
 body.light .trust-text{color:#24324f}
-body.light .trust-links{border-top-color:#d6def0}
+body.light .trust-links{border-top:none}
 body.light .trust-links a{color:#3156c6}
 body.light .trust-links a:hover{
   background:rgba(49,86,198,.08);
