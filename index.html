@@ -3041,9 +3041,19 @@ function poStopSkeletonShuffle(sk){
   try{ clearInterval(sk._shuffleIntervalId); }catch(_){}
   sk._shuffleIntervalId=null;
 }
+/** Distinct team abbreviations on the live pool (slate size) — drives slot strategy. */
+function _distinctTeamCountInPoolPlayers(arr){
+  const s=new Set();
+  for(let i=0;i<(arr||[]).length;i++){
+    const p=arr[i];
+    const ta=p&&(p.teamAbbr||p.team);
+    if(ta) s.add(String(ta).trim());
+  }
+  return s.size;
+}
 /**
- * One visible hold: prefer a pick that already passes diversification (minimal/no reject loop).
- * If no strict pick exists, use the same relaxed cascade as pickDiversifiedPlayer once.
+ * ≤3 teams in pool: one hold on a rules-valid pick when possible (tight slates, few valid names).
+ * ≥4 teams: draw from full pool with visible reject/respin, then pickDiversifiedPlayer fallback.
  */
 async function slotMachineResolvePick(pool, usedPlayersSet, usedTeamsSet, skIndex, token, getActiveToken){
   const activeToken=getActiveToken||(function(){ return mlbToken; });
@@ -3051,33 +3061,57 @@ async function slotMachineResolvePick(pool, usedPlayersSet, usedTeamsSet, skInde
   if(!arr.length) return null;
   const sk=document.getElementById('poSkel-'+skIndex);
   const HOLD_MS=58;
+  const MAX_VISIBLE_TRIES=22;
   function skLockOff(){
     try{
       if(!sk) return;
       sk.classList.remove('po-skel-reject','po-skel-lock');
     }catch(_){}
   }
-  poStopSkeletonShuffle(sk);
-  if(token!==activeToken()){ skLockOff(); return null; }
-  const valid=arr.filter(function(c){ return isDiversifiedPickAllowed(c, usedPlayersSet, usedTeamsSet); });
-  let cand=null;
-  if(valid.length) cand=pickRandom(valid);
-  else{
-    cand=pickDiversifiedPlayer(pool, usedPlayersSet, usedTeamsSet);
-    if(!cand) cand=arr.length?pickRandom(arr):null;
-  }
-  if(!cand){ skLockOff(); return null; }
-  const nameEl=sk&&sk.querySelector('.po-skel-name');
-  if(nameEl){
+  function showCand(cand){
+    const nameEl=sk&&sk.querySelector('.po-skel-name');
+    if(!nameEl||!cand) return;
     const ab=cand.teamAbbr||cand.team||'';
     nameEl.innerHTML='<span class="shuffle-name" style="font-size:.85rem;font-weight:700;color:var(--text)">'+
       cand.player+'</span>'+teamPill(ab);
   }
-  _playPickTickSfx({volume:0.11, rate:1.04+Math.random()*0.14});
-  await sleep(HOLD_MS);
+  poStopSkeletonShuffle(sk);
   if(token!==activeToken()){ skLockOff(); return null; }
+  const slateTeams=_distinctTeamCountInPoolPlayers(arr);
+  if(slateTeams<=3){
+    const valid=arr.filter(function(c){ return isDiversifiedPickAllowed(c, usedPlayersSet, usedTeamsSet); });
+    let cand=null;
+    if(valid.length) cand=pickRandom(valid);
+    else{
+      cand=pickDiversifiedPlayer(pool, usedPlayersSet, usedTeamsSet);
+      if(!cand) cand=arr.length?pickRandom(arr):null;
+    }
+    if(!cand){ skLockOff(); return null; }
+    showCand(cand);
+    _playPickTickSfx({volume:0.11, rate:1.04+Math.random()*0.14});
+    await sleep(HOLD_MS);
+    if(token!==activeToken()){ skLockOff(); return null; }
+    skLockOff();
+    return cand;
+  }
+  let delay=HOLD_MS;
+  for(let step=0; step<MAX_VISIBLE_TRIES; step++){
+    if(token!==activeToken()){ skLockOff(); return null; }
+    const cand=pickRandom(arr);
+    showCand(cand);
+    _playPickTickSfx({volume:0.11, rate:1.04+Math.random()*0.14});
+    await sleep(delay);
+    if(isDiversifiedPickAllowed(cand, usedPlayersSet, usedTeamsSet)){ skLockOff(); return cand; }
+    if(step===MAX_VISIBLE_TRIES-1) break;
+    if(sk) sk.classList.add('po-skel-reject','po-skel-lock');
+    await sleep(110);
+    _playPickTickSfx({volume:0.24, rate:0.58+Math.random()*0.06});
+    await sleep(240);
+    skLockOff();
+    delay=HOLD_MS;
+  }
   skLockOff();
-  return cand;
+  return pickDiversifiedPlayer(pool, usedPlayersSet, usedTeamsSet);
 }
 function _withOppTeamFromPool(list){
   const arr=Array.isArray(list)?list:[];
