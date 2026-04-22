@@ -47,8 +47,10 @@ function activeStatusToPro(status) {
   return ["active", "trialing", "past_due"].includes(status);
 }
 
-async function upsertEntitlementFromSubscription(subscription) {
-  const uid = subscription.metadata?.uid;
+async function upsertEntitlementFromSubscription(subscription, fallbackUid) {
+  // Checkout session metadata does not automatically propagate to the Subscription object
+  // unless subscription_data.metadata is set. Accept an explicit fallback uid (Firebase Auth).
+  const uid = subscription.metadata?.uid || fallbackUid;
   if (!uid) return;
 
   const isPro = activeStatusToPro(subscription.status);
@@ -105,7 +107,8 @@ app.post("/webhooks/stripe", express.raw({ type: "application/json" }), async (r
 
       if (session.subscription) {
         const subscription = await stripe.subscriptions.retrieve(session.subscription);
-        await upsertEntitlementFromSubscription(subscription);
+        const uid = session.metadata?.uid || session.client_reference_id;
+        await upsertEntitlementFromSubscription(subscription, uid);
       }
     }
 
@@ -178,6 +181,9 @@ app.post("/billing/create-checkout-session", requireAuth, async (req, res) => {
     customer: stripeCustomerId,
     client_reference_id: uid,
     metadata: { uid },
+    subscription_data: {
+      metadata: { uid },
+    },
     line_items: [{ price: priceId, quantity: 1 }],
     success_url: successUrl,
     cancel_url: cancelUrl,
@@ -253,7 +259,7 @@ app.post("/billing/restore", requireAuth, async (req, res) => {
     );
   }
 
-  await upsertEntitlementFromSubscription(newest);
+  await upsertEntitlementFromSubscription(newest, uid);
   res.json({ restored: true, isPro: activeStatusToPro(newest.status), subscriptionStatus: newest.status });
 });
 
