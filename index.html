@@ -81,17 +81,22 @@ body.light .site-footer{border-top-color:var(--line)}
 .ad-sense-wrap{margin:12px 0 4px;padding:10px;border-radius:12px;border:1px dashed rgba(148,163,184,.35);background:rgba(255,255,255,.03);text-align:center;min-height:0}
 .ad-sense-wrap ins.adsbygoogle{display:block;margin:0 auto}
 body.light .ad-sense-wrap{border-color:#cfd8ea;background:rgba(246,248,255,.6)}
+/* flex-start: theme + log out share one baseline row (center would drop log out mid-title) */
 .topbar{
-  display:flex;align-items:center;justify-content:space-between;gap:12px;
-  flex-wrap:wrap;padding:12px 14px;border:1px solid var(--line);border-radius:14px;
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+  flex-wrap:nowrap;padding:12px 14px;border:1px solid var(--line);border-radius:14px;
   background:linear-gradient(180deg,var(--card),var(--card2));box-shadow:0 10px 28px rgba(0,0,0,.32);
+}
+@media (max-width:520px){
+  .topbar{flex-wrap:wrap}
+  .topbar-right{width:100%;justify-content:flex-end}
 }
 .topbar-left{
   display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;
   flex:1 1 auto;min-width:0;
 }
 .topbar-right{
-  display:flex;align-items:center;justify-content:flex-end;gap:10px;
+  display:flex;align-items:flex-start;justify-content:flex-end;gap:10px;
   flex-wrap:wrap;flex-shrink:0;margin-left:auto;
 }
 .topbar-btn{
