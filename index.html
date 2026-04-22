@@ -320,6 +320,25 @@ body.light .tabs{
 .list{display:grid;gap:10px;margin-top:10px;max-height:380px;overflow:auto}
 .picks-board-wrap > .list{margin-top:0;max-height:380px;overflow:auto}
 .item{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px;border-radius:11px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);box-shadow:0 6px 16px rgba(0,0,0,.16)}
+.item.pick-card-locked{padding-right:34px;}
+.pick-micro-lock{
+  position:absolute;
+  top:8px;
+  right:8px;
+  width:18px;
+  height:18px;
+  border-radius:999px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-size:11px;
+  color:#facc15;
+  border:1px solid rgba(250,204,21,.55);
+  background:rgba(22,30,47,.85);
+  box-shadow:0 0 0 1px rgba(250,204,21,.18),0 4px 12px rgba(0,0,0,.24);
+  pointer-events:none;
+  z-index:2;
+}
 .details{display:none;margin-top:10px;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12)}
 .pick-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.08)}
 .pick-title-chip{display:inline-flex;align-items:center;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:900;background:rgba(37,201,255,.12);border:1px solid rgba(37,201,255,.35);color:#dff8ff;letter-spacing:.02em}
@@ -3686,7 +3705,22 @@ function syncPicksBoardWrapOrbit(){
   wrap.classList.remove('orbit-ring','live-flash');
   const items=el ? Array.from(el.querySelectorAll(':scope > .item')) : [];
   const loadedNow = items.length > 0;
+  const lockedNow = _isUiPickLocked() && loadedNow;
   items.forEach(function(node, i){
+    node.classList.toggle('pick-card-locked', lockedNow);
+    let badge=node.querySelector('.pick-micro-lock');
+    if(lockedNow){
+      node.classList.remove('orbit-ring','live-flash');
+      if(!badge){
+        badge=document.createElement('span');
+        badge.className='pick-micro-lock';
+        badge.setAttribute('aria-hidden','true');
+        badge.textContent='🔒';
+        node.appendChild(badge);
+      }
+      return;
+    }
+    if(badge) badge.remove();
     node.classList.add('orbit-ring','live-flash');
     node.style.setProperty('--orbit-delay', ((i * 0.41) % 3.4) + 's');
     node.style.setProperty('--orbit-duration', (4.05 + (i % 8) * 0.28) + 's');
@@ -3694,7 +3728,7 @@ function syncPicksBoardWrapOrbit(){
   });
   if(stripPill){
     stripPill.classList.toggle('is-on', loadedNow);
-    stripPill.classList.toggle('orbit-ring', loadedNow);
+    stripPill.classList.toggle('orbit-ring', loadedNow && !lockedNow);
   }
 }
 /** Orb on each overlay pick card (skeleton shuffle + revealed); visible while overlay covers main #picks. */
@@ -5974,6 +6008,13 @@ function copyPicksFromOverlay(){
   border-radius:12px;
   background:rgba(110,231,255,.1);
 }
+#fbError{
+  display:none;
+  text-align:center;
+  margin-top:8px;
+  font-size:12px;
+  color:#fca5a5;
+}
 #fbClose{position:absolute;top:12px;right:14px;background:none;border:none;color:var(--muted);
   font-size:18px;cursor:pointer;line-height:1;}
 
@@ -6002,12 +6043,14 @@ function copyPicksFromOverlay(){
   </div>
   <textarea id="fbComment" rows="3" placeholder="Optional comment..."></textarea>
   <button id="fbSendBtn" onclick="fbSubmit()">Send Feedback</button>
+  <div id="fbError"></div>
   <div id="fbThanks">Thank You for your feedback!</div>
 </div>
 
 <script>
 var _fbStar=0;
 var _fbPanelOpen=false;
+const FEEDBACK_TO_EMAIL='roberteprice2@gmail.com';
 function toggleFeedback(){
   _fbPanelOpen=!_fbPanelOpen;
   document.getElementById('fbPanel').classList.toggle('open',_fbPanelOpen);
@@ -6018,19 +6061,20 @@ function fbSetStar(n){
   document.querySelectorAll('.fb-star').forEach(s=>s.classList.toggle('on',parseInt(s.dataset.v)<=n));
 }
 function fbToggleTag(el){ el.classList.toggle('on'); }
-function fbSubmit(){
+async function fbSubmit(){
   const stars=_fbStar;
   const tags=[...document.querySelectorAll('.fb-tag.on')].map(t=>t.textContent).join(', ');
   const comment=document.getElementById('fbComment').value.trim();
   if(!stars){ fbSetStar(1); return; }
   const btn=document.getElementById('fbSendBtn');
   const thanks=document.getElementById('fbThanks');
-  const closeDelayMs = 2500;
+  const err=document.getElementById('fbError');
+  const closeDelayMs = 1800;
+  if(err){ err.style.display='none'; err.textContent=''; }
   btn.disabled=true;
-  btn.style.display='none';
-  thanks.style.display='block';
+  btn.textContent='Sending...';
   const params={
-    to_email:'digitaldr@gmail.com',
+    to_email:FEEDBACK_TO_EMAIL,
     subject:'Pro Sports Quick Pix — User Feedback',
     rating: stars+' / 5 stars',
     tags: tags||'None selected',
@@ -6046,23 +6090,30 @@ function fbSubmit(){
       document.querySelectorAll('.fb-star').forEach(s=>s.classList.remove('on'));
       document.querySelectorAll('.fb-tag').forEach(t=>t.classList.remove('on'));
       document.getElementById('fbComment').value='';
-      btn.style.display='block';
       btn.disabled=false;
       btn.textContent='Send Feedback';
       thanks.style.display='none';
+      if(err){ err.style.display='none'; err.textContent=''; }
     }, closeDelayMs);
   }
   trackEvent('feedback_submit',{rating:stars,tags:tags});
-  if(typeof emailjs !== 'undefined' && typeof emailjs.send === 'function'){
-    emailjs.send('service_ymxyo11','template_feedback',params).catch(function(err){
-      console.error('EmailJS feedback error:', err);
-      var hint = (err && (err.text || err.message)) ? String(err.text || err.message) : '';
-      if(hint) console.error('Detail:', hint);
-    });
-  } else {
-    console.warn('EmailJS feedback service unavailable in this session.');
+  try{
+    if(!(typeof emailjs !== 'undefined' && typeof emailjs.send === 'function')){
+      throw new Error('Feedback service unavailable. Please try again in a few seconds.');
+    }
+    await emailjs.send('service_ymxyo11','template_feedback',params);
+    thanks.style.display='block';
+    finishFeedbackFlow();
+  }catch(sendErr){
+    console.error('EmailJS feedback error:', sendErr);
+    btn.disabled=false;
+    btn.textContent='Send Feedback';
+    if(err){
+      const hint = (sendErr && (sendErr.text || sendErr.message)) ? String(sendErr.text || sendErr.message) : '';
+      err.textContent = hint ? `Feedback not sent: ${hint}` : 'Feedback not sent. Please try again.';
+      err.style.display='block';
+    }
   }
-  finishFeedbackFlow();
 }
 </script>
 <script data-pplx-inline-edit>
