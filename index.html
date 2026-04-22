@@ -81,23 +81,25 @@ body.light .site-footer{border-top-color:var(--line)}
 .ad-sense-wrap{margin:12px 0 4px;padding:10px;border-radius:12px;border:1px dashed rgba(148,163,184,.35);background:rgba(255,255,255,.03);text-align:center;min-height:0}
 .ad-sense-wrap ins.adsbygoogle{display:block;margin:0 auto}
 body.light .ad-sense-wrap{border-color:#cfd8ea;background:rgba(246,248,255,.6)}
-/* flex-start: theme + log out share one baseline row (center would drop log out mid-title) */
+/* Grid keeps theme + titles + log out on one row — flex wrap was sending log out to a second row (bottom-right) */
 .topbar{
-  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
-  flex-wrap:nowrap;padding:12px 14px;border:1px solid var(--line);border-radius:14px;
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  grid-template-rows:auto;
+  align-items:start;
+  column-gap:12px;
+  row-gap:0;
+  padding:12px 14px;border:1px solid var(--line);border-radius:14px;
   background:linear-gradient(180deg,var(--card),var(--card2));box-shadow:0 10px 28px rgba(0,0,0,.32);
 }
-@media (max-width:520px){
-  .topbar{flex-wrap:wrap}
-  .topbar-right{width:100%;justify-content:flex-end}
-}
-.topbar-left{
-  display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;
-  flex:1 1 auto;min-width:0;
+.topbar-titles{
+  min-width:0;
+  text-align:left;
 }
 .topbar-right{
   display:flex;align-items:flex-start;justify-content:flex-end;gap:10px;
-  flex-wrap:wrap;flex-shrink:0;margin-left:auto;
+  flex-wrap:nowrap;
+  justify-self:end;
 }
 .topbar-btn{
   padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.18);
@@ -1140,12 +1142,10 @@ window.safeHeadshot = function(obj){
 -->
 <div class="wrap">
   <div class="topbar">
-    <div class="topbar-left">
-      <button type="button" id="themeToggle" class="badge topbar-btn topbar-action-btn" onclick="toggleTheme()" aria-label="Switch to light mode">☀️ Light mode</button>
-      <div>
-        <div class="title">Pro Sports Quick Pix</div>
-        <div class="subtitle" id="taglineSubtitle">Daily sports picks powered by professional sports lineups. <span class="dev-tap" data-dev-word="free" onclick="_devTapSubtitleWord(event,'free')" role="button" tabindex="0">Free</span> <span class="dev-tap" data-dev-word="fast" onclick="_devTapSubtitleWord(event,'fast')" role="button" tabindex="0">Fast</span>. <span class="dev-tap" data-dev-word="sharp" onclick="_devTapSubtitleWord(event,'sharp')" role="button" tabindex="0">Sharp</span>.</div>
-      </div>
+    <button type="button" id="themeToggle" class="badge topbar-btn topbar-action-btn" onclick="toggleTheme()" aria-label="Switch to light mode">☀️ Light mode</button>
+    <div class="topbar-titles">
+      <div class="title">Pro Sports Quick Pix</div>
+      <div class="subtitle" id="taglineSubtitle">Daily sports picks powered by professional sports lineups. <span class="dev-tap" data-dev-word="free" onclick="_devTapSubtitleWord(event,'free')" role="button" tabindex="0">Free</span> <span class="dev-tap" data-dev-word="fast" onclick="_devTapSubtitleWord(event,'fast')" role="button" tabindex="0">Fast</span>. <span class="dev-tap" data-dev-word="sharp" onclick="_devTapSubtitleWord(event,'sharp')" role="button" tabindex="0">Sharp</span>.</div>
     </div>
     <div class="topbar-right">
       <div class="badge" id="sportHintBadge">Choose a sport tab</div>
