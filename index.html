@@ -717,17 +717,23 @@ button.trust-badge.trust-badge-agebtn::-moz-focus-inner{border:0;padding:0}
 .trust-text{color:#dce6ff;font-size:14px;line-height:1.4;font-weight:600;}
 .trust-links{
   display:flex;
-  flex-wrap:wrap;
-  justify-content:center;
+  flex-direction:column;
   align-items:center;
-  column-gap:clamp(12px,2.4vw,24px);
-  row-gap:10px;
+  gap:10px;
   width:100%;
   max-width:44rem;
   margin:14px auto 0;
   padding-top:14px;
   border-top:1px solid rgba(110,231,255,.2);
   text-align:center;
+}
+.trust-links-row{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  align-items:center;
+  column-gap:clamp(12px,2.4vw,24px);
+  row-gap:8px;
 }
 .trust-links a{
   display:inline-flex;
@@ -1214,11 +1220,15 @@ window.safeHeadshot = function(obj){
       <div class="trust-text" id="legalStateLine">Your state only where legal. Results are not guaranteed. For entertainment only.</div>
     </div>
     <div class="trust-links">
-      <a href="#" onclick="openAgeGate();return false;">Age Check</a>
-      <a href="#" onclick="document.getElementById('rgModal').style.display='block';return false;">Responsible Gaming</a>
-      <a href="#" onclick="document.getElementById('termsModal').style.display='block';return false;">Terms</a>
-      <a href="#" onclick="document.getElementById('privacyModal').style.display='block';return false;">Privacy</a>
-      <a href="#" onclick="document.getElementById('affiliateModal').style.display='block';return false;">Affiliate Disclosure</a>
+      <div class="trust-links-row">
+        <a href="#" onclick="openAgeGate();return false;">Age Check</a>
+        <a href="#" onclick="document.getElementById('rgModal').style.display='block';return false;">Responsible Gaming</a>
+        <a href="#" onclick="document.getElementById('termsModal').style.display='block';return false;">Terms</a>
+      </div>
+      <div class="trust-links-row">
+        <a href="#" onclick="document.getElementById('privacyModal').style.display='block';return false;">Privacy</a>
+        <a href="#" onclick="document.getElementById('affiliateModal').style.display='block';return false;">Affiliate Disclosure</a>
+      </div>
     </div>
   </div>
 
