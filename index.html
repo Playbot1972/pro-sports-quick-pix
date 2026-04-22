@@ -353,6 +353,47 @@ body.light .tabs{
   font-size:12px;
 }
 .pick-actions-merged #pickCountRow .btn2{background:rgba(255,255,255,.04)}
+/* MLB HR: full-width row of three blue count boxes, Spin on row below */
+.pick-actions-mlb-hr{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin:10px 0;
+}
+.pick-actions-mlb-hr #pickCountRow.pick-count-tight--hr{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  width:100%;
+  align-items:stretch;
+}
+.pick-actions-mlb-hr #pickCountRow.pick-count-tight--hr .btn{
+  min-width:108px;
+  min-height:58px;
+  max-width:none;
+  flex:1 1 0;
+  padding:10px 10px;
+  border-radius:12px;
+  font-size:13px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  line-height:1.2;
+}
+.pick-actions-mlb-hr #pickCountRow.pick-count-tight--hr .btn2{background:rgba(255,255,255,.04)}
+.pick-actions-mlb-hr #pickCountRow.pick-count-tight--hr .btn.orbit-ring::before{border-radius:12px}
+.pick-actions-mlb-hr .pick-load-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  align-items:center;
+  width:100%;
+}
+.pick-actions-mlb-hr .pick-load-row .pick-load-btn{
+  flex:1 1 200px;
+  min-height:58px;
+}
 .btn{border-radius:10px;border:1px solid rgba(37,201,255,.45);padding:10px 12px;font-size:13px;background:linear-gradient(180deg,#2bd1ff,#13b9ec);color:#06111c;font-weight:900;cursor:pointer}
 .btn2{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:var(--text)}
 .list{display:grid;gap:10px;margin-top:10px;max-height:380px;overflow:auto}
@@ -667,6 +708,7 @@ body.light .slip-btn.slip-btn-dev-active{
   .tab{font-size:13px}
   .btn{font-size:14px}
   .pick-actions-merged #pickCountRow .btn{font-size:13px;padding:8px 5px}
+  .pick-actions-mlb-hr #pickCountRow.pick-count-tight--hr .btn{min-width:0;font-size:12px;padding:9px 8px;min-height:52px}
   .slip-btn{font-size:13px}
   .navitem{font-size:14px}
 }
@@ -964,7 +1006,7 @@ window.safeHeadshot = function(obj){
     <!-- STEP 3: Welcome -->
     <div class="ob-step" id="ob-step3">
       <div class="ob-sub" id="ob-welcome"></div>
-      <div class="ob-unlock-badge">🏆 1 Free HR Pick is ready &mdash; select "1 Batter" and hit Pick Lucky Hitter!</div>
+      <div class="ob-unlock-badge">🏆 1 Free HR Pick is ready &mdash; select "1 Batter" and tap Spin.</div>
       <button class="ob-btn" onclick="obDismiss()">Let's Go! ⚾</button>
     </div>
   </div>
@@ -1603,7 +1645,7 @@ function renderSport(){
       renderRBIPicks();
     } else {
       const _hrCnt=[1,2,3].map(n=>`<button type='button' class='btn ${pickCount===n?'orbit-ring':'btn2'} ${((_isUiPickLocked()||_paywalled)&&pickCount!==n)?'locked':''}' ${_isUiPickLocked()?'disabled':''} onclick="setCount(${n})">${n} Batter${n>1?'s':''}${((n>1||_paywalled)&&!_isPro)&&!_devMode?' 🔒':''}</button>`).join('');
-      document.getElementById('mlbControls').innerHTML=`<div class='pick-actions-merged'><div id='pickCountRow' class='pick-count-tight'>${_hrCnt}</div><div class='pick-load-cluster'><button type='button' class='btn pick-load-btn' id='mlbLoadBtn' onclick='moneyTransformButton(this);startMLBLoad()' ${(pickCount>=1&&pickCount<=3&&!_isUiPickLocked()&&!_paywalled)?'':'disabled'}>Pick Lucky Hitter ⚾</button>${mlbLoaded||mlbPicks.length?"<button type='button' class='btn btn2' onclick='clearMLB()'>Clear</button>":''}</div></div><div class='muted'>Loads today's active MLB hitters from the official MLB Stats API.</div><div class='muted' id='lineupDateText' style='margin-top:6px'>Date: ${todayStr}</div>`;
+      document.getElementById('mlbControls').innerHTML=`<div class='pick-actions-mlb-hr'><div id='pickCountRow' class='pick-count-tight pick-count-tight--hr'>${_hrCnt}</div><div class='pick-load-row btnrow'><button type='button' class='btn pick-load-btn' id='mlbLoadBtn' onclick='moneyTransformButton(this);startMLBLoad()' ${(pickCount>=1&&pickCount<=3&&!_isUiPickLocked()&&!_paywalled)?'':'disabled'}>Spin</button>${mlbLoaded||mlbPicks.length?"<button type='button' class='btn btn2' onclick='clearMLB()'>Clear</button>":''}</div></div><div class='muted'>Loads today's active MLB hitters from the official MLB Stats API.</div><div class='muted' id='lineupDateText' style='margin-top:6px'>Date: ${todayStr}</div>`;
       renderMLB();
     }
   } else if(current==='NFL'){
@@ -1859,7 +1901,7 @@ function copyPicks(){
     copyTextRobust(text).then(flashCopied);
   }
 }
-function clearMLB(){mlbToken++;mlbLoaded=false;mlbLoading=false;mlbPicks=[];mlbTeamsUsed=[];mlbHitterUsed=new Set();mlbLivePool=[];mlbHrPickSlotCount=0;pickLocked=false;pickCount=0;currentOption='HR';renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Click Pick Lucky Hitter.</div>';syncPicksBoardWrapOrbit();}
+function clearMLB(){mlbToken++;mlbLoaded=false;mlbLoading=false;mlbPicks=[];mlbTeamsUsed=[];mlbHitterUsed=new Set();mlbLivePool=[];mlbHrPickSlotCount=0;pickLocked=false;pickCount=0;currentOption='HR';renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Tap Spin.</div>';syncPicksBoardWrapOrbit();}
 function setKsCount(n){if(_isUiPickLocked()) return; ksPickCount=n; renderSport();}
 function renderKsPicks(){
   document.getElementById('picksTitle').textContent='⚾ Lucky Pitchers';
@@ -4854,7 +4896,7 @@ function startNameShuffle(pool, token, getActiveToken){
 
 // Map each sport to its load button ID and original label
 const _sportLoadBtnMap={
-  MLB:{id:'mlbLoadBtn',label:'Pick Lucky Hitter'},
+  MLB:{id:'mlbLoadBtn',label:'Spin'},
   Ks:{id:'ksLoadBtn',label:'Pick Lucky Pitcher ⚾'},
   Hits:{id:'hitsLoadBtn',label:'Pick Lucky Hitter 💥'},
   'Total Bases':{id:'basesLoadBtn',label:'Pick Lucky Hitter 🎯'},
