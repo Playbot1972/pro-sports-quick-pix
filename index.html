@@ -751,8 +751,8 @@ button.trust-badge.trust-badge-agebtn::-moz-focus-inner{border:0;padding:0}
   display:flex;
   justify-content:center;
   align-items:center;
-  column-gap:clamp(10px,2vw,20px);
-  row-gap:8px;
+  column-gap:6px;
+  row-gap:6px;
 }
 /* Keep each row on one line so the strip stays exactly two rows (long labels on row 2) */
 .trust-links-row--short{flex-wrap:nowrap}
@@ -765,7 +765,7 @@ button.trust-badge.trust-badge-agebtn::-moz-focus-inner{border:0;padding:0}
   align-items:center;
   justify-content:center;
   min-height:36px;
-  padding:6px clamp(8px,1.8vw,12px);
+  padding:6px 8px;
   font-size:clamp(11.5px,2.6vw,13px);
   border-radius:10px;
   border:1px solid transparent;
@@ -773,7 +773,8 @@ button.trust-badge.trust-badge-agebtn::-moz-focus-inner{border:0;padding:0}
   color:#b8ddff;
   text-decoration:none;
   font-weight:700;
-  letter-spacing:.01em;
+  letter-spacing:normal;
+  word-spacing:normal;
   opacity:.95;
   white-space:nowrap;
 }
@@ -5946,7 +5947,7 @@ function getRhythmSuspense(i){
   </div>
 </div>
 
-<div id="rgModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:9999;overflow:auto;padding:24px"><div style="max-width:900px;margin:40px auto;background:linear-gradient(180deg,#111c33,#182747);border:1px solid #26355f;border-radius:18px;padding:18px;color:#eef3ff"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center"><h2 style="margin:0">Responsible Gaming</h2><button onclick="document.getElementById('rgModal').style.display='none'" style="border:0;border-radius:10px;padding:10px 14px;font-weight:800;background:#6ee7ff;color:#08101f">OK</button></div><p style="color:#9fb0d0;line-height:1.55">This app is for entertainment only. If you choose to participate, set a budget before you start and never chase losses.</p><ul style="color:#9fb0d0;line-height:1.55"><li>Only play if you are 21 or older and it is legal where you are.</li><li>Set time and money limits before you begin.</li><li>Do not wager money needed for bills, rent, or essentials.</li><li>Take breaks if betting stops feeling fun.</li><li>If gambling is causing stress or harm, seek help immediately.</li></ul><p style="color:#9fb0d0;line-height:1.55">If you or someone you know needs help, contact a licensed counseling or support service in your area.</p></div></div>
+<div id="rgModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:9999;overflow:auto;padding:24px"><div style="max-width:900px;margin:40px auto;background:linear-gradient(180deg,#111c33,#182747);border:1px solid #26355f;border-radius:18px;padding:18px;color:#eef3ff"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center"><h2 style="margin:0">Responsible Gaming</h2><button onclick="document.getElementById('rgModal').style.display='none'" style="border:0;border-radius:10px;padding:10px 14px;font-weight:800;background:#6ee7ff;color:#08101f">OK</button></div><p style="color:#9fb0d0;line-height:1.55">This app is for entertainment only. If you choose to participate, set a budget before you start and never chase losses.</p><ul style="color:#9fb0d0;line-height:1.55"><li>Only play if you are 21 or older and it is legal where you are.</li><li>Set time and money limits before you begin.</li><li>Do not wager money needed for bills, rent, or essentials.</li><li>Take breaks if betting stops feeling fun.</li><li>If gambling is causing stress or harm, seek help immediately.</li></ul><p style="color:#9fb0d0;line-height:1.55">If you or someone you know needs help, contact a licensed counseling or support service in your area.</p><p style="color:#9fb0d0;line-height:1.55;margin-top:14px"><strong style="color:#eef3ff">U.S. helplines:</strong> Problem gambling: <a href="tel:+18004262537" style="color:#6ee7ff;font-weight:800;text-decoration:underline">1-800-GAMBLER</a> (1-800-426-2537). Suicide &amp; Crisis Lifeline: <a href="tel:988" style="color:#6ee7ff;font-weight:800;text-decoration:underline">988</a> (call or text).</p></div></div>
 
 <div id="termsModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:9999;overflow:auto;padding:24px"><div style="max-width:900px;margin:40px auto;background:linear-gradient(180deg,#111c33,#182747);border:1px solid #26355f;border-radius:18px;padding:18px;color:#eef3ff"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center"><h2 style="margin:0">Terms</h2><button onclick="document.getElementById('termsModal').style.display='none'" style="border:0;border-radius:10px;padding:10px 14px;font-weight:800;background:#6ee7ff;color:#08101f">OK</button></div><p style="color:#9fb0d0;line-height:1.55">Use this app for entertainment only. By using it, you agree that picks are not guaranteed and outcomes may vary. You are responsible for complying with local laws and age restrictions.</p><p style="color:#9fb0d0;line-height:1.55">Do not rely on this app for financial advice. The app may use third-party data and services that can change or fail without notice.</p></div></div>
 
