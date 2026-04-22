@@ -692,6 +692,7 @@ body.light .hr-env-pill.hr-env-unfavorable{background:rgba(239,68,68,.1);color:#
 @keyframes liveBoardFlash{0%,100%{box-shadow:0 0 0 1px rgba(37,201,255,.42),0 0 16px rgba(38,217,255,.22),inset 0 0 0 rgba(38,217,255,0)}50%{box-shadow:0 0 0 1px rgba(37,201,255,.72),0 0 36px rgba(38,217,255,.48),inset 0 0 0 1px rgba(38,217,255,.4)}}
 @keyframes liveBoardBorderPulse{0%,100%{opacity:.62}50%{opacity:1}}
 @keyframes liveBoardPillFlash{0%,100%{box-shadow:0 0 0 0 rgba(38,217,255,0);filter:brightness(1)}50%{box-shadow:0 0 0 1px rgba(38,217,255,.35),0 0 20px rgba(38,217,255,.55);filter:brightness(1.22)}}
+@keyframes liveBoardPillFlashLight{0%,100%{box-shadow:none;filter:brightness(1)}50%{box-shadow:0 0 0 1px rgba(74,103,216,.38),0 0 12px rgba(74,103,216,.2);filter:brightness(1.03)}}
 @keyframes randomDotOrbit{to{offset-distance:100%}}
 /* Quick double flash (sport → tabs → counts → Spin); mirrors snappy theme-toggle feedback */
 @keyframes uiDoubleFlash{
@@ -848,6 +849,24 @@ body.light .slip-btn.slip-btn-dev-active{
   box-shadow:0 0 0 1px rgba(74,103,216,.45),0 0 14px rgba(74,103,216,.2);
   color:#0f1a33!important;
 }
+/* LIVE BOARD pill + Bet Slip chip: fixed ice-cyan copy was low-contrast on light panels */
+body.light .live-board-pill{
+  color:#0f2744;
+  background:rgba(74,103,216,.12);
+  border-color:rgba(74,103,216,.42);
+  text-shadow:none;
+}
+body.light .live-board-pill.is-on{animation-name:liveBoardPillFlashLight}
+body.light .account-strip #liveBoardStripPill.orbit-ring::before{
+  background:#5b7cff;
+  box-shadow:0 0 0 1px rgba(91,124,255,.35),0 0 7px rgba(91,124,255,.55);
+}
+body.light .pick-title-chip{
+  color:#142a4a;
+  background:rgba(74,103,216,.12);
+  border-color:rgba(74,103,216,.4);
+}
+body.light .pick-head{border-bottom-color:var(--line)}
 body.light .topbar-btn{
   background:rgba(255,255,255,.9);
   border-color:#cfd8ea;
