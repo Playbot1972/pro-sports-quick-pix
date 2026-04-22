@@ -716,6 +716,10 @@ body.light .slip-btn.slip-btn-dev-active{
 .ob-age-actions{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px;justify-content:center}
 .ob-btn.ob-age-yes-split{width:auto;flex:1;min-width:120px;margin-top:0}
 .ob-age-no-btn{flex:1;min-width:120px;margin-top:0;padding:13px 16px;border-radius:14px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#eef3ff;font-weight:800;font-size:.95rem;cursor:pointer;font-family:inherit}
+#logoutConfirmModal .ob-age-no-btn.orbit-ring::before{
+  border-radius:14px;
+  offset-path:inset(2px round 14px);
+}
 .ob-legal{font-size:.75rem;color:#56627a;margin-top:14px;line-height:1.5}
 .ob-unlock-badge{background:linear-gradient(90deg,rgba(110,231,255,.12),rgba(139,92,246,.12));border:1px solid rgba(110,231,255,.25);border-radius:12px;padding:10px 14px;font-size:.88rem;color:#6ee7ff;font-weight:700;margin-bottom:20px}
 #freeBadge{display:none;padding:4px 10px;border-radius:999px;background:linear-gradient(90deg,rgba(110,231,255,.15),rgba(139,92,246,.15));border:1px solid rgba(110,231,255,.25);font-size:11px;font-weight:800;color:#6ee7ff;margin-left:8px;vertical-align:middle}
@@ -5627,7 +5631,7 @@ function getRhythmSuspense(i){
     <p class="ob-age-q" style="margin-top:0">Sign out and clear this profile on this device?</p>
     <div class="ob-age-actions">
       <button type="button" class="ob-btn ob-age-yes-split" onclick="confirmLogout()">OK</button>
-      <button type="button" class="ob-age-no-btn" onclick="closeLogoutConfirmModal()">Cancel</button>
+      <button type="button" class="ob-age-no-btn orbit-ring" onclick="closeLogoutConfirmModal()">Cancel</button>
     </div>
   </div>
 </div>
