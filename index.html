@@ -522,6 +522,7 @@ body.light .stripe-modal-secure{color:#5a6f93!important}
 body.light .stripe-modal-secure strong{color:#3156c6!important}
 body.light .stripe-modal-version{color:#5a6f93!important;border-top-color:#d6def0!important}
 body.light .po-footer-version{color:#5a6f93!important;border-top-color:#d6def0!important;background:linear-gradient(180deg,rgba(255,255,255,.92),#eef3ff)!important}
+body.light #logoutConfirmModal{background:rgba(234,240,251,.92)!important}
 body.light #ageGateModal{background:rgba(234,240,251,.92)!important}
 body.light .age-modal-card{
   background:linear-gradient(160deg,#ffffff,#eef3ff)!important;
@@ -4967,8 +4968,16 @@ function syncLogoutButton(){
   btn.textContent = loggedIn ? 'Log out' : 'Log in';
   btn.onclick = loggedIn ? logoutSession : openLoginFromTopbar;
 }
+function closeLogoutConfirmModal(){
+  const m = document.getElementById('logoutConfirmModal');
+  if(m) m.style.display='none';
+}
 function logoutSession(){
-  if(!confirm('Sign out and clear this profile on this device?')) return;
+  const m = document.getElementById('logoutConfirmModal');
+  if(m) m.style.display='flex';
+}
+function confirmLogout(){
+  closeLogoutConfirmModal();
   (async()=>{
     try{
       if(window.firebaseAuth && window.firebaseAuth.currentUser && window.firebaseSignOut){
@@ -5609,6 +5618,18 @@ function getRhythmSuspense(i){
 <!-- PRO SUCCESS BANNER -->
 <div id="proBanner" style="display:none;position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:10001;background:linear-gradient(90deg,#6ee7ff,#8b5cf6);color:#07111f;font-weight:900;font-size:.95rem;padding:12px 24px;border-radius:40px;box-shadow:0 8px 32px rgba(0,0,0,.4);align-items:center;gap:10px;white-space:nowrap">
   🏆 Pro unlocked! Welcome to Pro Sports Quick Pix.
+</div>
+
+<!-- LOG OUT CONFIRM (matches age-check overlay + primary / secondary buttons) -->
+<div id="logoutConfirmModal" style="display:none;position:fixed;inset:0;z-index:10003;background:rgba(7,17,31,.96);align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(8px)">
+  <div class="age-modal-card" role="dialog" aria-modal="true" aria-labelledby="logoutConfirmTitle">
+    <div class="age-modal-title" id="logoutConfirmTitle">Pro Sports Quick Pix</div>
+    <p class="ob-age-q" style="margin-top:0">Sign out and clear this profile on this device?</p>
+    <div class="ob-age-actions">
+      <button type="button" class="ob-btn ob-age-yes-split" onclick="confirmLogout()">OK</button>
+      <button type="button" class="ob-age-no-btn" onclick="closeLogoutConfirmModal()">Cancel</button>
+    </div>
+  </div>
 </div>
 
 <!-- AGE CHECK (trust banner link) -->
