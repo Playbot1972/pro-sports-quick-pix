@@ -5469,6 +5469,17 @@ function getRhythmSuspense(i){
       <div class="stripe-modal-title">Go Pro</div>
       <div class="stripe-modal-sub">Unlock everything in Pro Sports Quick Pix</div>
     </div>
+    <div style="font-size:.82rem;color:#9fb0d0;text-align:center;margin-bottom:8px">Already subscribed?</div>
+    <button id="restoreEmailBtn" class="btn btn2" onclick="restoreEmailLogin()" style="width:100%;margin-top:0">Continue with Email</button>
+    <div id="checkoutError" style="color:#f87171;font-size:.82rem;text-align:center;margin-top:8px;min-height:18px"></div>
+    <button id="restoreLoginBtn" class="btn btn2" onclick="restoreLogin()" style="width:100%;margin-top:10px">Continue with Google</button>
+    <button id="restoreBtn" class="btn btn2" onclick="restorePurchases()" style="width:100%;margin-top:10px">Restore Purchases</button>
+    <div id="restoreEmailForm" style="display:none;margin-top:10px;text-align:left;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px">
+      <div style="font-size:.82rem;color:#9fb0d0;margin-bottom:8px">Use the same email you paid with.</div>
+      <input id="restoreEmailInput" class="ob-input" type="email" placeholder="Email address" style="margin-bottom:8px">
+      <input id="restorePasswordInput" class="ob-input" type="password" placeholder="Password (min 6 chars)" style="margin-bottom:8px">
+      <button id="restoreEmailSubmitBtn" class="btn btn2" onclick="submitRestoreEmailLogin()" style="width:100%">Continue with Email</button>
+    </div>
     <div class="stripe-modal-list">
       <div class="stripe-modal-list-head">What you get</div>
       <div class="stripe-modal-list-items">
@@ -5483,17 +5494,7 @@ function getRhythmSuspense(i){
       <span class="stripe-modal-price">$4.99</span><span class="stripe-modal-price-sub"> / month</span>
     </div>
     <div class="stripe-modal-note">Cancel anytime. Billed monthly.</div>
-    <button id="checkoutBtn" class="btn-cta btn-cta-lg orbit-ring" onclick="startCheckout()" style="width:100%;transition:opacity .2s">Subscribe for $4.99/mo 🚀</button>
-    <button id="restoreBtn" class="btn btn2" onclick="restorePurchases()" style="width:100%;margin-top:10px">Restore Purchases</button>
-    <button id="restoreLoginBtn" class="btn btn2" onclick="restoreLogin()" style="width:100%;margin-top:10px">Log in with Google to restore</button>
-    <button id="restoreEmailBtn" class="btn btn2" onclick="restoreEmailLogin()" style="width:100%;margin-top:10px">Log in with Email to restore</button>
-    <div id="restoreEmailForm" style="display:none;margin-top:10px;text-align:left;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px">
-      <div style="font-size:.82rem;color:#9fb0d0;margin-bottom:8px">Use the same email you paid with.</div>
-      <input id="restoreEmailInput" class="ob-input" type="email" placeholder="Email address" style="margin-bottom:8px">
-      <input id="restorePasswordInput" class="ob-input" type="password" placeholder="Password (min 6 chars)" style="margin-bottom:8px">
-      <button id="restoreEmailSubmitBtn" class="btn btn2" onclick="submitRestoreEmailLogin()" style="width:100%">Continue with Email</button>
-    </div>
-    <div id="checkoutError" style="color:#f87171;font-size:.82rem;text-align:center;margin-top:8px;min-height:18px"></div>
+    <button id="checkoutBtn" class="btn-cta btn-cta-lg orbit-ring" onclick="startCheckout()" style="width:100%;transition:opacity .2s;margin-top:12px">Subscribe for $4.99/mo 🚀</button>
     <div class="stripe-modal-secure">Secured by <strong>Stripe</strong> · 256-bit SSL encryption</div>
     <div class="stripe-modal-version" id="appVersionStripeModal" aria-hidden="true"></div>
   </div>

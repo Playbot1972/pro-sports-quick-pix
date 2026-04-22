@@ -194,20 +194,38 @@ app.post("/billing/restore", requireAuth, async (req, res) => {
     return;
   }
   const uid = req.user.uid;
+  const email = (req.user.email || "").toLowerCase();
   const customerSnap = await db.collection("stripeCustomers").doc(uid).get();
-  if (!customerSnap.exists) {
-    res.json({ restored: false, isPro: false, reason: "no_customer" });
-    return;
+  let stripeCustomerId = customerSnap.exists ? customerSnap.data().stripeCustomerId : null;
+  let newest = null;
+
+  async function newestSubForCustomer(customerId) {
+    const subs = await stripe.subscriptions.list({
+      customer: customerId,
+      status: "all",
+      limit: 10,
+    });
+    return subs.data.sort((a, b) => b.created - a.created)[0] || null;
   }
 
-  const stripeCustomerId = customerSnap.data().stripeCustomerId;
-  const subs = await stripe.subscriptions.list({
-    customer: stripeCustomerId,
-    status: "all",
-    limit: 10,
-  });
+  // First try explicit uid->customer mapping.
+  if (stripeCustomerId) {
+    newest = await newestSubForCustomer(stripeCustomerId);
+  }
 
-  const newest = subs.data.sort((a, b) => b.created - a.created)[0];
+  // Fallback: discover Stripe customer by authenticated email.
+  if (!newest && email) {
+    const customers = await stripe.customers.list({ email, limit: 20 });
+    for (const c of customers.data) {
+      const sub = await newestSubForCustomer(c.id);
+      if (sub) {
+        newest = sub;
+        stripeCustomerId = c.id;
+        break;
+      }
+    }
+  }
+
   if (!newest) {
     await db.collection("entitlements").doc(uid).set(
       {
@@ -220,6 +238,19 @@ app.post("/billing/restore", requireAuth, async (req, res) => {
     );
     res.json({ restored: false, isPro: false, reason: "no_subscription" });
     return;
+  }
+
+  // Persist discovered mapping to make future restores instant.
+  if (stripeCustomerId) {
+    await db.collection("stripeCustomers").doc(uid).set(
+      {
+        uid,
+        stripeCustomerId,
+        email: email || null,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      },
+      { merge: true },
+    );
   }
 
   await upsertEntitlementFromSubscription(newest);
