@@ -1,16 +1,33 @@
 # Pro Sports Quick Pix
 
-This is a simple test site for remote viewing and debugging.
+Remote testing site for MLB and multi-sport pick generation.
 
-It includes MLB pick generation and a full-screen pick overlay.
+## Billing + Restore Purchases (in progress)
 
-For testing only.
-# Pro Sports Quick Pix
+This repo now includes a starter backend in `functions/` for secure Pro entitlements:
 
-Remote testing site for MLB pick generation.
+- `POST /billing/create-checkout-session` (requires Firebase Auth token)
+- `POST /billing/restore` (requires Firebase Auth token)
+- `GET /entitlements/me` (requires Firebase Auth token)
+- `POST /webhooks/stripe` (Stripe webhook signature verification)
 
-## How to use
-Open the GitHub Pages link, choose a pick count, and load the picks.
+The frontend `index.html` now uses those endpoints for checkout and restore, and no longer treats `?pro=success` as a direct unlock.
+
+## Deploy backend
+
+1. Install dependencies:
+   - `cd functions && npm install`
+2. Set Firebase function secrets / env vars:
+   - `STRIPE_SECRET_KEY`
+   - `STRIPE_WEBHOOK_SECRET`
+   - `STRIPE_PRICE_ID`
+   - `APP_URL` (optional; defaults to GitHub Pages URL)
+3. Deploy functions:
+   - `firebase deploy --only functions`
+4. Configure Stripe webhook to:
+   - `https://us-central1-pro-sports-quick-pix.cloudfunctions.net/api/webhooks/stripe`
 
 ## Notes
-This is a test build and may change often.
+
+- The frontend expects users to be logged in with Firebase Auth for checkout/restore.
+- Entitlements are stored in Firestore (`entitlements/{uid}`).

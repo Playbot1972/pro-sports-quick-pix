@@ -5170,8 +5170,48 @@ function showUpgradeWall(opts){
   syncPicksBoardWrapOrbit();
 }
 
-// ── Stripe Payment Link ──
-const _stripePaymentLink = 'https://buy.stripe.com/4gM7sN0EqafL4ZUcc81Nu00';
+// ── Billing / Entitlements API ──
+const _billingApiBase = 'https://us-central1-pro-sports-quick-pix.cloudfunctions.net/api';
+
+async function _getIdTokenOrThrow(){
+  const user = window.firebaseAuth && window.firebaseAuth.currentUser;
+  if(!user) throw new Error('Please log in first to manage Pro access.');
+  return user.getIdToken();
+}
+
+async function syncProStatusFromServer(opts={}){
+  const showBanner = !!opts.showBanner;
+  let token;
+  try{
+    token = await _getIdTokenOrThrow();
+  }catch(err){
+    if(opts.silent) return false;
+    throw err;
+  }
+  const r = await fetch(`${_billingApiBase}/entitlements/me`, {
+    method:'GET',
+    headers:{ Authorization:`Bearer ${token}` }
+  });
+  if(!r.ok) throw new Error('Could not verify purchase right now.');
+  const data = await r.json();
+  _isPro = !!data.isPro;
+  try{
+    const d = JSON.parse(_lhMem.getItem('lhProfile') || '{}');
+    d.isPro = _isPro;
+    if(_isPro){
+      d.freePickUsed = false;
+      d.freePickDate = null;
+      _freePickUsed = false;
+    }
+    _lhMem.setItem('lhProfile', JSON.stringify(d));
+  }catch(_){}
+  renderSport();
+  if(showBanner && _isPro){
+    const banner = document.getElementById('proBanner');
+    if(banner){ banner.style.display='flex'; setTimeout(()=>{ banner.style.display='none'; }, 6000); }
+  }
+  return _isPro;
+}
 
 function showUpgradeModal(){
   document.getElementById('stripeModal').style.display='flex';
@@ -5181,39 +5221,65 @@ function closeStripeModal(){
   document.getElementById('stripeModal').style.display='none';
 }
 
-function startCheckout(){
+async function startCheckout(){
   const btn = document.getElementById('checkoutBtn');
+  const errEl = document.getElementById('checkoutError');
+  if(errEl) errEl.textContent = '';
   btn.disabled = true;
   btn.textContent = 'Redirecting to Stripe…';
-  // Append success redirect as prefilled email if available
-  let url = _stripePaymentLink;
-  if(_userEmail) url += '?prefilled_email=' + encodeURIComponent(_userEmail);
-  window.location.href = url;
+  try{
+    const token = await _getIdTokenOrThrow();
+    const r = await fetch(`${_billingApiBase}/billing/create-checkout-session`, {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        Authorization:`Bearer ${token}`
+      },
+      body: JSON.stringify({ email: _userEmail || '' })
+    });
+    if(!r.ok) throw new Error('Checkout session failed');
+    const data = await r.json();
+    if(!data.url) throw new Error('Missing Stripe checkout URL');
+    window.location.href = data.url;
+  }catch(err){
+    if(errEl) errEl.textContent = err?.message || 'Unable to start checkout.';
+    btn.disabled = false;
+    btn.textContent = 'Subscribe for $4.99/mo 🚀';
+  }
+}
+
+async function restorePurchases(){
+  const btn = document.getElementById('restoreBtn');
+  const errEl = document.getElementById('checkoutError');
+  if(errEl) errEl.textContent = '';
+  if(btn){ btn.disabled = true; btn.textContent = 'Restoring…'; }
+  try{
+    const token = await _getIdTokenOrThrow();
+    const r = await fetch(`${_billingApiBase}/billing/restore`, {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        Authorization:`Bearer ${token}`
+      }
+    });
+    if(!r.ok) throw new Error('Restore request failed');
+    await syncProStatusFromServer({ showBanner:true, silent:true });
+    if(!_isPro && errEl) errEl.textContent = 'No active Pro purchase found for this account.';
+  }catch(err){
+    if(errEl) errEl.textContent = err?.message || 'Could not restore purchases.';
+  }finally{
+    if(btn){ btn.disabled = false; btn.textContent = 'Restore Purchases'; }
+  }
 }
 
 // Detect post-payment return
 (function checkProReturn(){
   const params = new URLSearchParams(window.location.search);
-  if(params.get('pro') === 'success'){
-    // Mark as pro in memory
-    try {
-      const d = JSON.parse(_lhMem.getItem('lhProfile') || '{}');
-      d.isPro = true;
-      d.freePickUsed = false;
-      _lhMem.setItem('lhProfile', JSON.stringify(d));
-      _isPro = true;
-      _freePickUsed = false;
-    } catch(e){}
-    // Clean URL
+  if(params.get('pro') === 'success' || params.get('pro') === 'cancel'){
     history.replaceState({}, '', window.location.pathname);
-    // Show success banner
-    setTimeout(()=>{
-      const banner = document.getElementById('proBanner');
-      if(banner){ banner.style.display='flex'; setTimeout(()=>{ banner.style.display='none'; }, 6000); }
-    }, 500);
   }
-  if(params.get('pro') === 'cancel'){
-    history.replaceState({}, '', window.location.pathname);
+  if(params.get('pro') === 'success'){
+    setTimeout(()=>{ syncProStatusFromServer({ showBanner:true, silent:true }).catch(()=>{}); }, 400);
   }
 })();
 
@@ -5223,8 +5289,12 @@ renderTabs();
 renderSport();
 document.addEventListener('DOMContentLoaded', ()=>{
   syncLogoutButton();
+  syncProStatusFromServer({ silent:true }).catch(()=>{});
   if(window.firebaseOnAuthStateChanged && window.firebaseAuth){
-    window.firebaseOnAuthStateChanged(window.firebaseAuth, syncLogoutButton);
+    window.firebaseOnAuthStateChanged(window.firebaseAuth, ()=>{
+      syncLogoutButton();
+      syncProStatusFromServer({ silent:true }).catch(()=>{});
+    });
   }
   initAdSenseTopSlot();
 });
@@ -5287,6 +5357,7 @@ function getRhythmSuspense(i){
     </div>
     <div class="stripe-modal-note">Cancel anytime. Billed monthly.</div>
     <button id="checkoutBtn" class="btn-cta btn-cta-lg orbit-ring" onclick="startCheckout()" style="width:100%;transition:opacity .2s">Subscribe for $4.99/mo 🚀</button>
+    <button id="restoreBtn" class="btn btn2" onclick="restorePurchases()" style="width:100%;margin-top:10px">Restore Purchases</button>
     <div id="checkoutError" style="color:#f87171;font-size:.82rem;text-align:center;margin-top:8px;min-height:18px"></div>
     <div class="stripe-modal-secure">Secured by <strong>Stripe</strong> · 256-bit SSL encryption</div>
     <div class="stripe-modal-version" id="appVersionStripeModal" aria-hidden="true"></div>
