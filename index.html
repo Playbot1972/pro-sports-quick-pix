@@ -741,20 +741,24 @@ button.trust-badge.trust-badge-agebtn::-moz-focus-inner{border:0;padding:0}
   display:flex;
   flex-direction:column;
   align-items:center;
-  gap:10px;
+  gap:5px;
   width:100%;
   max-width:44rem;
   margin:14px auto 0;
-  padding-top:14px;
+  padding-top:10px;
   border-top:1px solid rgba(110,231,255,.2);
   text-align:center;
 }
+/* Kill whitespace text nodes between </a><a> — otherwise flex treats them as extra items → “double spaced” gaps */
 .trust-links-row{
   display:flex;
   justify-content:center;
   align-items:center;
+  align-content:center;
   column-gap:6px;
-  row-gap:6px;
+  row-gap:4px;
+  font-size:0;
+  line-height:0;
 }
 /* Keep each row on one line so the strip stays exactly two rows (long labels on row 2) */
 .trust-links-row--short{flex-wrap:nowrap}
@@ -766,9 +770,10 @@ button.trust-badge.trust-badge-agebtn::-moz-focus-inner{border:0;padding:0}
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  min-height:36px;
-  padding:6px 8px;
+  min-height:34px;
+  padding:5px 8px;
   font-size:clamp(11.5px,2.6vw,13px);
+  line-height:1.15;
   border-radius:10px;
   border:1px solid transparent;
   box-sizing:border-box;
