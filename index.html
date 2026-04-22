@@ -5357,6 +5357,11 @@ function toggleRestoreEmailForm(forceOpen){
     const localEmail = (()=>{ try{ return JSON.parse(_lhMem.getItem('lhProfile')||'{}').email || ''; }catch(_){ return ''; } })();
     const emailInput = document.getElementById('restoreEmailInput');
     if(emailInput && !emailInput.value) emailInput.value = localEmail;
+    // Ensure the form and submit button are visible on short/mobile viewports.
+    requestAnimationFrame(()=>{
+      try{ box.scrollIntoView({ behavior:'smooth', block:'center' }); }catch(_){}
+      try{ emailInput && emailInput.focus({ preventScroll:true }); }catch(_){}
+    });
   }
 }
 
