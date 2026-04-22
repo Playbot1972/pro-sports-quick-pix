@@ -729,24 +729,29 @@ button.trust-badge.trust-badge-agebtn::-moz-focus-inner{border:0;padding:0}
 }
 .trust-links-row{
   display:flex;
-  flex-wrap:wrap;
   justify-content:center;
   align-items:center;
-  column-gap:clamp(12px,2.4vw,24px);
+  column-gap:clamp(10px,2vw,20px);
   row-gap:8px;
+}
+/* Keep each row on one line so the strip stays exactly two rows (long labels on row 2) */
+.trust-links-row--short{flex-wrap:nowrap}
+.trust-links-row--long{flex-wrap:nowrap}
+@media (max-width:340px){
+  .trust-links-row--long{flex-wrap:wrap}
 }
 .trust-links a{
   display:inline-flex;
   align-items:center;
   justify-content:center;
   min-height:36px;
-  padding:6px 12px;
+  padding:6px clamp(8px,1.8vw,12px);
+  font-size:clamp(11.5px,2.6vw,13px);
   border-radius:10px;
   border:1px solid transparent;
   box-sizing:border-box;
   color:#b8ddff;
   text-decoration:none;
-  font-size:13px;
   font-weight:700;
   letter-spacing:.01em;
   opacity:.95;
@@ -1220,13 +1225,13 @@ window.safeHeadshot = function(obj){
       <div class="trust-text" id="legalStateLine">Your state only where legal. Results are not guaranteed. For entertainment only.</div>
     </div>
     <div class="trust-links">
-      <div class="trust-links-row">
+      <div class="trust-links-row trust-links-row--short">
         <a href="#" onclick="openAgeGate();return false;">Age Check</a>
-        <a href="#" onclick="document.getElementById('rgModal').style.display='block';return false;">Responsible Gaming</a>
         <a href="#" onclick="document.getElementById('termsModal').style.display='block';return false;">Terms</a>
-      </div>
-      <div class="trust-links-row">
         <a href="#" onclick="document.getElementById('privacyModal').style.display='block';return false;">Privacy</a>
+      </div>
+      <div class="trust-links-row trust-links-row--long">
+        <a href="#" onclick="document.getElementById('rgModal').style.display='block';return false;">Responsible Gaming</a>
         <a href="#" onclick="document.getElementById('affiliateModal').style.display='block';return false;">Affiliate Disclosure</a>
       </div>
     </div>
