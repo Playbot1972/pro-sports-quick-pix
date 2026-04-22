@@ -306,8 +306,8 @@ body.light .tabs{
 #freeBadge{margin-left:8px}
 .slip-actions{position:sticky;bottom:10px;z-index:16;margin-top:12px;padding:10px;border-radius:12px;border:1px solid var(--line);background:linear-gradient(180deg,rgba(15,23,40,.95),rgba(18,29,51,.95));display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end;backdrop-filter:blur(8px)}
 .slip-actions-trailing{display:flex;gap:8px;align-items:center;margin-left:auto}
-.slip-hr-favorable-only-label{display:none;align-items:center;gap:6px;font-size:11px;font-weight:800;color:var(--muted);cursor:pointer;user-select:none;max-width:min(220px,46vw);line-height:1.25}
-.slip-hr-favorable-only-label input{width:15px;height:15px;accent-color:#34d399;cursor:pointer;flex-shrink:0;margin:0}
+.slip-hr-favorable-only-label{display:none;align-items:center;justify-content:center;padding:2px;cursor:pointer;user-select:none;line-height:0}
+.slip-hr-favorable-only-label input{width:18px;height:18px;accent-color:#34d399;cursor:pointer;flex-shrink:0;margin:0;vertical-align:middle}
 .slip-btn{border-radius:10px;border:1px solid rgba(255,255,255,.14);padding:10px 12px;font-size:12px;font-weight:800;cursor:pointer;background:rgba(255,255,255,.05);color:var(--text);touch-action:manipulation}
 .slip-btn.primary{border-color:rgba(37,201,255,.5);background:linear-gradient(180deg,rgba(37,201,255,.28),rgba(37,201,255,.14));color:#dff8ff}
 .slip-btn:disabled{opacity:.45;cursor:not-allowed}
@@ -566,7 +566,6 @@ body.light .slip-actions{
   background:linear-gradient(180deg,#ffffff,#eef3ff);
   border-color:#cfd8ea;
 }
-body.light .slip-hr-favorable-only-label{color:#475569}
 body.light .slip-btn{
   background:#f2f6ff;
   border-color:#cfd8ea;
@@ -949,11 +948,10 @@ window.safeHeadshot = function(obj){
       </div>
     </div>
     <div class="slip-actions">
-      <label id="slipHrFavorableOnlyWrap" class="slip-hr-favorable-only-label" for="slipHrFavorableOnly" title="When checked, HR loads and swipe replacements only use hitters rated Favorable for carry environment.">
-        <input type="checkbox" id="slipHrFavorableOnly" onchange="onSlipHrFavorableOnlyChange()" />
-        <span>Favorable env. only</span>
-      </label>
       <div class="slip-actions-trailing">
+        <label id="slipHrFavorableOnlyWrap" class="slip-hr-favorable-only-label" for="slipHrFavorableOnly" title="HR only: when checked, loads and swipe replacements use only Favorable carry-environment hitters.">
+          <input type="checkbox" id="slipHrFavorableOnly" aria-label="Favorable HR environment only" onchange="onSlipHrFavorableOnlyChange()" />
+        </label>
         <button type="button" id="slipClearBtn" class="slip-btn" onclick="clearCurrentSportPicks()">Clear Current</button>
         <button type="button" id="slipCopyBtn" class="slip-btn primary" onclick="copyCurrentSportPicks()">Copy Slip</button>
       </div>
@@ -4407,7 +4405,7 @@ async function startMLBLoad(){
       poolForHr=poolDiv.filter(function(p){ return (p.hrEnvRating||'')==='favorable'; });
       if(!poolForHr.length){
         mlbLoading=false;
-        document.getElementById('picks').innerHTML='<div class="muted">No hitters with a Favorable carry environment today. Uncheck &quot;Favorable env. only&quot; next to Clear, or try again later.</div>';
+        document.getElementById('picks').innerHTML='<div class="muted">No hitters with a Favorable carry environment today. Uncheck the box left of Clear Current, or try again later.</div>';
         poSetError('No Favorable-environment hitters in today’s pool.');
         showToast('No Favorable-environment hitters today.', 'error', 'center');
         pickLocked=false;
