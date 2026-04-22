@@ -12,6 +12,8 @@ const stripeSecretKey = defineSecret("STRIPE_SECRET_KEY");
 const stripeWebhookSecret = defineSecret("STRIPE_WEBHOOK_SECRET");
 const stripePriceId = defineSecret("STRIPE_PRICE_ID");
 const appUrl = defineSecret("APP_URL");
+const resendApiKey = defineSecret("RESEND_API_KEY");
+const feedbackToEmail = defineSecret("FEEDBACK_TO_EMAIL");
 let stripeClient = null;
 let stripeClientKey = "";
 
@@ -263,11 +265,72 @@ app.post("/billing/restore", requireAuth, async (req, res) => {
   res.json({ restored: true, isPro: activeStatusToPro(newest.status), subscriptionStatus: newest.status });
 });
 
+app.post("/feedback/send", async (req, res) => {
+  const resendKey = resendApiKey.value();
+  const toEmail = feedbackToEmail.value();
+  if (!resendKey || !toEmail) {
+    res.status(500).json({ error: "Feedback email is not configured yet." });
+    return;
+  }
+
+  const rating = Number(req.body?.rating || 0);
+  const tags = String(req.body?.tags || "").trim();
+  const comment = String(req.body?.comment || "").trim();
+  const sport = String(req.body?.sport || "Unknown").trim();
+  const subOption = String(req.body?.subOption || "Unknown").trim();
+  const userEmail = String(req.body?.userEmail || "").trim();
+  const userName = String(req.body?.userName || "").trim();
+  if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
+    res.status(400).json({ error: "Rating must be between 1 and 5." });
+    return;
+  }
+
+  const text = [
+    "New Pro Sports Quick Pix feedback",
+    "",
+    `Rating: ${rating} / 5`,
+    `Tags: ${tags || "None"}`,
+    `Sport: ${sport}`,
+    `Option: ${subOption}`,
+    `User name: ${userName || "Unknown"}`,
+    `User email: ${userEmail || "Unknown"}`,
+    "",
+    "Comment:",
+    comment || "(no comment)",
+  ].join("\n");
+
+  try {
+    const r = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${resendKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: "Pro Sports Quick Pix <onboarding@resend.dev>",
+        to: [toEmail],
+        subject: "Pro Sports Quick Pix - User Feedback",
+        text,
+      }),
+    });
+
+    if (!r.ok) {
+      const detail = await r.text();
+      res.status(502).json({ error: `Feedback provider rejected request: ${detail || r.statusText}` });
+      return;
+    }
+
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: `Feedback send failed: ${err.message}` });
+  }
+});
+
 export const api = onRequest(
   {
     region: "us-central1",
     invoker: "public",
-    secrets: [stripeSecretKey, stripeWebhookSecret, stripePriceId, appUrl],
+    secrets: [stripeSecretKey, stripeWebhookSecret, stripePriceId, appUrl, resendApiKey, feedbackToEmail],
   },
   app,
 );

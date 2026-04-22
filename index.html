@@ -6050,7 +6050,6 @@ function copyPicksFromOverlay(){
 <script>
 var _fbStar=0;
 var _fbPanelOpen=false;
-const FEEDBACK_TO_EMAIL='roberteprice2@gmail.com';
 function toggleFeedback(){
   _fbPanelOpen=!_fbPanelOpen;
   document.getElementById('fbPanel').classList.toggle('open',_fbPanelOpen);
@@ -6073,15 +6072,25 @@ async function fbSubmit(){
   if(err){ err.style.display='none'; err.textContent=''; }
   btn.disabled=true;
   btn.textContent='Sending...';
+  let userEmail = '';
+  let userName = '';
+  try{
+    const p = JSON.parse(_lhMem.getItem('lhProfile') || '{}');
+    userEmail = String(p.email || _userEmail || '').trim();
+    userName = String(p.name || _userName || '').trim();
+  }catch(_){
+    userEmail = String(_userEmail || '').trim();
+    userName = String(_userName || '').trim();
+  }
   const params={
-    to_email:FEEDBACK_TO_EMAIL,
-    subject:'Pro Sports Quick Pix — User Feedback',
-    rating: stars+' / 5 stars',
+    rating: stars,
     tags: tags||'None selected',
     comment: comment||'(no comment)',
     sport: current||'Unknown',
-    sub_option: currentOption||'—',
-    timestamp: new Date().toLocaleString()
+    subOption: currentOption||'—',
+    timestamp: new Date().toLocaleString(),
+    userEmail,
+    userName,
   };
   function finishFeedbackFlow(){
     setTimeout(()=>{
@@ -6098,14 +6107,23 @@ async function fbSubmit(){
   }
   trackEvent('feedback_submit',{rating:stars,tags:tags});
   try{
-    if(!(typeof emailjs !== 'undefined' && typeof emailjs.send === 'function')){
-      throw new Error('Feedback service unavailable. Please try again in a few seconds.');
+    const r = await fetch(`${_billingApiBase}/feedback/send`, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify(params)
+    });
+    if(!r.ok){
+      let msg = 'Feedback not sent. Please try again.';
+      try{
+        const d = await r.json();
+        if(d && d.error) msg = String(d.error);
+      }catch(_){}
+      throw new Error(msg);
     }
-    await emailjs.send('service_ymxyo11','template_feedback',params);
     thanks.style.display='block';
     finishFeedbackFlow();
   }catch(sendErr){
-    console.error('EmailJS feedback error:', sendErr);
+    console.error('Feedback send error:', sendErr);
     btn.disabled=false;
     btn.textContent='Send Feedback';
     if(err){
