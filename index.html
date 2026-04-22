@@ -502,7 +502,7 @@ body.light .tabs{
 .age-modal-card{
   background:linear-gradient(160deg,#111c33,#0e1a30);
   border:1px solid rgba(110,231,255,.22);
-  border-radius:22px;padding:28px 24px;max-width:400px;width:100%;
+  border-radius:20px;padding:18px 20px 16px;max-width:400px;width:100%;
   color:#eef3ff;box-shadow:0 24px 80px rgba(0,0,0,.55);text-align:center;
 }
 .stripe-modal-card{
@@ -548,15 +548,15 @@ body.light .tabs{
   color:#8fa3c4;
 }
 .age-modal-icon{
-  margin:0 auto 12px;
+  margin:0 auto 6px;
   display:flex;
   align-items:center;
   justify-content:center;
 }
 .age-modal-icon.age-modal-strike-badge{
   position:relative;
-  width:3.75rem;
-  height:3.75rem;
+  width:3.1rem;
+  height:3.1rem;
   border-radius:50%;
   border:2px solid rgba(248,113,113,.55);
   background:rgba(248,113,113,.12);
@@ -581,7 +581,7 @@ body.light .tabs{
 .age-modal-strike-badge .age-struck-num{
   position:relative;
   z-index:1;
-  font-size:1.45rem;
+  font-size:1.22rem;
   font-weight:900;
   letter-spacing:-0.03em;
   color:#fecdd3;
@@ -593,7 +593,7 @@ body.light .age-modal-strike-badge{
 }
 body.light .age-modal-strike-badge::after{background:#dc2626}
 body.light .age-modal-strike-badge .age-struck-num{color:#b91c1c}
-.age-modal-title{font-size:1.15rem;font-weight:900;color:#eef3ff;margin-bottom:10px}
+.age-modal-title{font-size:1.08rem;font-weight:900;color:#eef3ff;margin-bottom:4px;letter-spacing:.01em}
 .paywall-overlay-card{
   text-align:center;padding:28px 18px 40px;max-width:420px;margin:0 auto;
 }
@@ -882,7 +882,7 @@ body.light .topbar-btn:hover{
   .topbar{padding:11px 12px}
   .topbar-btn.topbar-action-btn{min-width:108px;min-height:38px;font-size:11px;padding:8px 10px}
   .tabs{top:72px}
-  .ob-age-21pill{font-size:0.98rem;padding:9px 22px;min-height:42px}
+  .ob-age-21pill{font-size:0.95rem;padding:8px 18px;min-height:38px}
   .tab{font-size:13px}
   .btn{font-size:14px}
   .pick-actions-stacked #pickCountRow.pick-count-tight--stacked{column-gap:8px}
@@ -917,11 +917,12 @@ body.light .topbar-btn:hover{
 .shuffle-name{display:inline-block;font-weight:900;letter-spacing:.04em;animation:shufflePop .16s ease-out 1}
 @keyframes shufflePop{0%{opacity:.25;transform:translateY(4px) scale(.98)}100%{opacity:1;transform:translateY(0) scale(1)}}
 /* ── ONBOARDING OVERLAY ── */
-#onboardOverlay{position:fixed;inset:0;z-index:9999;background:rgba(7,17,31,.97);display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(8px)}
-#onboardBox{background:linear-gradient(160deg,#111c33,#182747);border:1px solid rgba(110,231,255,.18);border-radius:24px;max-width:420px;width:100%;padding:32px 28px;box-shadow:0 32px 80px rgba(0,0,0,.5);text-align:center}
+#onboardOverlay{position:fixed;inset:0;z-index:9999;background:rgba(7,17,31,.97);display:flex;align-items:center;justify-content:center;padding:12px;backdrop-filter:blur(8px)}
+#onboardBox{background:linear-gradient(160deg,#111c33,#182747);border:1px solid rgba(110,231,255,.18);border-radius:22px;max-width:420px;width:100%;padding:22px 22px 20px;box-shadow:0 32px 80px rgba(0,0,0,.5);text-align:center}
 #onboardBox .ob-logo{font-size:2.2rem;margin-bottom:8px}
 #onboardBox .ob-title{font-size:1.35rem;font-weight:900;color:#eef3ff;margin-bottom:6px}
-#onboardBox .ob-sub{font-size:.9rem;color:#9fb0d0;margin-bottom:24px;line-height:1.5}
+#onboardBox .ob-sub{font-size:.9rem;color:#9fb0d0;margin-bottom:24px;line-height:1.45}
+#ob-step1 .ob-sub{margin-bottom:10px}
 #onboardBox .ob-step{display:none}
 #onboardBox .ob-step.active{display:block}
 .ob-input{width:100%;padding:12px 14px;border-radius:12px;border:1px solid rgba(110,231,255,.2);background:rgba(255,255,255,.06);color:#eef3ff;font-size:.95rem;margin-bottom:12px;outline:none;transition:border .2s}
@@ -930,25 +931,26 @@ body.light .topbar-btn:hover{
 .ob-btn{width:100%;padding:13px;border-radius:14px;border:0;background:linear-gradient(90deg,#6ee7ff,#8b5cf6);color:#07111f;font-weight:900;font-size:1rem;cursor:pointer;transition:opacity .2s;margin-top:4px}
 .ob-btn:hover{opacity:.88}
 .ob-btn:disabled{opacity:.45;cursor:not-allowed}
-.ob-age-q{color:#9fb0d0;font-size:.92rem;line-height:1.5;margin:0 0 22px;text-align:center}
+.ob-age-q{color:#9fb0d0;font-size:.9rem;line-height:1.42;margin:0 0 14px;text-align:center}
 .ob-age-q strong{color:#eef3ff}
 .ob-age-q--withpill{
   display:flex;
   flex-direction:column;
   align-items:center;
-  gap:12px;
-  margin:0 0 24px;
-  font-size:.92rem;
+  gap:7px;
+  margin:0 0 14px;
+  font-size:.9rem;
 }
-.ob-age-q-line{color:#9fb0d0;line-height:1.45;max-width:20rem;margin:0}
+#ob-step1 .ob-age-q--withpill{margin-bottom:12px}
+.ob-age-q-line{color:#9fb0d0;line-height:1.38;max-width:20rem;margin:0}
 .ob-age-21pill{
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  min-height:46px;
-  padding:10px 28px;
+  min-height:40px;
+  padding:8px 22px;
   border-radius:999px;
-  font-size:1.05rem;
+  font-size:1rem;
   font-weight:900;
   letter-spacing:.04em;
   color:#06111c;
@@ -963,7 +965,7 @@ body.light .topbar-btn:hover{
   border-radius:999px;
   offset-path:inset(2px round 999px);
 }
-.ob-age-actions{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px;justify-content:center}
+.ob-age-actions{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:0;justify-content:center}
 .ob-btn.ob-age-yes-split{width:auto;flex:1;min-width:120px;margin-top:0}
 .ob-btn.ob-age-yes-split.orbit-ring{position:relative;overflow:visible;}
 .ob-btn.ob-age-yes-split.orbit-ring::before{
@@ -975,7 +977,8 @@ body.light .topbar-btn:hover{
   border-radius:14px;
   offset-path:inset(2px round 14px);
 }
-.ob-legal{font-size:.75rem;color:#56627a;margin-top:14px;line-height:1.5}
+.ob-legal{font-size:.75rem;color:#56627a;margin-top:10px;line-height:1.45}
+#ob-step1 .ob-legal{margin-top:8px}
 .ob-unlock-badge{background:linear-gradient(90deg,rgba(110,231,255,.12),rgba(139,92,246,.12));border:1px solid rgba(110,231,255,.25);border-radius:12px;padding:10px 14px;font-size:.88rem;color:#6ee7ff;font-weight:700;margin-bottom:20px}
 #freeBadge{display:none;padding:4px 10px;border-radius:999px;background:linear-gradient(90deg,rgba(110,231,255,.15),rgba(139,92,246,.15));border:1px solid rgba(110,231,255,.25);font-size:11px;font-weight:800;color:#6ee7ff;margin-left:8px;vertical-align:middle}
 
@@ -5927,7 +5930,7 @@ function getRhythmSuspense(i){
 </div>
 
 <!-- AGE CHECK (trust banner link) -->
-<div id="ageGateModal" style="display:none;position:fixed;inset:0;z-index:10002;background:rgba(7,17,31,.96);align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(8px)">
+<div id="ageGateModal" style="display:none;position:fixed;inset:0;z-index:10002;background:rgba(7,17,31,.96);align-items:center;justify-content:center;padding:12px;backdrop-filter:blur(8px)">
   <div class="age-modal-card">
     <div class="age-modal-icon age-modal-strike-badge" aria-hidden="true"><span class="age-struck-num">20</span></div>
     <div class="age-modal-title">Age check</div>
