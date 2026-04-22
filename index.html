@@ -5179,6 +5179,55 @@ async function _getIdTokenOrThrow(){
   return user.getIdToken();
 }
 
+async function loginWithGoogleForBilling(){
+  if(!window.firebaseSignInWithGoogle) throw new Error('Google sign-in is unavailable right now.');
+  const cred = await window.firebaseSignInWithGoogle();
+  const user = cred && cred.user ? cred.user : (window.firebaseAuth ? window.firebaseAuth.currentUser : null);
+  if(!user) throw new Error('Google sign-in did not return a user.');
+  await _syncBillingProfileFromFirebaseUser(user, 'google');
+  return user;
+}
+
+async function _syncBillingProfileFromFirebaseUser(user, provider){
+  try{
+    const profile = JSON.parse(_lhMem.getItem('lhProfile') || '{}');
+    profile.email = user.email || profile.email || '';
+    profile.name = profile.name || user.displayName || '';
+    if(provider) profile.provider = provider;
+    _lhMem.setItem('lhProfile', JSON.stringify(profile));
+    _userEmail = profile.email || _userEmail;
+    _userName = profile.name || _userName;
+    if(window.firebaseSaveUserProfile){
+      await window.firebaseSaveUserProfile({
+        name: profile.name || '',
+        provider: provider || profile.provider || '',
+      });
+    }
+    syncLogoutButton();
+  }catch(_){}
+}
+
+async function loginWithEmailForBilling(email, password){
+  if(!window.firebaseSignInEmailUser || !window.firebaseCreateEmailUser){
+    throw new Error('Email login is unavailable right now.');
+  }
+  let cred = null;
+  try{
+    cred = await window.firebaseSignInEmailUser(email, password);
+  }catch(err){
+    const code = String(err && err.code || '');
+    if(code === 'auth/user-not-found' || code === 'auth/invalid-credential'){
+      cred = await window.firebaseCreateEmailUser(email, password);
+    }else{
+      throw err;
+    }
+  }
+  const user = cred && cred.user ? cred.user : (window.firebaseAuth ? window.firebaseAuth.currentUser : null);
+  if(!user) throw new Error('Email login did not return a user.');
+  await _syncBillingProfileFromFirebaseUser(user, 'email');
+  return user;
+}
+
 async function syncProStatusFromServer(opts={}){
   const showBanner = !!opts.showBanner;
   let token;
@@ -5250,9 +5299,13 @@ async function startCheckout(){
 
 async function restorePurchases(){
   const btn = document.getElementById('restoreBtn');
+  const loginBtn = document.getElementById('restoreLoginBtn');
+  const emailBtn = document.getElementById('restoreEmailBtn');
   const errEl = document.getElementById('checkoutError');
   if(errEl) errEl.textContent = '';
   if(btn){ btn.disabled = true; btn.textContent = 'Restoring…'; }
+  if(loginBtn){ loginBtn.disabled = true; }
+  if(emailBtn){ emailBtn.disabled = true; }
   try{
     const token = await _getIdTokenOrThrow();
     const r = await fetch(`${_billingApiBase}/billing/restore`, {
@@ -5266,9 +5319,83 @@ async function restorePurchases(){
     await syncProStatusFromServer({ showBanner:true, silent:true });
     if(!_isPro && errEl) errEl.textContent = 'No active Pro purchase found for this account.';
   }catch(err){
-    if(errEl) errEl.textContent = err?.message || 'Could not restore purchases.';
+    if(err && String(err.message||'').includes('Please log in first')){
+      if(errEl) errEl.textContent = 'Please use Google login first, then tap Restore Purchases again.';
+    }else{
+      if(errEl) errEl.textContent = err?.message || 'Could not restore purchases.';
+    }
   }finally{
     if(btn){ btn.disabled = false; btn.textContent = 'Restore Purchases'; }
+    if(loginBtn){ loginBtn.disabled = false; }
+    if(emailBtn){ emailBtn.disabled = false; }
+  }
+}
+
+async function restoreLogin(){
+  const loginBtn = document.getElementById('restoreLoginBtn');
+  const errEl = document.getElementById('checkoutError');
+  if(errEl) errEl.textContent = '';
+  if(loginBtn){ loginBtn.disabled = true; loginBtn.textContent = 'Opening Google…'; }
+  try{
+    await loginWithGoogleForBilling();
+    if(errEl) errEl.textContent = 'Google login complete. Tap Restore Purchases.';
+  }catch(err){
+    if(errEl) errEl.textContent = err?.message || 'Google login failed.';
+  }finally{
+    if(loginBtn){ loginBtn.disabled = false; loginBtn.textContent = 'Log in with Google to restore'; }
+  }
+}
+
+function toggleRestoreEmailForm(forceOpen){
+  const box = document.getElementById('restoreEmailForm');
+  const btn = document.getElementById('restoreEmailBtn');
+  if(!box || !btn) return;
+  const open = typeof forceOpen === 'boolean' ? forceOpen : (box.style.display === 'none');
+  box.style.display = open ? 'block' : 'none';
+  btn.textContent = open ? 'Hide Email restore' : 'Log in with Email to restore';
+  if(open){
+    const localEmail = (()=>{ try{ return JSON.parse(_lhMem.getItem('lhProfile')||'{}').email || ''; }catch(_){ return ''; } })();
+    const emailInput = document.getElementById('restoreEmailInput');
+    if(emailInput && !emailInput.value) emailInput.value = localEmail;
+  }
+}
+
+async function restoreEmailLogin(){
+  toggleRestoreEmailForm();
+}
+
+async function submitRestoreEmailLogin(){
+  const loginBtn = document.getElementById('restoreEmailSubmitBtn');
+  const errEl = document.getElementById('checkoutError');
+  if(errEl) errEl.textContent = '';
+  const email = (document.getElementById('restoreEmailInput')?.value || '').trim();
+  const password = document.getElementById('restorePasswordInput')?.value || '';
+  if(!email){
+    if(errEl) errEl.textContent = 'Enter your email.';
+    return;
+  }
+  if(password.length < 6){
+    if(errEl) errEl.textContent = 'Password must be at least 6 characters.';
+    return;
+  }
+  if(loginBtn){ loginBtn.disabled = true; loginBtn.textContent = 'Signing in…'; }
+  try{
+    await loginWithEmailForBilling(email, password);
+    if(errEl) errEl.textContent = 'Email login complete. Tap Restore Purchases.';
+    toggleRestoreEmailForm(false);
+  }catch(err){
+    const code = String(err && err.code || '');
+    if(code === 'auth/wrong-password') {
+      if(errEl) errEl.textContent = 'Wrong password. Try again.';
+    } else if(code === 'auth/email-already-in-use') {
+      if(errEl) errEl.textContent = 'Email already exists with another sign-in method. Try Google login.';
+    } else if(code === 'auth/invalid-email') {
+      if(errEl) errEl.textContent = 'Invalid email address.';
+    } else {
+      if(errEl) errEl.textContent = err?.message || 'Email login failed.';
+    }
+  }finally{
+    if(loginBtn){ loginBtn.disabled = false; loginBtn.textContent = 'Continue with Email'; }
   }
 }
 
@@ -5358,6 +5485,14 @@ function getRhythmSuspense(i){
     <div class="stripe-modal-note">Cancel anytime. Billed monthly.</div>
     <button id="checkoutBtn" class="btn-cta btn-cta-lg orbit-ring" onclick="startCheckout()" style="width:100%;transition:opacity .2s">Subscribe for $4.99/mo 🚀</button>
     <button id="restoreBtn" class="btn btn2" onclick="restorePurchases()" style="width:100%;margin-top:10px">Restore Purchases</button>
+    <button id="restoreLoginBtn" class="btn btn2" onclick="restoreLogin()" style="width:100%;margin-top:10px">Log in with Google to restore</button>
+    <button id="restoreEmailBtn" class="btn btn2" onclick="restoreEmailLogin()" style="width:100%;margin-top:10px">Log in with Email to restore</button>
+    <div id="restoreEmailForm" style="display:none;margin-top:10px;text-align:left;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px">
+      <div style="font-size:.82rem;color:#9fb0d0;margin-bottom:8px">Use the same email you paid with.</div>
+      <input id="restoreEmailInput" class="ob-input" type="email" placeholder="Email address" style="margin-bottom:8px">
+      <input id="restorePasswordInput" class="ob-input" type="password" placeholder="Password (min 6 chars)" style="margin-bottom:8px">
+      <button id="restoreEmailSubmitBtn" class="btn btn2" onclick="submitRestoreEmailLogin()" style="width:100%">Continue with Email</button>
+    </div>
     <div id="checkoutError" style="color:#f87171;font-size:.82rem;text-align:center;margin-top:8px;min-height:18px"></div>
     <div class="stripe-modal-secure">Secured by <strong>Stripe</strong> · 256-bit SSL encryption</div>
     <div class="stripe-modal-version" id="appVersionStripeModal" aria-hidden="true"></div>
