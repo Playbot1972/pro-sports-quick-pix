@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Pro Sports Win — owner monitor</title>
+  <style>
+    :root,[data-theme="light"]{color-scheme:light;--bg:#eef3ff;--card:#ffffff;--line:#cfd8ea;--text:#14213d;--muted:#5a6f93;--good:#047857;--warn:#a16207;--bad:#b91c1c;--accent:#5b7cff;--shadow:0 14px 34px rgba(20,33,61,.1)}
+    [data-theme="dark"]{color-scheme:dark;--bg:#07111f;--card:#101b30;--line:#24314f;--text:#eef3ff;--muted:#9fb0d0;--good:#34d399;--warn:#facc15;--bad:#f87171;--accent:#6ee7ff;--shadow:0 14px 34px rgba(0,0,0,.22)}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;background:radial-gradient(circle at top,color-mix(in srgb,var(--accent) 24%,transparent),transparent 36%),var(--bg);color:var(--text)}
+    .wrap{max-width:1120px;margin:0 auto;padding:20px}
+    .top{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:16px}
+    h1{font-size:1.45rem;margin:0}
+    .sub{color:var(--muted);font-size:.9rem;margin-top:5px}
+    button,.linkbtn{border:1px solid var(--line);background:color-mix(in srgb,var(--card) 82%,var(--accent));color:var(--text);border-radius:12px;padding:10px 12px;font-weight:800;cursor:pointer;text-decoration:none}
+    button.primary{background:linear-gradient(90deg,#6ee7ff,#8b5cf6);color:#07111f;border:0}
+    .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+    .card{border:1px solid var(--line);background:linear-gradient(180deg,var(--card),color-mix(in srgb,var(--card) 82%,var(--bg)));border-radius:16px;padding:14px;box-shadow:var(--shadow)}
+    .k{font-size:.75rem;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.06em}
+    .v{font-size:1.8rem;font-weight:950;margin-top:6px}
+    .good{color:var(--good)}.warn{color:var(--warn)}.bad{color:var(--bad)}
+    table{width:100%;border-collapse:collapse;font-size:.86rem}
+    th,td{text-align:left;border-bottom:1px solid var(--line);padding:10px 8px;white-space:nowrap}
+    th{color:var(--muted);font-size:.75rem;text-transform:uppercase;letter-spacing:.06em}
+    .wide{grid-column:1/-1}
+    .muted{color:var(--muted)}
+    .status{margin:12px 0;color:var(--muted);font-size:.9rem}
+    .brand-site-header{font-weight:950;letter-spacing:.04em}.tm-sup{font-size:.5em;font-weight:800;line-height:0;vertical-align:super;margin-left:.04em;position:relative;top:-.12em}
+    .pill{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:4px 8px;font-size:.75rem;color:var(--muted)}
+    tr.row-today td{background:color-mix(in srgb,var(--accent) 16%,transparent);box-shadow:inset 3px 0 0 var(--accent)}
+    [data-theme="light"] tr.row-today td{background:color-mix(in srgb,var(--accent) 12%,var(--card))}
+    .today-strip{font-size:.8rem;color:var(--muted);margin:0 0 10px;line-height:1.45}
+    .today-strip strong{color:var(--text)}
+    @media (max-width:800px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.top{align-items:flex-start;flex-direction:column}}
+    @media (max-width:520px){.grid{grid-template-columns:1fr}.wrap{padding:12px}th,td{font-size:.78rem;padding:8px 5px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <h1><span class="brand-site-header">PRO SPORTS WIN<sup class="tm-sup" aria-label="trademark">™</sup></span> Monitor</h1>
+        <div class="sub">Owner-only funnel and ops for <strong>prosports.win</strong> (Pro Sports Win). Quick Pix is the in-app picks experience; this page is not indexed.</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <a class="linkbtn" href="/app">Open App</a>
+        <button id="themeBtn" type="button">☀</button>
+        <button id="loginBtn" class="primary">Sign in with Google</button>
+        <button id="refreshBtn">Refresh</button>
+        <button id="backfillBtn">Backfill 30d</button>
+      </div>
+    </div>
+
+    <div class="status" id="status">Sign in with the owner Google account to load metrics.</div>
+    <p class="muted" style="font-size:.86rem;line-height:1.45;margin:0 0 14px">Visits, ad landings, and upgrade views are recorded when <strong>Pro Sports Win</strong> (<code>/app</code>) loads in a browser (first-party events). If those stay at 0, open the live app once and refresh, or check that ad blockers are not blocking requests to this site’s <code>/api</code> path. <strong>Verify delivery:</strong> open the app with <code>?lh_debug_analytics=1</code> (or set <code>localStorage.lh_debug_analytics</code> to <code>1</code>), then DevTools → Network → filter <code>event</code> → look for <code>POST …/api/analytics/event</code> and status <strong>204</strong>; the console logs <code>[PSW analytics]</code> lines. Use Backfill for server-backed history (Stripe, access codes, free picks, account creation dates).</p>
+
+    <div class="card wide" style="margin-bottom:14px">
+      <div class="k">Reddit Ads — destination URL (Pro Sports Win)</div>
+      <p class="muted" style="font-size:.86rem;line-height:1.45;margin:8px 0 12px">Use one of these as the <strong>destination URL</strong> in Reddit Ads. All land on <strong>prosports.win</strong> — the <strong>Pro Sports Win</strong> product. <strong>Quick Pix</strong> is the quick-picks experience inside <code>/app</code>; ad copy can mention either, but the canonical domain and destination should stay <strong>prosports.win</strong>. Short links respond with <strong>HTTP 302</strong> to an <strong>absolute</strong> <code>https://prosports.win/app?…</code> URL (UTMs included). Absolute <code>Location</code> headers avoid Reddit’s <code>BROKEN_URL</code> crawler issues with relative redirects. If an ad still fails validation, paste the expanded URL below (no redirect).</p>
+      <div style="display:grid;gap:12px">
+        <div>
+          <div class="k" style="margin-bottom:5px">Production (recommended)</div>
+          <div style="display:flex;gap:8px;align-items:stretch;flex-wrap:wrap">
+            <input id="redditDestProd" readonly value="https://prosports.win/go/reddit" style="flex:1;min-width:220px;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:10px;padding:9px 10px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.82rem">
+            <button type="button" id="copyRedditProd">Copy</button>
+          </div>
+        </div>
+        <div>
+          <div class="k" style="margin-bottom:5px">Firebase Hosting (same redirect)</div>
+          <div style="display:flex;gap:8px;align-items:stretch;flex-wrap:wrap">
+            <input id="redditDestFb" readonly value="https://pro-sports-quick-pix.web.app/go/reddit" style="flex:1;min-width:220px;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:10px;padding:9px 10px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.82rem">
+            <button type="button" id="copyRedditFb">Copy</button>
+          </div>
+        </div>
+        <div>
+          <div class="k" style="margin-bottom:5px">Expanded URL (same UTMs; paste in Reddit if you prefer no redirect)</div>
+          <div style="display:flex;gap:8px;align-items:stretch;flex-wrap:wrap">
+            <input id="redditDestFull" readonly value="https://prosports.win/app?utm_source=reddit&amp;utm_medium=cpc&amp;utm_campaign=traffic_2026" style="flex:1;min-width:220px;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:10px;padding:9px 10px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.82rem">
+            <button type="button" id="copyRedditFull">Copy</button>
+          </div>
+        </div>
+      </div>
+      <p class="muted" style="font-size:.78rem;margin:10px 0 0">All three hit the same <strong>Pro Sports Win</strong> app and record the same first-party analytics after <code>/app</code> loads.</p>
+    </div>
+
+    <div class="grid">
+      <div class="card"><div class="k">Visits</div><div class="v" id="mVisits">--</div></div>
+      <div class="card"><div class="k">Signups</div><div class="v" id="mSignups">--</div></div>
+      <div class="card"><div class="k">Checkout Starts</div><div class="v" id="mCheckout">--</div></div>
+      <div class="card"><div class="k">Purchases</div><div class="v good" id="mPurchases">--</div></div>
+      <div class="card"><div class="k">Free Picks Used</div><div class="v" id="mFree">--</div></div>
+      <div class="card"><div class="k">Upgrade Views</div><div class="v" id="mUpgrade">--</div></div>
+      <div class="card"><div class="k">Access Codes</div><div class="v" id="mCodes">--</div></div>
+      <div class="card"><div class="k">Purchase Rate</div><div class="v" id="mRate">--</div></div>
+      <div class="card"><div class="k">Est. Revenue</div><div class="v good" id="mRevenue">--</div></div>
+
+      <div class="card wide">
+        <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:8px">
+          <div><div class="k">Owner SMS Sender</div><div class="muted">Send access-code texts from the official site.</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
+          <div>
+            <div class="k" style="margin-bottom:5px">Phone Number</div>
+            <input id="smsPhone" placeholder="+18156219609" style="width:100%;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:10px;padding:9px 10px">
+          </div>
+          <div>
+            <div class="k" style="margin-bottom:5px">Access Code</div>
+            <select id="smsCode" style="width:100%;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:10px;padding:9px 10px"></select>
+          </div>
+          <div>
+            <div class="k" style="margin-bottom:5px">Template</div>
+            <select id="smsTemplate" style="width:100%;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:10px;padding:9px 10px"></select>
+          </div>
+          <div style="display:flex;align-items:end;gap:8px">
+            <button id="smsFillBtn" type="button">Fill Message</button>
+            <button id="smsSendBtn" type="button" class="primary">Send SMS</button>
+          </div>
+        </div>
+        <div class="k" style="margin:10px 0 5px">Message Preview</div>
+        <textarea id="smsMessage" rows="4" style="width:100%;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:10px;padding:9px 10px;resize:vertical"></textarea>
+        <div class="muted" id="smsStatus" style="margin-top:8px">Sign in to load SMS templates and access-code defaults.</div>
+      </div>
+
+      <div class="card wide">
+        <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:8px;flex-wrap:wrap">
+          <div><div class="k">Daily Funnel</div><div class="muted">Last 30 days from first-party aggregate events (UTC days). <strong>Today’s row</strong> is highlighted; dashboard auto-refreshes every 30s while signed in.</div></div>
+          <span class="pill" id="generatedAt">--</span>
+        </div>
+        <p class="today-strip" id="todayStrip" aria-live="polite">Today (UTC): <strong>—</strong> — visits: <strong>—</strong>, ad landings: <strong>—</strong></p>
+        <div style="overflow:auto">
+          <table>
+            <thead>
+              <tr><th>Day</th><th>Visits</th><th>Ads</th><th>Signups</th><th>Free Used</th><th>Upgrade</th><th>Code</th><th>Checkout</th><th>Purchase</th><th>Sources</th></tr>
+            </thead>
+            <tbody id="rows"><tr><td colspan="10" class="muted">No data loaded.</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCF4PtHYIlGAnmM7_lIT58d_irYQRovgQc",
+      authDomain: "pro-sports-quick-pix.firebaseapp.com",
+      projectId: "pro-sports-quick-pix",
+      storageBucket: "pro-sports-quick-pix.firebasestorage.app",
+      messagingSenderId: "377494264538",
+      appId: "1:377494264538:web:8d9b83c39850e6d35c23e3",
+      measurementId: "G-0KYPK8RCVN"
+    };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+    function publicApiBase(){
+      try{
+        if(typeof location !== 'undefined' && (location.protocol === 'https:' || location.protocol === 'http:') && location.host){
+          return location.origin.replace(/\/$/, '') + '/api';
+        }
+      }catch(_){}
+      return 'https://us-central1-pro-sports-quick-pix.cloudfunctions.net/api';
+    }
+    const apiBase = publicApiBase();
+    let theme = document.documentElement.getAttribute('data-theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    const themeBtn = document.getElementById('themeBtn');
+    function syncTheme(){
+      document.documentElement.setAttribute('data-theme', theme);
+      if(themeBtn) themeBtn.textContent = theme === 'dark' ? '☀' : '☾';
+    }
+    syncTheme();
+    if(themeBtn) themeBtn.addEventListener('click', ()=>{ theme = theme === 'dark' ? 'light' : 'dark'; syncTheme(); });
+
+    const $ = (id) => document.getElementById(id);
+    async function copyInputUrl(inputId, buttonId){
+      const input = $(inputId);
+      const btn = $(buttonId);
+      if(!input || !input.value) return;
+      try{
+        await navigator.clipboard.writeText(input.value);
+        if(btn){
+          const prev = btn.textContent;
+          btn.textContent = 'Copied';
+          setTimeout(()=>{ btn.textContent = prev; }, 1600);
+        }
+      }catch(_){
+        try{
+          input.focus();
+          input.select();
+          document.execCommand('copy');
+          if(btn){
+            const prev = btn.textContent;
+            btn.textContent = 'Copied';
+            setTimeout(()=>{ btn.textContent = prev; }, 1600);
+          }
+        }catch(__){}
+      }
+    }
+    const copyRedditProd = $('copyRedditProd');
+    const copyRedditFb = $('copyRedditFb');
+    const copyRedditFull = $('copyRedditFull');
+    if(copyRedditProd) copyRedditProd.addEventListener('click', ()=>copyInputUrl('redditDestProd', 'copyRedditProd'));
+    if(copyRedditFb) copyRedditFb.addEventListener('click', ()=>copyInputUrl('redditDestFb', 'copyRedditFb'));
+    if(copyRedditFull) copyRedditFull.addEventListener('click', ()=>copyInputUrl('redditDestFull', 'copyRedditFull'));
+    const n = (obj, key) => Number((obj && obj[key]) || 0);
+    const sum = (rows, key) => rows.reduce((acc, row) => acc + n(row.events, key), 0);
+    const utcTodayStr = () => new Date().toISOString().slice(0, 10);
+    let metricsRefreshTimer = null;
+    const signupCount = (row) => Math.max(n(row.events, 'sign_up'), n(row.events, 'account_created'));
+    const money = (value) => '$' + Number(value || 0).toFixed(2);
+    let smsTemplates = [];
+    let smsMetaReady = false;
+
+    function smsSetStatus(msg){
+      if($('smsStatus')) $('smsStatus').textContent = msg;
+    }
+
+    function smsValidateFields(){
+      const missing = [];
+      const to = ($('smsPhone')?.value || '').trim();
+      const code = ($('smsCode')?.value || '').trim();
+      const message = ($('smsMessage')?.value || '').trim();
+      if(!to) missing.push('phone');
+      if(!code) missing.push('code');
+      if(!message) missing.push('message');
+      return { to, code, message, missing };
+    }
+
+    function smsRenderTemplateOptions(){
+      const el = $('smsTemplate');
+      if(!el) return;
+      el.innerHTML = smsTemplates.map((t)=>`<option value="${t.id}">${t.label}</option>`).join('') || '<option value="">No templates</option>';
+    }
+
+    function smsRenderCodeOptions(codes, lastCode, recentCodes){
+      const el = $('smsCode');
+      if(!el) return;
+      const rec = Array.isArray(recentCodes) ? recentCodes.filter(Boolean) : [];
+      const recentSet = new Set(rec);
+      const all = Array.isArray(codes) ? codes : [];
+      const lines = [];
+      if(rec.length){
+        lines.push('<optgroup label="Recent">');
+        rec.forEach((c)=> lines.push(`<option value="${c}">${c}${c===lastCode?' (last used)':''}</option>`));
+        lines.push('</optgroup>');
+      }
+      lines.push('<optgroup label="All Codes">');
+      all.forEach((c)=> lines.push(`<option value="${c}">${c}${c===lastCode && !recentSet.has(c)?' (last used)':''}</option>`));
+      lines.push('</optgroup>');
+      el.innerHTML = lines.join('');
+      if(lastCode){
+        el.value = lastCode;
+      }else if(el.options.length){
+        el.selectedIndex = 0;
+      }
+    }
+
+    function smsComposeFromTemplate(){
+      const templateId = $('smsTemplate')?.value || '';
+      const code = $('smsCode')?.value || '';
+      const t = smsTemplates.find((x)=>x.id === templateId) || smsTemplates[0];
+      if(!t) return;
+      const msg = String(t.text || '').replaceAll('{CODE}', code);
+      if($('smsMessage')) $('smsMessage').value = msg;
+    }
+
+    async function loadSmsMeta(){
+      const user = auth.currentUser;
+      if(!user){
+        smsMetaReady = false;
+        if($('smsSendBtn')) $('smsSendBtn').disabled = true;
+        return;
+      }
+      const token = await user.getIdToken();
+      const r = await fetch(`${apiBase}/owner/sms/meta`, { headers:{ Authorization:`Bearer ${token}` } });
+      const data = await r.json().catch(()=>({}));
+      if(!r.ok) throw new Error(data.error || 'Could not load SMS metadata.');
+      smsTemplates = Array.isArray(data.templates) ? data.templates : [];
+      smsRenderTemplateOptions();
+      smsRenderCodeOptions(data.codes || [], data.lastCode || '', data.recentCodes || []);
+      const phoneInput = $('smsPhone');
+      if(phoneInput && !phoneInput.value){
+        const saved = localStorage.getItem('ownerSmsLastPhone') || '';
+        if(saved) phoneInput.value = saved;
+      }
+      smsComposeFromTemplate();
+      smsMetaReady = true;
+      if($('smsSendBtn')) $('smsSendBtn').disabled = false;
+      smsSetStatus('Ready to send. Review message before sending.');
+    }
+
+    async function checkSmsConfig(){
+      const user = auth.currentUser;
+      if(!user) return;
+      const token = await user.getIdToken();
+      const r = await fetch(`${apiBase}/owner/sms/config-status`, { headers:{ Authorization:`Bearer ${token}` } });
+      const data = await r.json().catch(()=>({}));
+      if(!r.ok) return;
+      const c = data.checks || {};
+      const parts = [];
+      if(!c.accountSidPresent) parts.push('TWILIO_ACCOUNT_SID missing');
+      if(!c.authTokenPresent) parts.push('TWILIO_AUTH_TOKEN missing');
+      if(!c.fromPresent) parts.push('TWILIO_FROM_NUMBER missing');
+      else if(!c.fromValid) parts.push('TWILIO_FROM_NUMBER invalid format');
+      if(parts.length){
+        smsSetStatus(`SMS config issue: ${parts.join('; ')}.`);
+        return;
+      }
+      const authResp = await fetch(`${apiBase}/owner/sms/auth-test`, { headers:{ Authorization:`Bearer ${token}` } });
+      const authData = await authResp.json().catch(()=>({}));
+      if(!authResp.ok){
+        smsSetStatus(`Twilio auth failed: ${authData.error || 'invalid credentials'}.`);
+        return;
+      }
+      smsSetStatus(`SMS ready. Twilio auth OK${authData.accountStatus ? ` (${authData.accountStatus})` : ''}.`);
+    }
+
+    async function loadMetrics(opts){
+      const metricsOnly = !!(opts && opts.metricsOnly);
+      const user = auth.currentUser;
+      if(!user){
+        if(metricsRefreshTimer){
+          clearInterval(metricsRefreshTimer);
+          metricsRefreshTimer = null;
+        }
+        $('status').textContent = 'Sign in with the owner Google account to load metrics.';
+        return;
+      }
+      if(!metricsOnly) $('status').textContent = 'Loading metrics...';
+      const token = await user.getIdToken();
+      const r = await fetch(`${apiBase}/analytics/summary?days=30`, { headers:{ Authorization:`Bearer ${token}` } });
+      const data = await r.json().catch(()=>({}));
+      if(!r.ok) throw new Error(data.error || 'Could not load metrics.');
+      render(data);
+      if(!metricsOnly){
+        await loadSmsMeta();
+        await checkSmsConfig();
+        $('status').textContent = `Signed in as ${user.email}.`;
+      }
+      if(metricsRefreshTimer) clearInterval(metricsRefreshTimer);
+      metricsRefreshTimer = setInterval(()=>{
+        if(!auth.currentUser) return;
+        loadMetrics({ metricsOnly: true }).catch((err)=>{ console.warn('[monitor] metrics refresh failed', err); });
+      }, 30000);
+    }
+
+    async function sendDebugPing(){
+      const user = auth.currentUser;
+      if(!user) throw new Error('Sign in with owner account first, then tap Debug Ping.');
+      const token = await user.getIdToken();
+      const r = await fetch(`${apiBase}/analytics/debug-ping`, {
+        method:'POST',
+        headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
+        body: JSON.stringify({ source:'monitor_debug' }),
+      });
+      const data = await r.json().catch(()=>({}));
+      if(!r.ok || !data?.ok) throw new Error(data?.error || 'Debug ping failed.');
+      return data;
+    }
+
+    function render(data){
+      const rows = data.days || [];
+      const visits = sum(rows, 'page_visit');
+      const signups = rows.reduce((acc, row) => acc + signupCount(row), 0);
+      const checkout = sum(rows, 'begin_checkout');
+      const purchases = sum(rows, 'purchase');
+      const revenue = rows.reduce((acc,row)=>acc + n(row.revenue, 'purchase'), 0);
+      $('mVisits').textContent = visits;
+      $('mSignups').textContent = signups;
+      $('mCheckout').textContent = checkout;
+      $('mPurchases').textContent = purchases;
+      $('mFree').textContent = sum(rows, 'free_pick_used');
+      $('mUpgrade').textContent = sum(rows, 'upgrade_modal_opened');
+      $('mCodes').textContent = sum(rows, 'access_code_redeemed');
+      $('mRate').textContent = visits ? ((purchases / visits) * 100).toFixed(1) + '%' : '--';
+      $('mRevenue').textContent = money(revenue);
+      $('generatedAt').textContent = data.generatedAt || '--';
+      const utcDay = utcTodayStr();
+      const todayRow = rows.find((r)=>r.day === utcDay);
+      const te = todayRow && todayRow.events ? todayRow.events : {};
+      const ts = $('todayStrip');
+      if(ts){
+        ts.innerHTML = `Today (UTC): <strong>${utcDay}</strong> — visits: <strong>${n(te,'page_visit')}</strong>, ad landings: <strong>${n(te,'ad_landing')}</strong>`;
+      }
+      $('rows').innerHTML = rows.map((row)=>{
+        const e = row.events || {};
+        const src = row.sources || {};
+        const srcText = Object.keys(src).sort((a,b)=>src[b]-src[a]).slice(0,4).map(k=>`${k}:${src[k]}`).join(', ') || 'none';
+        const isToday = row.day === utcDay;
+        return `<tr class="${isToday ? 'row-today' : ''}" ${isToday ? 'data-utc-today="1"' : ''}>
+          <td>${row.day}${isToday ? ' · today' : ''}</td>
+          <td>${n(e,'page_visit')}</td>
+          <td>${n(e,'ad_landing')}</td>
+          <td>${signupCount(row)}</td>
+          <td>${n(e,'free_pick_used')}</td>
+          <td>${n(e,'upgrade_modal_opened')}</td>
+          <td>${n(e,'access_code_redeemed')}</td>
+          <td>${n(e,'begin_checkout')}</td>
+          <td>${n(e,'purchase')}</td>
+          <td class="muted">${srcText}</td>
+        </tr>`;
+      }).join('') || '<tr><td colspan="10" class="muted">No data yet.</td></tr>';
+    }
+
+    $('loginBtn').addEventListener('click', async ()=>{
+      await signInWithPopup(auth, provider);
+      await loadMetrics();
+    });
+    $('smsTemplate').addEventListener('change', ()=>smsComposeFromTemplate());
+    $('smsCode').addEventListener('change', ()=>smsComposeFromTemplate());
+    $('smsFillBtn').addEventListener('click', ()=>smsComposeFromTemplate());
+    $('smsSendBtn').addEventListener('click', ()=>(async ()=>{
+      const user = auth.currentUser;
+      if(!user){
+        smsSetStatus('Sign in with the owner account first.');
+        return;
+      }
+      if(!smsMetaReady){
+        smsSetStatus('SMS templates/codes are still loading. Please wait a moment and try again.');
+        return;
+      }
+      const { to, code, message, missing } = smsValidateFields();
+      const templateId = $('smsTemplate')?.value || 'custom';
+      if(missing.length){
+        smsSetStatus(`Missing required field(s): ${missing.join(', ')}.`);
+        return;
+      }
+      if($('smsSendBtn')) $('smsSendBtn').disabled = true;
+      smsSetStatus('Sending SMS...');
+      const token = await user.getIdToken();
+      const r = await fetch(`${apiBase}/owner/sms/send`, {
+        method:'POST',
+        headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
+        body: JSON.stringify({ to, code, templateId, message })
+      });
+      const data = await r.json().catch(()=>({}));
+      if(!r.ok){
+        if(data?.error === 'SMS provider is not configured.' && data?.details){
+          const d = data.details || {};
+          const missing = [];
+          if(!d.accountSidPresent) missing.push('TWILIO_ACCOUNT_SID missing');
+          if(!d.authTokenPresent) missing.push('TWILIO_AUTH_TOKEN missing');
+          if(!d.fromPresent) missing.push('TWILIO_FROM_NUMBER missing');
+          else if(!d.fromLooksE164 && !d.fromLooksMessagingServiceSid) missing.push('TWILIO_FROM_NUMBER invalid (must be +1... or MG...)');
+          const suffix = missing.length ? ` ${missing.join('; ')}.` : '';
+          throw new Error(`${data.error}${suffix}`);
+        }
+        throw new Error(data.error || 'Could not send SMS.');
+      }
+      try{ localStorage.setItem('ownerSmsLastPhone', to); }catch(_){}
+      smsSetStatus(`SMS sent successfully${data.providerSid ? ` (SID: ${data.providerSid})` : ''}.`);
+      await loadSmsMeta();
+    })().catch((err)=>{
+      smsSetStatus(err.message);
+    }).finally(()=>{
+      if($('smsSendBtn')) $('smsSendBtn').disabled = false;
+    }));
+    $('refreshBtn').addEventListener('click', ()=>loadMetrics().catch((err)=>{$('status').textContent = err.message;}));
+    $('backfillBtn').addEventListener('click', ()=>(async ()=>{
+      const user = auth.currentUser;
+      if(!user){
+        $('status').textContent = 'Sign in with the owner Google account before backfilling.';
+        return;
+      }
+      $('status').textContent = 'Backfilling the last 30 days...';
+      const token = await user.getIdToken();
+      const r = await fetch(`${apiBase}/analytics/backfill`, {
+        method:'POST',
+        headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
+        body:JSON.stringify({ days:30, authDays:365 })
+      });
+      const data = await r.json().catch(()=>({}));
+      if(!r.ok) throw new Error(data.error || 'Could not backfill metrics.');
+      const ac = data.firestore?.accountCreated ?? 0;
+      $('status').textContent = `Backfill complete. Stripe: +${data.stripe?.beginCheckout || 0} checkouts, +${data.stripe?.purchases || 0} purchases. Accounts (last ${data.authDays || 365}d): +${ac}.`;
+      await loadMetrics();
+    })().catch((err)=>{ $('status').textContent = err.message; }));
+    onAuthStateChanged(auth, ()=>loadMetrics().catch((err)=>{$('status').textContent = err.message;}));
+  </script>
+</body>
+</html>

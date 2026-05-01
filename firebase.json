@@ -4,5 +4,74 @@
       "source": "functions",
       "codebase": "default"
     }
-  ]
+  ],
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      ".firebaserc",
+      ".git",
+      ".git/**",
+      ".firebase",
+      ".firebase/**",
+      "README.md",
+      "package.json",
+      "package-lock.json",
+      "**/.*",
+      "**/node_modules/**",
+      "functions/**"
+    ],
+    "redirects": [
+      {
+        "source": "/go/reddit",
+        "destination": "https://prosports.win/app?utm_source=reddit&utm_medium=cpc&utm_campaign=traffic_2026",
+        "type": 302
+      }
+    ],
+    "rewrites": [
+      {
+        "source": "/privacy",
+        "destination": "/privacy.html"
+      },
+      {
+        "source": "/terms",
+        "destination": "/terms.html"
+      },
+      {
+        "source": "/demo",
+        "destination": "/demo.html"
+      },
+      {
+        "source": "/demo/**",
+        "destination": "/demo.html"
+      },
+      {
+        "source": "/monitor",
+        "destination": "/monitor.html"
+      },
+      {
+        "source": "/monitor/**",
+        "destination": "/monitor.html"
+      },
+      {
+        "source": "/api/**",
+        "function": {
+          "functionId": "api",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/app",
+        "destination": "/index.html"
+      },
+      {
+        "source": "/app/**",
+        "destination": "/index.html"
+      },
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
 }

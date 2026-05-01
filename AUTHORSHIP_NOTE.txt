@@ -1,0 +1,23 @@
+ProSports.win - Authorship Note
+Prepared: 2026-04-29
+
+Package purpose:
+- This package is prepared as a software copyright deposit-support bundle.
+
+Included authored files (ordered):
+1) index.html
+2) functions/index.js (presented as index.js in the deposit PDF)
+3) firebase.json
+4) package.json
+5) README.md
+
+Authorship statement:
+- The included source files reflect original project authorship for ProSports.win
+  as maintained in this repository snapshot on the prepared date above.
+- Third-party libraries, SDKs, external services, and platform tooling are not
+  claimed as authored content by this note.
+
+Snapshot integrity:
+- The PDF and ZIP in this package are intended to represent the same source
+  snapshot date and file ordering.
+- Keep this note together with the generated deposit files.

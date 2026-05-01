@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy | Pro Sports Win (prosports.win)</title>
+  <meta name="description" content="Privacy Policy for Pro Sports Win at prosports.win, including Quick Pix usage inside the app.">
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-0KYPK8RCVN"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-0KYPK8RCVN');
+  </script>
+  <style>
+    :root,[data-theme="light"]{color-scheme:light;--bg:#f3f7f3;--card:#ffffff;--text:#142116;--muted:#55635a;--line:#ced8ce;--accent:#16a34a;--shadow:0 18px 46px rgba(11,18,13,.12)}
+    [data-theme="dark"]{color-scheme:dark;--bg:#07110a;--card:#102016;--text:#ecf7ee;--muted:#b6c8ba;--line:rgba(220,255,230,.14);--accent:#34d399;--shadow:0 24px 70px rgba(0,0,0,.32)}
+    *{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.65;background:radial-gradient(circle at top,rgba(52,211,153,.12),transparent 30%),var(--bg);color:var(--text)}
+    main{width:min(100% - 32px,900px);margin:0 auto;padding:48px 0 64px}
+    [data-theme="light"] body{background:radial-gradient(circle at top,rgba(34,197,94,.13),transparent 30%),linear-gradient(180deg,var(--bg),#eef5ee)}
+    .card{background:linear-gradient(180deg,var(--card),color-mix(in srgb,var(--card) 84%,var(--bg)));border:1px solid var(--line);border-radius:24px;padding:28px;box-shadow:var(--shadow)}
+    h1{font-size:clamp(2rem,5vw,3.5rem);line-height:1;margin:0 0 12px}h2{margin-top:28px}p,li{color:var(--muted)}a{color:var(--accent);font-weight:800}.toplinks{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:18px;align-items:center}.note{border-left:4px solid var(--accent);padding-left:14px}.theme-btn{min-height:34px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--text);font-weight:900;cursor:pointer;padding:6px 11px}
+  </style>
+</head>
+<body>
+  <main>
+    <nav class="toplinks" aria-label="Page links">
+      <a href="/demo">Back to Demo</a>
+      <a href="/app">Open App</a>
+      <a href="/terms">Terms of Use</a>
+      <a href="mailto:digitaldr@gmail.com">Contact Support</a>
+      <button class="theme-btn" type="button" data-theme-toggle aria-label="Switch theme">◐</button>
+    </nav>
+    <section class="card">
+      <h1>Privacy Policy</h1>
+      <p class="note">Pro Sports Win is a sports entertainment and prediction app. It does not take bets, process wagers, show sportsbook odds, link to sportsbooks, accept deposits, pay winnings, or guarantee outcomes.</p>
+
+      <h2>Information We Collect</h2>
+      <p>When you use the app, we may collect basic information needed to run your account and app experience, such as your name, email address, phone number if you choose text verification, authentication status, Pro entitlement status, access code redemption status, and free-pick usage.</p>
+
+      <h2>How We Use Information</h2>
+      <p>We use this information to verify accounts, restore access, manage subscriptions or trial access, prevent repeated free-pick use, provide support, and keep the app functioning reliably.</p>
+
+      <h2>Payments</h2>
+      <p>Payments are handled by Stripe. Pro Sports Win does not store your full payment card number. Stripe may process payment and billing information according to Stripe's own privacy policy.</p>
+
+      <h2>Third-Party Services</h2>
+      <p>The app may use services such as Firebase, Stripe, EmailJS, Resend, and public sports data providers. Those services may process technical, account, or delivery data according to their own policies.</p>
+
+      <h2>Sports Data and Predictions</h2>
+      <p>Sports picks, simulations, and player information are for entertainment only. They are not financial advice, gambling advice, betting lines, sportsbook odds, or guaranteed predictions.</p>
+
+      <h2>Contact</h2>
+      <p>For privacy or support questions, contact <a href="mailto:digitaldr@gmail.com">digitaldr@gmail.com</a>.</p>
+
+      <p><small>Last updated: April 27, 2026</small></p>
+    </section>
+  </main>
+  <script>
+    (function(){
+      const root=document.documentElement;
+      const btn=document.querySelector('[data-theme-toggle]');
+      let theme=root.getAttribute('data-theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      root.setAttribute('data-theme', theme);
+      const sync=()=>{ if(btn) btn.textContent = theme === 'dark' ? '☀' : '☾'; };
+      sync();
+      if(btn) btn.addEventListener('click',()=>{ theme = theme === 'dark' ? 'light' : 'dark'; root.setAttribute('data-theme', theme); sync(); });
+    })();
+  </script>
+</body>
+</html>
