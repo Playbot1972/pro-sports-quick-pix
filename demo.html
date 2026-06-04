@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pro Sports Win — Quick Pix preview | prosports.win</title>
-  <meta name="description" content="Preview Pro Sports Win at prosports.win — Quick Pix spins free 1–3 player slips; Pro unlocks 4–6 picks, locks, and swipe-to-replace. Entertainment only." />
+  <meta name="description" content="Preview Pro Sports Win at prosports.win — Quick Pix spins free 1–3 player slips, sportsbook handoff (copy bet, open book), and Pro 4–6 pick slips. Entertainment only." />
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-0KYPK8RCVN"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -98,6 +98,15 @@
     .steps{display:grid;gap:1rem}.step{display:grid;grid-template-columns:auto 1fr;gap:1rem;align-items:start}.num{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:var(--color-primary);color:#04210f;font-weight:900}
     .pricing{display:grid;grid-template-columns:.9fr 1.1fr;gap:1rem}.price-card{padding:1.3rem;border-radius:1.4rem;border:1px solid var(--color-border);background:linear-gradient(180deg, rgba(52,211,153,.10), rgba(255,255,255,.03))}.price{font-family:var(--font-display);font-size:clamp(2.4rem,5vw,4rem);line-height:1}
     .faq{display:grid;gap:.85rem}.faq details{padding:1rem 1.1rem;background:var(--color-surface);border:1px solid var(--color-border);border-radius:1rem}.faq summary{cursor:pointer;font-weight:700}
+    .handoff-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem}
+    .handoff-card{padding:1.1rem 1.15rem;border-radius:1.2rem;border:1px solid var(--color-border);background:var(--color-surface);box-shadow:var(--shadow-sm)}
+    .handoff-card h3{margin:.35rem 0 .5rem;font-size:var(--text-lg)}
+    .handoff-card p{color:var(--color-text-muted);margin:0;font-size:var(--text-sm);line-height:1.5}
+    .handoff-example{margin-top:1rem;padding:1rem 1.1rem;border-radius:1rem;border:1px dashed color-mix(in srgb, var(--color-primary) 40%, var(--color-border));background:color-mix(in srgb, var(--color-primary) 8%, var(--color-surface));font-family:ui-monospace,monospace;font-size:var(--text-sm);line-height:1.5;color:var(--color-text)}
+    .handoff-actions-demo{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.85rem}
+    .handoff-pill{display:inline-block;padding:.35rem .7rem;border-radius:999px;border:1px solid var(--color-border);background:var(--color-surface-2);font-size:.75rem;font-weight:800;color:var(--color-text-muted)}
+    .handoff-notice{font-size:var(--text-sm);color:var(--color-text-muted);line-height:1.55;margin-top:1rem;padding:1rem;border-radius:1rem;border:1px solid var(--color-border);background:var(--color-surface-offset)}
+    @media (max-width: 920px){.handoff-grid{grid-template-columns:1fr}}
     footer{padding:2rem 0 3rem;color:var(--color-text-muted)}
     .footer-legal{display:flex;flex-wrap:wrap;gap:.75rem 1rem;align-items:center;margin-top:.65rem;font-size:var(--text-sm)}
     .footer-legal a{color:var(--color-primary);font-weight:800;text-decoration:underline;text-underline-offset:3px}
@@ -140,6 +149,7 @@
       <nav class="nav-links" aria-label="Primary">
         <a href="#about">About</a>
         <a href="#features">Features</a>
+        <a href="#handoff">Handoff</a>
         <a href="#watch">Watch</a>
         <a href="#experience">Experience</a>
         <a href="#pricing">Pricing</a>
@@ -275,6 +285,61 @@
             <h3>Made for your phone</h3>
             <p>Big buttons, clean cards, and share-ready slips make it easy to use on the couch, at the bar, or before kickoff.</p>
           </article>
+          <article class="feature">
+            <div class="icon">🏦</div>
+            <h3>Sportsbook handoff</h3>
+            <p>Copy a formatted bet, open DraftKings, FanDuel, and more, or view the matching market — you place the wager in their licensed app.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="handoff">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <h2>Sportsbook handoff (user-controlled)</h2>
+            <p>Take your Quick Pix pick into the sportsbook you already use — without Pro Sports Win placing bets or storing login credentials.</p>
+          </div>
+        </div>
+        <div class="handoff-grid">
+          <article class="handoff-card">
+            <div class="icon" style="font-size:1.5rem;margin-bottom:.25rem" aria-hidden="true">⎘</div>
+            <h3>Copy bet</h3>
+            <p>Each pick card includes a one-tap copy string with sport, player, market, matchup, and game time so you can paste or search inside any legal book.</p>
+            <div class="handoff-actions-demo" aria-hidden="true">
+              <span class="handoff-pill">Copy bet</span>
+            </div>
+          </article>
+          <article class="handoff-card">
+            <div class="icon" style="font-size:1.5rem;margin-bottom:.25rem" aria-hidden="true">↗</div>
+            <h3>Open book</h3>
+            <p>Choose your state and a sportsbook. When supported, we open that sport’s league page on the book’s site or app — otherwise you copy first and find the market yourself.</p>
+            <div class="handoff-actions-demo" aria-hidden="true">
+              <span class="handoff-pill">DraftKings</span>
+              <span class="handoff-pill">FanDuel</span>
+              <span class="handoff-pill">BetMGM</span>
+            </div>
+          </article>
+          <article class="handoff-card">
+            <div class="icon" style="font-size:1.5rem;margin-bottom:.25rem" aria-hidden="true">◎</div>
+            <h3>View matching market</h3>
+            <p>See the market label, full copy text, and a search hint before you leave the app. Helpful when a book does not support a prefilled slip link.</p>
+            <div class="handoff-actions-demo" aria-hidden="true">
+              <span class="handoff-pill">View market</span>
+            </div>
+          </article>
+          <article class="handoff-card">
+            <div class="icon" style="font-size:1.5rem;margin-bottom:.25rem" aria-hidden="true">✓</div>
+            <h3>What we do not do</h3>
+            <p>No auto-submit, no sportsbook passwords, and no guarantee that a link loads a full bet slip. You review the line and place the wager only in the licensed operator’s app.</p>
+          </article>
+        </div>
+        <p class="handoff-example" role="note">Example copy: MLB — Aaron Judge · 1+ Home Run (player prop) · NYY vs BOS · game 7:10 PM ET · odds: see sportsbook · book: your sportsbook · Entertainment pick — verify market &amp; line in app.</p>
+        <p class="handoff-notice"><strong>21+ only, where legal.</strong> Pro Sports Win is for entertainment. Affiliate links may apply on outbound sportsbook pages; you are always in control of whether you leave the app and place a wager.</p>
+        <div class="hero-actions" style="margin-top:1.25rem">
+          <a class="cta" href="/app" data-track-click="demo_handoff_try_app">Try handoff in the app</a>
+          <a class="secondary" href="#pricing" data-track-click="demo_handoff_pricing">See pricing</a>
         </div>
       </div>
     </section>
@@ -306,7 +371,7 @@
           <article class="feature">
             <div class="icon">4</div>
             <h3>User controls</h3>
-            <p>After the reveal, users can lock favorite cards, swipe to replace unlocked cards, copy the slip, or share it for sports discussion.</p>
+            <p>After the reveal, users can copy a formatted bet, open a sportsbook handoff, lock favorite cards, swipe to replace unlocked cards, or share the slip for sports discussion.</p>
           </article>
           <article class="feature">
             <div class="icon">5</div>
@@ -353,7 +418,7 @@
             <div class="step"><div class="num">1</div><div><h3>Choose your board</h3><p>Open the sport and market you want to explore.</p></div></div>
             <div class="step"><div class="num">2</div><div><h3>Pick your count</h3><p>Choose 1, 2, or 3 players free — upgrade for 4–6 slip sizes and Pro controls.</p></div></div>
             <div class="step"><div class="num">3</div><div><h3>Spin the cards</h3><p>Watch the reveal build suspense as each player card lands.</p></div></div>
-            <div class="step"><div class="num">4</div><div><h3>Lock, replace, and share</h3><p>Keep the picks you like, swipe the ones you want to change, then copy or share your slip.</p></div></div>
+            <div class="step"><div class="num">4</div><div><h3>Hand off, lock, or share</h3><p>Copy a bet for your sportsbook, open a licensed book when you choose, lock favorites (Pro), or share the slip for discussion.</p></div></div>
           </div>
         </div>
         <aside class="panel">
@@ -407,8 +472,12 @@
             <p>Free includes picks 1–3 with no daily limit. Pro is $4.99 per month and unlocks 4–6 pick slips plus locks and swipe-to-replace. Promo codes can unlock a 7-day Pro trial.</p>
           </details>
           <details>
+            <summary>Does the app place bets or link to sportsbooks?</summary>
+            <p>Pro Sports Win does not take bets, accept deposits, pay winnings, or place wagers for you. Optional handoff tools let you copy a pick or open a third-party sportsbook in your browser when you choose — you complete any wager only in that licensed app, 21+ where legal.</p>
+          </details>
+          <details>
             <summary>Is this gambling?</summary>
-            <p>No. Pro Sports Win is for entertainment and sports discussion only. The app does not take bets, handle wagers, show sportsbook odds, link to sportsbooks, accept deposits, pay winnings, or guarantee outcomes.</p>
+            <p>The app itself is an entertainment and reveal experience, not a sportsbook. If you use handoff to visit a legal sportsbook and place a wager, that activity is governed by the book and your local laws.</p>
           </details>
           <details>
             <summary>Does the app include odds or betting lines?</summary>
@@ -422,7 +491,7 @@
   <footer>
     <div class="container">
       <p style="font-weight:700;color:var(--color-text);margin-bottom:.75rem">PRO SPORTS WIN™ is a trademark of Robert Price.</p>
-      <p>Pro Sports Win is for entertainment only. 21+ only. No sportsbook affiliation, no odds, no betting lines, no real-money wagering, no deposits, no payouts, and no guaranteed outcomes.</p>
+      <p>Pro Sports Win is for entertainment only. 21+ only. User-initiated sportsbook handoff may open third-party sites; the app does not place bets. No guaranteed outcomes.</p>
       <div class="footer-legal" aria-label="Support and legal links">
         <a href="mailto:digitaldr@gmail.com" data-track-click="demo_footer_support">Contact Support</a>
         <span aria-hidden="true">|</span>
