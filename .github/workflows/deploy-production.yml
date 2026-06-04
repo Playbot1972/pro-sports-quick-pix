@@ -31,6 +31,7 @@ jobs:
               - 'privacy.html'
               - 'terms.html'
               - 'version.json'
+              - 'js/**'
               - 'firebase.json'
               - '**/*.png'
               - '**/*.jpg'

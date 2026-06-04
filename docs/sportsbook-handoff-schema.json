@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://prosports.win/schemas/sportsbook-handoff-pick-v1.json",
+  "title": "ProSportsWinSportsbookHandoffPick",
+  "description": "Normalized pick for copy/paste and user-directed sportsbook handoff. Pro Sports Win does not place bets or store sportsbook credentials.",
+  "type": "object",
+  "required": ["schemaVersion", "sport", "market", "player", "selection", "handoff"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "const": 1 },
+    "sport": { "type": "string", "examples": ["MLB", "NFL", "NBA", "NHL", "Soccer"] },
+    "market": { "type": "string", "description": "In-app market tab label", "examples": ["HR", "Points", "TDs"] },
+    "player": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "teamAbbr": { "type": "string" },
+        "opponentAbbr": { "type": "string" },
+        "position": { "type": "string" },
+        "espnId": { "type": "string" },
+        "mlbPlayerId": { "type": "string" }
+      }
+    },
+    "event": {
+      "type": "object",
+      "properties": {
+        "label": { "type": "string", "description": "e.g. NYY @ BOS" },
+        "startTimeIso": { "type": "string", "format": "date-time" },
+        "startTimeDisplay": { "type": "string", "examples": ["7:10 PM ET"] },
+        "venue": { "type": "string" },
+        "status": { "type": "string" },
+        "eventId": { "type": "string", "description": "Provider event key when known (ESPN, MLB gamePk)" }
+      }
+    },
+    "selection": {
+      "type": "object",
+      "properties": {
+        "side": { "type": "string", "examples": ["Over", "Under", "Yes", ""] },
+        "line": { "type": ["number", "string", "null"] },
+        "lineDisplay": { "type": "string", "examples": ["1+ HR", "Over 22.5 Points"] },
+        "statLabel": { "type": "string" }
+      }
+    },
+    "odds": {
+      "type": "object",
+      "description": "Filled when real sportsbook odds are integrated; MVP leaves display hint only",
+      "properties": {
+        "american": { "type": ["integer", "null"] },
+        "decimal": { "type": ["number", "null"] },
+        "display": { "type": "string" }
+      }
+    },
+    "sportsbook": {
+      "type": ["object", "null"],
+      "properties": {
+        "id": { "type": "string", "examples": ["draftkings", "fanduel"] },
+        "name": { "type": "string" }
+      }
+    },
+    "state": {
+      "type": "string",
+      "description": "US state code where user says they bet (jurisdiction filter only)",
+      "pattern": "^[A-Z]{2}$"
+    },
+    "handoff": {
+      "type": "object",
+      "required": ["copyText", "searchQuery", "deepLinkKind"],
+      "properties": {
+        "copyText": { "type": "string" },
+        "searchQuery": { "type": "string" },
+        "deepLinkKind": {
+          "type": "string",
+          "enum": ["home", "league", "event", "copy_only"]
+        },
+        "deepLinkUrl": { "type": "string", "format": "uri" },
+        "deepLinkLabel": { "type": "string", "examples": ["Open MLB on DraftKings"] }
+      }
+    }
+  }
+}
