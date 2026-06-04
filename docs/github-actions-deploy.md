@@ -27,10 +27,27 @@ The account needs permission to deploy Hosting and (if you use functions deploy)
 
 ### 2. Add GitHub secret
 
-1. GitHub repo → **Settings** → **Secrets and variables** → **Actions**.
-2. **New repository secret**
-3. Name: **`FIREBASE_SERVICE_ACCOUNT`**
-4. Value: paste the **entire** JSON key file (single secret, multiline is fine).
+**Do not commit the JSON file to git.** Only paste it into GitHub Secrets.
+
+#### Option A — GitHub website (easiest)
+
+1. Open the JSON in Notepad (e.g. `Downloads\pro-sports-quick-pix-firebase-adminsdk-fbsvc-fc0eee5a81.json`).
+2. Select all (`Ctrl+A`) → Copy (`Ctrl+C`).
+3. GitHub → repo **Playbot1972/pro-sports-quick-pix** → **Settings** → **Secrets and variables** → **Actions**.
+4. **New repository secret**
+5. Name: **`FIREBASE_SERVICE_ACCOUNT`**
+6. Value: paste the **entire** JSON (starts with `{` and includes `"private_key"`).
+7. **Add secret**
+
+#### Option B — PowerShell (GitHub CLI on your PC)
+
+```powershell
+cd C:\Users\tisar\Downloads
+gh auth login
+gh secret set FIREBASE_SERVICE_ACCOUNT --repo Playbot1972/pro-sports-quick-pix --app actions < ".\pro-sports-quick-pix-firebase-adminsdk-fbsvc-fc0eee5a81.json"
+```
+
+If `gh` is not installed: `winget install GitHub.cli`
 
 ### 3. Enable Actions
 
