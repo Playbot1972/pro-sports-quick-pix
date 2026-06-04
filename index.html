@@ -57,7 +57,7 @@
 <title>Pro Sports Win | Quick Pix picks</title>
 <script>
   // Public version: use letter suffixes for QA (see release.py --part letter).
-  const APP_VERSION = 'v1.25.0';
+  const APP_VERSION = 'v1.26.0';
   const APP_BUILD_TAG = (function(){
     const d = new Date(document.lastModified || Date.now());
     if(Number.isNaN(d.getTime())) return '';
@@ -522,6 +522,17 @@ body.light .tabs{
   background:rgba(110,231,255,.08);color:#6ee7ff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;
 }
 .pick-handoff-btn:hover{border-color:rgba(110,231,255,.45);background:rgba(110,231,255,.14)}
+.pick-handoff-btn-sb.is-set{
+  border-color:rgba(139,92,246,.45);
+  background:linear-gradient(135deg,rgba(110,231,255,.12),rgba(139,92,246,.16));
+  color:#e9d5ff;
+}
+body.light .pick-handoff-btn-sb.is-set{border-color:#9b8cf0;background:#ede9fe;color:#5b21b6}
+.handoff-dest-pill{
+  display:inline-block;padding:4px 10px;border-radius:999px;font-size:.7rem;font-weight:800;
+  margin-bottom:10px;border:1px solid rgba(110,231,255,.35);background:rgba(110,231,255,.1);color:#6ee7ff;
+}
+body.light .handoff-dest-pill{border-color:#b8c8e8;background:#eef3ff;color:#3156c6}
 body.light .pick-handoff-btn{border-color:#b8c8e8;background:#eef3ff;color:#3156c6}
 body.light .pick-handoff-btn:hover{background:#e3ecff}
 #handoffModal{
@@ -2181,7 +2192,7 @@ window.safeHeadshot = function(obj){
           </a>
         </div>
       </div>
-      <p class="slip-handoff-note">Sportsbook handoff: copy your pick and open a licensed book to find the market yourself. Pro Sports Win does not place bets. 21+ where legal.</p>
+      <p class="slip-handoff-note">Sportsbook handoff: copy bet, choose your book (button shows <strong>SB: DraftKings</strong> after first pick), then open the best link — prefilled slip when available, otherwise event, market, or league + search hint. You place all wagers in the licensed app. 21+ where legal.</p>
     </div>
   </div>
 
@@ -5650,6 +5661,7 @@ function _injectPickHandoffBars(rootEl){
     details.insertAdjacentHTML('beforeend', PSWHandoff.handoffBarHtml(idx));
   });
 }
+window._injectPickHandoffBars = _injectPickHandoffBars;
 /** Overlay cards are built while pickLocked is true, so micro-lock markup is frozen with disabled buttons. Rebuild those corners after the spin ends (and after lock toggles) so #poCards matches the main slip. */
 function syncPoOverlayProMicroLocks(){
   const root = document.getElementById('poCards');
@@ -8918,7 +8930,7 @@ function getRhythmSuspense(i){
       <button type="button" class="handoff-modal-close" onclick="PSWHandoff.closeModal()" aria-label="Close">&times;</button>
     </div>
     <div id="handoffModalBody"></div>
-    <p class="handoff-modal-lead" style="margin-top:14px;margin-bottom:0;font-size:.72rem">You place all wagers in the licensed sportsbook app. Some links open a league page, not a prefilled slip.</p>
+    <p class="handoff-modal-lead" style="margin-top:14px;margin-bottom:0;font-size:.72rem">You place all wagers in the licensed sportsbook app. Links tier from prefilled slip (when available) → event → market → league → home. Otherwise copy bet and use the search hint.</p>
   </div>
 </div>
 

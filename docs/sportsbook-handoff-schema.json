@@ -1,14 +1,25 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://prosports.win/schemas/sportsbook-handoff-pick-v1.json",
+  "$id": "https://prosports.win/schemas/sportsbook-handoff-pick-v2.json",
   "title": "ProSportsWinSportsbookHandoffPick",
-  "description": "Normalized pick for copy/paste and user-directed sportsbook handoff. Pro Sports Win does not place bets or store sportsbook credentials.",
+  "description": "Normalized pick (v2) for copy/paste and user-directed sportsbook handoff via adapter layer. Pro Sports Win does not place bets or store sportsbook credentials.",
   "type": "object",
-  "required": ["schemaVersion", "sport", "market", "player", "selection", "handoff"],
+  "required": ["schemaVersion", "sport", "league", "market", "player", "event", "selection", "legs", "handoff"],
   "properties": {
-    "schemaVersion": { "type": "integer", "const": 1 },
+    "schemaVersion": { "type": "integer", "const": 2 },
     "sport": { "type": "string", "examples": ["MLB", "NFL", "NBA", "NHL", "Soccer"] },
-    "market": { "type": "string", "description": "In-app market tab label", "examples": ["HR", "Points", "TDs"] },
+    "league": { "type": "string", "examples": ["MLB", "NFL", "NBA", "NHL", "MLS"] },
+    "market": {
+      "type": "object",
+      "required": ["tabLabel", "canonicalKey", "family", "bookLabel"],
+      "properties": {
+        "tabLabel": { "type": "string", "description": "In-app market tab label", "examples": ["HR", "Points", "TDs"] },
+        "canonicalKey": { "type": "string", "examples": ["mlb.player.home_run", "nba.player.points"] },
+        "family": { "type": "string", "examples": ["player_prop"] },
+        "bookLabel": { "type": "string", "description": "Human-readable market for copy/search" },
+        "bookSearchTerms": { "type": "array", "items": { "type": "string" } }
+      }
+    },
     "player": {
       "type": "object",
       "required": ["name"],
@@ -16,9 +27,7 @@
         "name": { "type": "string" },
         "teamAbbr": { "type": "string" },
         "opponentAbbr": { "type": "string" },
-        "position": { "type": "string" },
-        "espnId": { "type": "string" },
-        "mlbPlayerId": { "type": "string" }
+        "position": { "type": "string" }
       }
     },
     "event": {
@@ -29,7 +38,15 @@
         "startTimeDisplay": { "type": "string", "examples": ["7:10 PM ET"] },
         "venue": { "type": "string" },
         "status": { "type": "string" },
-        "eventId": { "type": "string", "description": "Provider event key when known (ESPN, MLB gamePk)" }
+        "eventId": { "type": "string", "description": "Provider event key when known (e.g. MLB gamePk)" }
+      }
+    },
+    "externalIds": {
+      "type": "object",
+      "properties": {
+        "espnAthleteId": { "type": "string" },
+        "mlbGamePk": { "type": "string" },
+        "providerNote": { "type": "string" }
       }
     },
     "selection": {
@@ -41,39 +58,68 @@
         "statLabel": { "type": "string" }
       }
     },
+    "legs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "legIndex": { "type": "integer" },
+          "marketKey": { "type": "string" },
+          "playerName": { "type": "string" },
+          "lineDisplay": { "type": "string" },
+          "side": { "type": "string" }
+        }
+      }
+    },
     "odds": {
       "type": "object",
-      "description": "Filled when real sportsbook odds are integrated; MVP leaves display hint only",
       "properties": {
         "american": { "type": ["integer", "null"] },
         "decimal": { "type": ["number", "null"] },
-        "display": { "type": "string" }
+        "display": { "type": "string" },
+        "source": { "type": "string" }
       }
     },
     "sportsbook": {
       "type": ["object", "null"],
       "properties": {
         "id": { "type": "string", "examples": ["draftkings", "fanduel"] },
-        "name": { "type": "string" }
+        "name": { "type": "string" },
+        "shortName": { "type": "string" }
       }
     },
     "state": {
       "type": "string",
-      "description": "US state code where user says they bet (jurisdiction filter only)",
+      "description": "US state code (jurisdiction filter only)",
       "pattern": "^[A-Z]{2}$"
     },
     "handoff": {
       "type": "object",
-      "required": ["copyText", "searchQuery", "deepLinkKind"],
+      "required": ["copyText", "searchQuery", "destinationTier"],
       "properties": {
         "copyText": { "type": "string" },
         "searchQuery": { "type": "string" },
-        "deepLinkKind": {
+        "destinationTier": {
           "type": "string",
-          "enum": ["home", "league", "event", "copy_only"]
+          "enum": ["betslip", "event", "market", "league", "home", "copy_only"]
         },
+        "prefilledAvailable": { "type": "boolean" },
+        "statusLabel": { "type": "string", "examples": ["Prefilled when available", "Open market", "Copy + search"] },
+        "userHint": { "type": "string" },
+        "destination": {
+          "type": ["object", "null"],
+          "properties": {
+            "tier": { "type": "string" },
+            "kind": { "type": "string" },
+            "url": { "type": "string", "format": "uri" },
+            "label": { "type": "string" },
+            "prefilledAvailable": { "type": "boolean" },
+            "userHint": { "type": "string" }
+          }
+        },
+        "deepLinkKind": { "type": "string" },
         "deepLinkUrl": { "type": "string", "format": "uri" },
-        "deepLinkLabel": { "type": "string", "examples": ["Open MLB on DraftKings"] }
+        "deepLinkLabel": { "type": "string" }
       }
     }
   }
