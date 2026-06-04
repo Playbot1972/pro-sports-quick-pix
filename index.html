@@ -57,7 +57,7 @@
 <title>Pro Sports Win | Quick Pix picks</title>
 <script>
   // Public version: use letter suffixes for QA (see release.py --part letter).
-  const APP_VERSION = 'v1.24.3';
+  const APP_VERSION = 'v1.25.0';
   const APP_BUILD_TAG = (function(){
     const d = new Date(document.lastModified || Date.now());
     if(Number.isNaN(d.getTime())) return '';
@@ -514,6 +514,57 @@ body.light .tabs{
 .item.pick-swipe-row:has(.pick-corner-actions){padding-right:40px;}
 .item.pick-swipe-row.pick-card-locked:has(.pick-corner-actions){padding-right:40px;}
 .po-card:has(.pick-corner-actions){padding-right:40px;}
+.pick-handoff-bar{
+  display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);
+}
+.pick-handoff-btn{
+  flex:1 1 auto;min-width:0;padding:7px 8px;border-radius:8px;border:1px solid rgba(110,231,255,.28);
+  background:rgba(110,231,255,.08);color:#6ee7ff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;
+}
+.pick-handoff-btn:hover{border-color:rgba(110,231,255,.45);background:rgba(110,231,255,.14)}
+body.light .pick-handoff-btn{border-color:#b8c8e8;background:#eef3ff;color:#3156c6}
+body.light .pick-handoff-btn:hover{background:#e3ecff}
+#handoffModal{
+  display:none;position:fixed;inset:0;z-index:10004;background:rgba(7,17,31,.92);
+  align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(8px);
+}
+#handoffModal .handoff-modal-card{
+  width:100%;max-width:420px;max-height:90vh;overflow:auto;padding:18px 16px 16px;
+  border-radius:16px;border:1px solid var(--line);
+  background:linear-gradient(160deg,var(--card),var(--card2));color:var(--text);
+  box-shadow:0 24px 60px rgba(0,0,0,.45);
+}
+#handoffModal .handoff-modal-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+#handoffModal .handoff-modal-head h2{margin:0;font-size:1.05rem;font-weight:900}
+#handoffModal .handoff-modal-close{border:0;background:transparent;color:var(--muted);font-size:1.25rem;cursor:pointer;padding:4px 8px}
+.handoff-modal-lead{font-size:.82rem;color:var(--muted);line-height:1.45;margin:0 0 12px}
+.handoff-modal-warn{font-size:.78rem;color:#fbbf24;line-height:1.4;margin:0 0 10px}
+.handoff-state-label{display:block;font-size:.78rem;font-weight:700;color:var(--muted);margin-bottom:12px}
+.handoff-state-select{width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--card2);color:var(--text);font-family:inherit}
+.handoff-book-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.handoff-book-btn{
+  display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:10px 11px;border-radius:10px;
+  border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text);font-weight:800;font-size:.82rem;cursor:pointer;font-family:inherit;text-align:left;
+}
+.handoff-book-sub{font-size:.7rem;font-weight:600;color:var(--muted)}
+.handoff-copy-all-btn,.handoff-action-btn{
+  width:100%;margin-top:10px;padding:11px;border-radius:10px;border:1px solid var(--line);
+  background:rgba(255,255,255,.06);color:var(--text);font-weight:800;cursor:pointer;font-family:inherit;
+}
+.handoff-action-btn.primary,.handoff-copy-all-btn.primary{border:0;background:linear-gradient(90deg,#6ee7ff,#8b5cf6);color:#07111f}
+.handoff-actions-row{display:flex;gap:8px;margin-top:8px}
+.handoff-actions-row .handoff-action-btn{margin-top:0;flex:1}
+.handoff-market-title{font-weight:900;font-size:1rem;margin-bottom:6px}
+.handoff-market-meta{font-size:.8rem;color:var(--muted);margin-bottom:4px}
+.handoff-copy-block{
+  white-space:pre-wrap;word-break:break-word;font-size:.75rem;line-height:1.45;
+  padding:10px;border-radius:10px;background:rgba(0,0,0,.2);border:1px solid var(--line);margin:10px 0;
+  font-family:ui-monospace,monospace;color:#cfe8ff;
+}
+body.light .handoff-copy-block{background:#f5f8ff;color:#1d2b46}
+body.light #handoffModal{background:rgba(234,240,251,.92)}
+body.light #handoffModal .handoff-modal-card{border-color:#cfd8ea}
+.slip-handoff-note{font-size:11px;color:var(--muted);line-height:1.4;margin-top:8px;max-width:42rem}
 .pick-board-spin-lock{
   position:absolute;
   top:8px;
@@ -2130,6 +2181,7 @@ window.safeHeadshot = function(obj){
           </a>
         </div>
       </div>
+      <p class="slip-handoff-note">Sportsbook handoff: copy your pick and open a licensed book to find the market yourself. Pro Sports Win does not place bets. 21+ where legal.</p>
     </div>
   </div>
 
@@ -2139,6 +2191,7 @@ window.safeHeadshot = function(obj){
     <p class="site-footer-copy">&copy; 2026 HPBS. All rights reserved.</p>
   </footer>
 </div>
+<script src="/js/sportsbook-handoff.js"></script>
 <script>
 // App script owns behavior inside .wrap > .card (picks, overlays). .site-footer is static HTML above.
 var _lhMem=(function(){
@@ -5567,6 +5620,36 @@ function pickRowCornerActionsHtml(_i){
     + '<button type="button" class="'+cls+'" title="'+title+'" aria-label="'+aria+'" aria-pressed="'+(locked?'true':'false')+'"'
     + ' onpointerdown="event.stopPropagation()" ontouchstart="event.stopPropagation()" onclick="return onPickMicroLockClick(event,'+idx+')">'+icon+'</button></div>';
 }
+function _getRawPickByIndex(idx){
+  const i=Number(idx);
+  if(i!==i||i<0) return null;
+  if(current==='MLB'){
+    if(currentOption==='Ks') return ksPicks[i];
+    if(currentOption==='Hits') return hitsPicks[i];
+    if(currentOption==='Total Bases') return basesPicks[i];
+    if(currentOption==='RBI') return rbiPicks[i];
+    return mlbPicks[i];
+  }
+  if(current==='NFL') return nflPicks[i];
+  if(current==='NBA') return nbaPicks[i];
+  if(current==='NHL') return nhlPicks[i];
+  if(current==='Soccer') return soccerPicks[i];
+  return null;
+}
+function _injectPickHandoffBars(rootEl){
+  if(!window.PSWHandoff) return;
+  const root=rootEl||document.getElementById('picks');
+  if(!root) return;
+  root.querySelectorAll('.pick-swipe-row[data-pick-swipe-idx], .po-card[data-po-pick-idx]').forEach(function(row){
+    const idx=parseInt(row.getAttribute('data-pick-swipe-idx')||row.getAttribute('data-po-pick-idx'),10);
+    if(idx!==idx||idx<0) return;
+    const details=row.querySelector('.details');
+    if(!details) return;
+    const existing=details.querySelector('.pick-handoff-bar');
+    if(existing) existing.remove();
+    details.insertAdjacentHTML('beforeend', PSWHandoff.handoffBarHtml(idx));
+  });
+}
 /** Overlay cards are built while pickLocked is true, so micro-lock markup is frozen with disabled buttons. Rebuild those corners after the spin ends (and after lock toggles) so #poCards matches the main slip. */
 function syncPoOverlayProMicroLocks(){
   const root = document.getElementById('poCards');
@@ -5582,12 +5665,14 @@ function syncPoOverlayProMicroLocks(){
   });
   _stripPickLockWidgetsFromDom();
   syncPoCardsOrbit();
+  _injectPickHandoffBars(document.getElementById('poCards'));
 }
 /** Same overlay micro-lock refresh for every market tab after #picks re-renders (Pro; no-op while a spin is active). */
 function _syncOverlayMicroLocksAfterPickRender(n){
   try{
     if(!pickLocked && Number(n) > 0) syncPoOverlayProMicroLocks();
   }catch(_){}
+  if(Number(n) > 0) _injectPickHandoffBars();
 }
 function nbaHeadshotUrl(p){
   const direct = p && p.headshotUrl ? String(p.headshotUrl) : '';
@@ -8826,6 +8911,17 @@ function getRhythmSuspense(i){
   </div>
 </div>
 
+<div id="handoffModal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="handoffModalTitle" onclick="if(event.target===this)PSWHandoff.closeModal()">
+  <div class="handoff-modal-card" onclick="event.stopPropagation()">
+    <div class="handoff-modal-head">
+      <h2 id="handoffModalTitle">Sportsbook handoff</h2>
+      <button type="button" class="handoff-modal-close" onclick="PSWHandoff.closeModal()" aria-label="Close">&times;</button>
+    </div>
+    <div id="handoffModalBody"></div>
+    <p class="handoff-modal-lead" style="margin-top:14px;margin-bottom:0;font-size:.72rem">You place all wagers in the licensed sportsbook app. Some links open a league page, not a prefilled slip.</p>
+  </div>
+</div>
+
 <div id="rgModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:9999;overflow:auto;padding:24px"><div style="max-width:900px;margin:40px auto;background:linear-gradient(180deg,#111c33,#182747);border:1px solid #26355f;border-radius:18px;padding:18px;color:#eef3ff"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center"><h2 style="margin:0">Responsible Gaming</h2><button onclick="document.getElementById('rgModal').style.display='none'" style="border:0;border-radius:10px;padding:10px 14px;font-weight:800;background:#6ee7ff;color:#08101f">OK</button></div><p style="color:#9fb0d0;line-height:1.55">This app is for entertainment only. If you choose to participate, set a budget before you start and never chase losses.</p><ul style="color:#9fb0d0;line-height:1.55"><li>Only play if you are 21 or older and it is legal where you are.</li><li>Set time and money limits before you begin.</li><li>Do not wager money needed for bills, rent, or essentials.</li><li>Take breaks if betting stops feeling fun.</li><li>If gambling is causing stress or harm, seek help immediately.</li></ul><p style="color:#9fb0d0;line-height:1.55">If you or someone you know needs help, contact a licensed counseling or support service in your area.</p><p style="color:#9fb0d0;line-height:1.55;margin-top:14px"><strong style="color:#eef3ff">U.S. helplines:</strong> Problem gambling: <a href="tel:+18004262537" style="color:#6ee7ff;font-weight:800;text-decoration:underline">1-800-GAMBLER</a> (1-800-426-2537). Suicide &amp; Crisis Lifeline: <a href="tel:988" style="color:#6ee7ff;font-weight:800;text-decoration:underline">988</a> (call or text).</p></div></div>
 
 <div id="termsModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:9999;overflow:auto;padding:24px"><div style="max-width:900px;margin:40px auto;background:linear-gradient(180deg,#111c33,#182747);border:1px solid #26355f;border-radius:18px;padding:18px;color:#eef3ff"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center"><h2 style="margin:0">Terms</h2><button onclick="document.getElementById('termsModal').style.display='none'" style="border:0;border-radius:10px;padding:10px 14px;font-weight:800;background:#6ee7ff;color:#08101f">OK</button></div><p style="color:#d6e0f5;line-height:1.55;margin:14px 0 10px;font-weight:700">PRO SPORTS WIN™ is a trademark of Robert Price.</p><p style="color:#9fb0d0;line-height:1.55">Use this app for entertainment only. By using it, you agree that picks are not guaranteed and outcomes may vary. You are responsible for complying with local laws and age restrictions.</p><p style="color:#9fb0d0;line-height:1.55">Do not rely on this app for financial advice. The app may use third-party data and services that can change or fail without notice.</p></div></div>
@@ -9471,6 +9567,13 @@ initLegalModalStyling();
 scheduleSyncAppVersionBadge();
 _syncDevClearBtnStyle();
 syncPicksBoardWrapOrbit();
+if(window.PSWHandoff){
+  PSWHandoff.registerPickResolver(function(idx){
+    const raw=_getRawPickByIndex(idx);
+    if(!raw) return null;
+    return { raw: raw, ctx: { sport: current, option: currentOption, index: idx } };
+  });
+}
 </script>
 <div class="app-version" id="appVersion">v-auto</div>
 <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
