@@ -57,7 +57,7 @@
 <title>Pro Sports Win | Quick Pix picks</title>
 <script>
   // Public version: use letter suffixes for QA (see release.py --part letter).
-  const APP_VERSION = 'v1.23.9';
+  const APP_VERSION = 'v1.24.0';
   const APP_BUILD_TAG = (function(){
     const d = new Date(document.lastModified || Date.now());
     if(Number.isNaN(d.getTime())) return '';
@@ -1989,8 +1989,8 @@ window.safeHeadshot = function(obj){
 
     <!-- STEP 2: Profile -->
     <div class="ob-step" id="ob-step2">
-      <div class="ob-sub">Create your free profile to unlock your first pick.</div>
-      <div class="ob-unlock-badge">🎁 1 Free Pick Unlocked After Sign-Up</div>
+      <div class="ob-sub">Create your free profile to unlock picks 1–3.</div>
+      <div class="ob-unlock-badge">🎁 Free picks 1–3 unlocked after sign-up</div>
       <input class="ob-input" type="text" id="ob-name" placeholder="First Name" maxlength="32" oninput="obValidate()">
       <input class="ob-input" type="email" id="ob-email" placeholder="Email Address" oninput="obValidate()">
       <input class="ob-input" type="tel" id="ob-phone" placeholder="Mobile (for text code) — optional" inputmode="tel" autocomplete="tel" maxlength="22" oninput="obValidate()" aria-describedby="ob-phone-hint">
@@ -2026,7 +2026,7 @@ window.safeHeadshot = function(obj){
     <!-- STEP 3: Welcome -->
     <div class="ob-step" id="ob-step3">
       <div class="ob-sub" id="ob-welcome"></div>
-      <div class="ob-unlock-badge">🏆 1 Free Pick is ready &mdash; choose any market, select 1 player, and tap Spin.</div>
+      <div class="ob-unlock-badge">🏆 Free picks 1–3 are ready &mdash; choose any market, pick 1–3 players, and tap Spin.</div>
       <button class="ob-btn" onclick="obDismiss()">Let's Go! ⚾</button>
     </div>
     <!-- reCAPTCHA must NOT live inside .ob-step (steps use display:none); hidden parents break Phone Auth + cause double-render errors -->
@@ -2056,7 +2056,7 @@ window.safeHeadshot = function(obj){
     <div class="account-billing-card">
       <div class="account-billing-main">
         <div class="account-billing-title" id="accountBillingTitle">Pro Sports Win account</div>
-        <div class="account-billing-sub" id="accountBillingSub">Free includes 1 daily pick. Pro unlocks unlimited picks and advanced controls.</div>
+        <div class="account-billing-sub" id="accountBillingSub">Free includes picks 1–3 with no daily limit. Pro unlocks 4–6 pick slips, locks, and swipe-to-replace.</div>
       </div>
       <div class="account-billing-actions">
         <span class="account-pill" id="accountBillingPill">Free</span>
@@ -2107,7 +2107,7 @@ window.safeHeadshot = function(obj){
       </div>
       <div class="panel">
         <div class="pick-head">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><strong id="picksTitle">Quick Picks</strong><span class="pick-title-chip">Bet Slip</span><span id="freeBadge">🎁 1 Free Pick</span><span id="updatedAt" class="muted" style="font-weight:700">Updated: --</span></div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><strong id="picksTitle">Quick Picks</strong><span class="pick-title-chip">Bet Slip</span><span id="freeBadge">🎁 Free: 1–3 picks</span><span id="updatedAt" class="muted" style="font-weight:700">Updated: --</span></div>
           <button id="shareBtn" class="btn-pill" onclick="copyPicks()">⎘ Copy Picks</button>
         </div>
         <div class="picks-board-wrap" id="picksBoardWrap"><div class="list" id="picks"><div class="muted">Choose a sport and option to see starter picks.</div></div></div>
@@ -2201,15 +2201,16 @@ function _beltValidatePlayerPoolStatLabels(sport, expectedOption, pool){
 }
 function _resetProOnlyCountsForFreeMode(){
   if(_devMode || _isPro) return;
-  if(pickCount > 1) pickCount = 1;
-  if(ksPickCount > 1) ksPickCount = 1;
-  if(hitsPickCount > 1) hitsPickCount = 1;
-  if(basesPickCount > 1) basesPickCount = 1;
-  if(rbiPickCount > 1) rbiPickCount = 1;
-  if(nflPickCount > 1) nflPickCount = 1;
-  if(nbaPickCount > 1) nbaPickCount = 1;
-  if(nhlPickCount > 1) nhlPickCount = 1;
-  if(soccerPickCount > 1) soccerPickCount = 1;
+  const cap = FREE_MAX_PICK_COUNT;
+  if(pickCount > cap) pickCount = cap;
+  if(ksPickCount > cap) ksPickCount = cap;
+  if(hitsPickCount > cap) hitsPickCount = cap;
+  if(basesPickCount > cap) basesPickCount = cap;
+  if(rbiPickCount > cap) rbiPickCount = cap;
+  if(nflPickCount > cap) nflPickCount = cap;
+  if(nbaPickCount > cap) nbaPickCount = cap;
+  if(nhlPickCount > cap) nhlPickCount = cap;
+  if(soccerPickCount > cap) soccerPickCount = cap;
 }
 function _devResetSubtitleTapCounters(){
   [_devTapSharp,_devTapFast,_devTapFree].forEach(function(o){
@@ -2299,7 +2300,7 @@ function _devToggleMode(){
       else { _isPro = false; _freePickUsed = false; }
     }catch(_){ _isPro = false; _freePickUsed = false; }
     _resetProOnlyCountsForFreeMode();
-    if(_freePickUsed && !_isPro) showUpgradeWall(); else renderSport();
+    renderSport();
   }
 }
 var _ageYesDevSeq = 0;
@@ -2942,6 +2943,8 @@ function _flashPickSpinButton(){
 }
 function setSport(s){_trackSectionSwitch(s);current=s;currentOption=sports[s].options[0];renderTabs();renderSport();_flashAllMarketTabs();}
 const PRO_MAX_PICK_COUNT = 6;
+/** Free tier: pick counts 1–3 are unlimited; 4–6 require Pro (subscription or access-code trial). */
+const FREE_MAX_PICK_COUNT = 3;
 function _isValidPickCount(n){
   n = Number(n);
   return Number.isInteger(n) && n >= 1 && n <= PRO_MAX_PICK_COUNT;
@@ -2951,8 +2954,7 @@ function _isProOnlyPickCount(n){
 }
 function _pickCountRequiresUpgrade(n){
   if(_hasProFeatures()) return false;
-  if(_freePickUsed && !_paywallBypassActive()) return _isValidPickCount(n);
-  return Number(n) > 1;
+  return Number(n) > FREE_MAX_PICK_COUNT;
 }
 function _pickCountButtonsHtml(selected, setterName, noun){
   const label = noun || 'Player';
@@ -2961,7 +2963,7 @@ function _pickCountButtonsHtml(selected, setterName, noun){
     const selectedCls = selected === n ? 'orbit-ring' : 'btn2';
     const lockedCls = (_isUiPickLocked() || proOnly) ? 'locked' : '';
     const proCls = proOnly ? 'pick-count-pro-locked' : '';
-    const title = proOnly ? (_freePickUsed ? 'Free pick used — upgrade to spin again.' : 'Pro only — upgrade to spin more than 1 pick.') : '';
+    const title = proOnly ? 'Pro only — upgrade for 4–6 pick slips.' : '';
     const click = proOnly ? `_showPickCountProUpgrade(${n})` : `${setterName}(${n})`;
     const lock = proOnly ? '<span class="pick-count-lock-icon" aria-hidden="true">🔒</span>' : '';
     return `<button type='button' class='btn ${selectedCls} ${lockedCls} ${proCls}' ${_isUiPickLocked()?'disabled':''} aria-disabled='${proOnly?'true':'false'}' title='${title}' onclick="${click}">${lock}<span>${n} ${label}${n>1?'s':''}</span></button>`;
@@ -3013,7 +3015,7 @@ function _snapActiveSportNavLeft(){
   });
 }
 function renderSport(){
-  const _paywalled = _freePickUsed && !_devMode && !_isPro;
+  const _paywalled = false;
   const data=sports[current];document.getElementById('sportTitle').textContent=current;document.getElementById('sportDesc').textContent=data.desc;document.getElementById('sportHintBadge').textContent=current+' Live Lineups';_syncDevClearBtnStyle();
   if(current==='MLB'){
     document.getElementById('options').innerHTML='';
@@ -3360,21 +3362,13 @@ function setOption(o){currentOption=o;renderTabs();renderSport();_flashPickCount
 async function _shouldGateLoadWithUpgrade(meta){
   if(_devMode || _isPro) return false;
   const attempted = Number(meta && meta.attemptedCount) || 1;
-  const countLocked = attempted > 1;
-  let freeUsed = !!_freePickUsed;
-  if(!countLocked){
-    try{
-      const status = await syncFreePickStatusFromServer({ silent:true });
-      if(status && status.freePickUsed) freeUsed = true;
-    }catch(_){}
-  }
-  if(!freeUsed && !countLocked) return false;
+  if(attempted <= FREE_MAX_PICK_COUNT) return false;
   trackEvent('paywall_hit',{
     sport:(meta && meta.sport) || current,
     option:(meta && meta.option) || currentOption,
     attempted_count:attempted,
     trigger:'load_click',
-    reason:freeUsed?'free_used':'count_locked'
+    reason:'count_locked'
   });
   showUpgradeWall((meta && meta.payload) || {});
   return true;
@@ -3551,7 +3545,6 @@ async function startHitsLoad(){
   openPickOverlay();
   const loadBtn=document.getElementById('hitsLoadBtn');
   if(loadBtn) loadBtn.disabled=true;
-  const _markFreeAfter=(!_freePickUsed&&!_devMode&&!_paywallBypassActive());
   const token=++hitsToken;
   hitsLoading=true;hitsLoaded=false;hitsPicks=[];hitsUsed=new Set();hitsLivePool=[];hitsPickSlotCount=0;_resetPickLocksForNewSpin();pickLocked=true;
   _firstSfxIdx=-1;_lastSfxIdx=-1;
@@ -3613,7 +3606,6 @@ async function startHitsLoad(){
       syncPoOverlayProMicroLocks();
       document.getElementById('poTitle').textContent='💥 Lucky Hitters';
       if(hitsPicks.length>0)document.getElementById('poShareBtn').style.display='block';
-      if(_markFreeAfter)markFreePickUsed();
     }
   }catch(e){
     if(token!==hitsToken)return;
@@ -3677,7 +3669,6 @@ async function startBasesLoad(){
   openPickOverlay();
   const loadBtn=document.getElementById('basesLoadBtn');
   if(loadBtn) loadBtn.disabled=true;
-  const _markFreeAfter=(!_freePickUsed&&!_devMode&&!_paywallBypassActive());
   const token=++basesToken;
   basesLoading=true;basesLoaded=false;basesPicks=[];basesUsed=new Set();basesLivePool=[];basesPickSlotCount=0;_resetPickLocksForNewSpin();pickLocked=true;
   _firstSfxIdx=-1;_lastSfxIdx=-1;
@@ -3734,7 +3725,6 @@ async function startBasesLoad(){
       syncPoOverlayProMicroLocks();
       document.getElementById('poTitle').textContent='🎯 Lucky Hitters';
       if(basesPicks.length>0)document.getElementById('poShareBtn').style.display='block';
-      if(_markFreeAfter)markFreePickUsed();
     }
   }catch(e){
     if(token!==basesToken)return;
@@ -3798,7 +3788,6 @@ async function startRBILoad(){
   openPickOverlay();
   const loadBtn=document.getElementById('rbiLoadBtn');
   if(loadBtn) loadBtn.disabled=true;
-  const _markFreeAfter=(!_freePickUsed&&!_devMode&&!_paywallBypassActive());
   const token=++rbiToken;
   rbiLoading=true;rbiLoaded=false;rbiPicks=[];rbiUsed=new Set();rbiLivePool=[];rbiPickSlotCount=0;_resetPickLocksForNewSpin();pickLocked=true;
   _firstSfxIdx=-1;_lastSfxIdx=-1;
@@ -3855,7 +3844,6 @@ async function startRBILoad(){
       syncPoOverlayProMicroLocks();
       document.getElementById('poTitle').textContent='💪 Lucky Hitters';
       if(rbiPicks.length>0)document.getElementById('poShareBtn').style.display='block';
-      if(_markFreeAfter)markFreePickUsed();
     }
   }catch(e){
     if(token!==rbiToken)return;
@@ -4078,7 +4066,6 @@ async function startNFLLoad(){
   openPickOverlay();
   const loadBtn=document.getElementById('nflLoadBtn');
   if(loadBtn) loadBtn.disabled=true;
-  const _markFreeAfter=(!_freePickUsed&&!_devMode&&!_paywallBypassActive());
   const token=++nflToken;
   nflLoading=true;nflLoaded=false;nflPicks=[];nflUsed=new Set();nflLivePool=[];nflPickSlotCount=0;_resetPickLocksForNewSpin();pickLocked=true;
   _firstSfxIdx=-1;_lastSfxIdx=-1;
@@ -4130,7 +4117,6 @@ async function startNFLLoad(){
       syncPoOverlayProMicroLocks();
       document.getElementById('poTitle').textContent='🏈 Lucky Players';
       if(nflPicks.length>0)document.getElementById('poShareBtn').style.display='block';
-      if(_markFreeAfter)markFreePickUsed();
     }
   }catch(e){
     if(token!==nflToken)return;
@@ -4311,7 +4297,6 @@ async function startNBALoad(){
   openPickOverlay();
   const loadBtn=document.getElementById('nbaLoadBtn');
   if(loadBtn)loadBtn.disabled=true;
-  const _markFreeAfter=(!_freePickUsed&&!_devMode&&!_paywallBypassActive());
   const token=++nbaToken;
   nbaLoading=true;nbaLoaded=false;nbaPicks=[];nbaUsed=new Set();nbaLivePool=[];nbaPickSlotCount=0;_resetPickLocksForNewSpin();pickLocked=true;
   _firstSfxIdx=-1;_lastSfxIdx=-1;
@@ -4363,7 +4348,6 @@ async function startNBALoad(){
       syncPoOverlayProMicroLocks();
       document.getElementById('poTitle').textContent='🏀 Lucky Players';
       if(nbaPicks.length>0)document.getElementById('poShareBtn').style.display='block';
-      if(_markFreeAfter)markFreePickUsed();
     }
   }catch(e){
     if(token!==nbaToken)return;
@@ -4558,7 +4542,6 @@ async function startNHLLoad(){
   openPickOverlay();
   const loadBtn=document.getElementById('nhlLoadBtn');
   if(loadBtn)loadBtn.disabled=true;
-  const _markFreeAfter=(!_freePickUsed&&!_devMode&&!_paywallBypassActive());
   const token=++nhlToken;
   nhlLoading=true;nhlLoaded=false;nhlPicks=[];nhlUsed=new Set();nhlLivePool=[];nhlPickSlotCount=0;_resetPickLocksForNewSpin();pickLocked=true;
   _firstSfxIdx=-1;_lastSfxIdx=-1;
@@ -4610,7 +4593,6 @@ async function startNHLLoad(){
       syncPoOverlayProMicroLocks();
       document.getElementById('poTitle').textContent='🏒 Lucky Players';
       if(nhlPicks.length>0)document.getElementById('poShareBtn').style.display='block';
-      if(_markFreeAfter)markFreePickUsed();
     }
   }catch(e){
     if(token!==nhlToken)return;
@@ -4823,7 +4805,6 @@ async function startSoccerLoad(){
   openPickOverlay();
   const loadBtn=document.getElementById('soccerLoadBtn');
   if(loadBtn)loadBtn.disabled=true;
-  const _markFreeAfter=(!_freePickUsed&&!_devMode&&!_paywallBypassActive());
   const token=++soccerToken;
   soccerLoading=true;soccerLoaded=false;soccerPicks=[];soccerUsed=new Set();soccerLivePool=[];soccerPickSlotCount=0;_resetPickLocksForNewSpin();pickLocked=true;
   _firstSfxIdx=-1;_lastSfxIdx=-1;
@@ -4875,7 +4856,6 @@ async function startSoccerLoad(){
       syncPoOverlayProMicroLocks();
       document.getElementById('poTitle').textContent='⚽ Lucky Players';
       if(soccerPicks.length>0)document.getElementById('poShareBtn').style.display='block';
-      if(_markFreeAfter)markFreePickUsed();
     }
   }catch(e){
     if(token!==soccerToken)return;
@@ -6802,7 +6782,7 @@ function renderMLB(){
   const row=document.getElementById('pickCountRow');
   if(row){row.querySelectorAll('button').forEach(b=>{const n=Number((b.textContent||'').match(/\d+/)?.[0]);const proOnly=_isProOnlyPickCount(n);const isSelected=_isValidPickCount(pickCount)&&n===Number(pickCount);b.classList.toggle('orbit-ring',isSelected);b.classList.toggle('btn2',!isSelected);b.classList.toggle('locked',_isUiPickLocked()||proOnly);b.classList.toggle('pick-count-pro-locked',proOnly);b.disabled=_isUiPickLocked();});}
   const loadBtn=document.getElementById('mlbLoadBtn');
-  if(loadBtn) loadBtn.disabled=!_canSpinPickCount(pickCount, _freePickUsed && !_devMode && !_isPro);
+  if(loadBtn) loadBtn.disabled=!_canSpinPickCount(pickCount, false);
   syncPicksBoardWrapOrbit();
   syncSlipHrFavorableOnlyUi();
   syncSlipActions();
@@ -6817,9 +6797,6 @@ async function startMLBLoad(){
   openPickOverlay();
   const loadBtn=document.getElementById('mlbLoadBtn');
   if(loadBtn) loadBtn.disabled=true;
-  // markFreePickUsed() is called AFTER picks render — not here — so the
-  // upgrade wall doesn't fire 200ms into the load and wipe the UI.
-  const _markFreeAfter = (!_freePickUsed && !_devMode && !_paywallBypassActive());
   const token=++mlbToken;
   mlbLoading=true;mlbLoaded=false;mlbPicks=[];mlbTeamsUsed=[];mlbHitterUsed=new Set();mlbLivePool=[];mlbHrPickSlotCount=0;_resetPickLocksForNewSpin();pickLocked=true;
   _firstSfxIdx=-1;_lastSfxIdx=-1; // reset SFX state for this run
@@ -6884,7 +6861,7 @@ async function startMLBLoad(){
       if(i < max - 1) await sleep(300);
     }
     stopShuffle();
-    if(token===mlbToken){pickCount=0;pickLocked=false;mlbHrPickSlotCount=mlbPicks.length;renderMLB(); poFinish(); if(_markFreeAfter) markFreePickUsed();}
+    if(token===mlbToken){pickCount=0;pickLocked=false;mlbHrPickSlotCount=mlbPicks.length;renderMLB(); poFinish();}
   }catch(e){
     if(token!==mlbToken) return;
     stopShuffle();
@@ -6928,7 +6905,6 @@ async function startKsLoad(){
   openPickOverlay();
   const loadBtn=document.getElementById('ksLoadBtn');
   if(loadBtn) loadBtn.disabled=true;
-  const _markFreeAfter = (!_freePickUsed && !_devMode && !_paywallBypassActive());
   const token=++ksToken;
   ksLoading=true;ksLoaded=false;ksPicks=[];ksPitcherUsed=new Set();ksLivePool=[];ksPickSlotCount=0;_resetPickLocksForNewSpin();pickLocked=true;
   _firstSfxIdx=-1;_lastSfxIdx=-1;
@@ -6984,7 +6960,6 @@ async function startKsLoad(){
       syncPoOverlayProMicroLocks();
       document.getElementById('poTitle').textContent='\u26be Lucky Pitchers';
       if(ksPicks.length>0) document.getElementById('poShareBtn').style.display='block';
-      if(_markFreeAfter) markFreePickUsed();
     }
   }catch(e){
     if(token!==ksToken) return;
@@ -7326,10 +7301,10 @@ function syncAccountBillingPanel(){
     restoreBtn.style.display = fbUser ? 'none' : 'inline-flex';
   }else{
     title.textContent = email ? 'Free Account' : 'Pro Sports Win account';
-    sub.textContent = `${email ? email + ' · ' : ''}Free includes 1 daily pick. Pro unlocks unlimited picks and advanced controls.`;
-    pill.textContent = _freePickUsed ? 'Free Used' : 'Free';
+    sub.textContent = `${email ? email + ' · ' : ''}Free includes picks 1–3 with no daily limit. Pro unlocks 4–6 pick slips, locks, and swipe-to-replace.`;
+    pill.textContent = 'Free';
     pill.classList.remove('account-pill-pro');
-    pill.classList.toggle('account-pill-free-used', !!_freePickUsed);
+    pill.classList.remove('account-pill-free-used');
     upgradeBtn.style.display = 'inline-flex';
     manageBtn.style.display = 'none';
     restoreBtn.style.display = 'inline-flex';
@@ -7383,8 +7358,7 @@ async function continueSignedInUserToApp(user){
   }catch(_){}
   try{ await syncProStatusFromServer({ silent:true }); }catch(_){}
   if(_isPro){ renderSport(); }
-  else if(!_freePickUsed){ showFreeBadge(); }
-  else { renderSport(); setTimeout(showUpgradeWall, 300); }
+  else { showFreeBadge(); }
   syncLogoutButton();
   if(!keepUpgradeModal) focusSportsBoard();
   return true;
@@ -7415,7 +7389,7 @@ function obInit(){
         _userName = d.name || _userName || '';
         _userEmail = d.email || _userEmail || '';
         _refreshFreePickConsumedState(d);
-        if(_isPro){ renderSport(); } else if(!_freePickUsed){ showFreeBadge(); } else { setTimeout(showUpgradeWall, 300); }
+        if(_isPro){ renderSport(); } else { showFreeBadge(); }
       }
     }catch(_){}
     document.getElementById('onboardOverlay').style.display='none';
@@ -7430,7 +7404,7 @@ function obInit(){
       _userEmail = d.email || '';
       _refreshFreePickConsumedState(d);
       document.getElementById('onboardOverlay').style.display='none';
-      if(_isPro){ renderSport(); } else if(!_freePickUsed){ showFreeBadge(); } else { setTimeout(showUpgradeWall, 300); }
+      if(_isPro){ renderSport(); } else { showFreeBadge(); }
       syncLogoutButton();
     }catch(e){ showOverlay(); syncLogoutButton(); }
   } else {
@@ -7723,14 +7697,12 @@ function obComplete(){
     context: 'free_pick_onboarding'
   });
   document.getElementById('ob-welcome').innerHTML =
-    `Welcome, <strong style="color:#6ee7ff">${name}</strong>! 🎉<br><span style="color:#9fb0d0;font-size:.88rem">Your free pick is unlocked.</span>`;
+    `Welcome, <strong style="color:#6ee7ff">${name}</strong>! 🎉<br><span style="color:#9fb0d0;font-size:.88rem">Picks 1–3 are unlocked — spin anytime.</span>`;
   _isPro = false;
   _obInteractiveAuthFlow = false;
   obStep(3);
   showFreeBadge();
-  syncFreePickStatusFromServer({ silent:true }).then(function(data){
-    if(data && data.freePickUsed && !data.isPro) showUpgradeWall();
-  }).catch(()=>{});
+  syncFreePickStatusFromServer({ silent:true }).catch(()=>{});
   syncLogoutButton();
 }
 
@@ -7773,54 +7745,38 @@ function obDismiss(){
 }
 
 function showFreeBadge(){
-  if(_freePickUsed || _isPro) return;
+  if(_isPro) return;
   const badge = document.getElementById('freeBadge');
   if(badge) badge.style.display='inline-block';
-  // Free tier: exactly one pick per run — enable load buttons on every sport tab
-  pickCount = 1;
-  ksPickCount = 1;
-  hitsPickCount = 1;
-  basesPickCount = 1;
-  rbiPickCount = 1;
-  nflPickCount = 1;
-  nbaPickCount = 1;
-  nhlPickCount = 1;
-  soccerPickCount = 1;
   renderSport();
 }
 
+/** Legacy daily free-pick flag — no longer gates spins (free tier is picks 1–3 unlimited). */
 function markFreePickUsed(){
-  if(_devMode) return; // dev mode: skip paywall entirely
-  if(_isPro) return;
-  if(_paywallBypassActive()) return;
-  if(_freePickUsed) return;
-  _freePickUsed = true;
-  const badge = document.getElementById('freeBadge');
-  if(badge) badge.style.display='none';
-  try{
-    const d = JSON.parse(_lhMem.getItem('lhProfile')||'{}');
-    d.freePickUsed = true;
-    d.freePickDate = _localCalendarDay();
-    _lhMem.setItem('lhProfile', JSON.stringify(d));
-  }catch(e){}
-  syncAccountBillingPanel();
-  trackEvent('free_pick_used', {
-    sport: current,
-    option: currentOption,
-    count: _currentPicksCount()
-  });
-  consumeFreePickOnServer().catch(()=>{});
-  // Keep the just-generated free pick visible; show paywall on the next gated action.
+  return;
 }
 
 function _buildPaywallOverlayHTML(){
   return `<div id="poPaywallRoot" class="po-paywall-panel paywall-overlay-card">
       <div class="paywall-lock-icon">🔒</div>
-      <div class="paywall-overlay-title">Your free pick is used</div>
-      <div class="paywall-overlay-sub">Free includes 1 daily pick.<br>Pro unlocks unlimited spins, 2-6 pick slips, player locks, and swipe-to-replace.</div>
+      <div class="paywall-overlay-title">4–6 picks are Pro</div>
+      <div class="paywall-overlay-sub">Free includes picks 1–3 with no daily limit.<br>Pro unlocks 4–6 pick slips, player locks, and swipe-to-replace.</div>
       <button class="btn-cta btn-cta-md orbit-ring" onclick="showUpgradeModal()">See Pro options 🚀</button>
-      <div class="paywall-overlay-note">Already subscribed? Use Restore Purchases. Cancel anytime through Stripe.</div>
+      <div class="paywall-overlay-note">Have a code? Redeem for a 7-day trial. Subscribers: use Restore Purchases.</div>
     </div>`;
+}
+function _attemptedCountFromUpgradeOpts(opts){
+  opts = opts || {};
+  if(opts.attemptedHR != null) return Number(opts.attemptedHR);
+  if(opts.attemptedKs != null) return Number(opts.attemptedKs);
+  if(opts.attemptedHits != null) return Number(opts.attemptedHits);
+  if(opts.attemptedBases != null) return Number(opts.attemptedBases);
+  if(opts.attemptedRBI != null) return Number(opts.attemptedRBI);
+  if(opts.attemptedNBA != null) return Number(opts.attemptedNBA);
+  if(opts.attemptedNHL != null) return Number(opts.attemptedNHL);
+  if(opts.attemptedSoccer != null) return Number(opts.attemptedSoccer);
+  if(opts.attemptedNFL != null) return Number(opts.attemptedNFL);
+  return 0;
 }
 function isPaywallOverlayOpen(){
   const ov = document.getElementById('pickOverlay');
@@ -7900,16 +7856,16 @@ function showUpgradeWall(opts){
   const loadBtnInfo = _getLoadBtnInfo();
   const loadBtn = document.getElementById(loadBtnInfo.id);
   if(loadBtn) loadBtn.disabled = true;
-  const currentCount = _currentPicksCount();
-  const countWord = currentCount > 1 ? `${currentCount} picks` : 'another pick';
+  const attempted = _attemptedCountFromUpgradeOpts(opts);
+  const spinLabel = attempted > 1 ? `${attempted} players` : '4–6 players';
   const picks = document.getElementById('picks');
   if(picks) picks.innerHTML = `
     <div class="inline-paywall-card">
       <div class="paywall-lock-icon" style="font-size:1.6rem;margin-bottom:10px">🔒</div>
-      <div class="inline-paywall-title">Free Pick Used!</div>
-      <div class="inline-paywall-sub">You’ve used your 1 free daily pick.<br>Upgrade to spin ${countWord}, unlock 2-6 pick slips, player locks, and more.</div>
+      <div class="inline-paywall-title">4–6 picks are Pro</div>
+      <div class="inline-paywall-sub">Free includes picks 1–3 with no daily limit.<br>Upgrade to spin ${spinLabel}, unlock locks, and swipe-to-replace.</div>
       <button class="btn-cta btn-cta-sm orbit-ring" onclick="showUpgradeModal()">Upgrade 🚀</button>
-      <div class="inline-paywall-note">Resets daily. Come back tomorrow for another free pick.</div>
+      <div class="inline-paywall-note">Access codes include a 7-day Pro trial. Subscribers: Restore Purchases.</div>
     </div>`;
   showPaywallOverlayIfNeeded();
   syncPicksBoardWrapOrbit();
@@ -7971,7 +7927,6 @@ async function syncFreePickStatusFromServer(opts={}){
   if(!_freePickEmailForServer() && !(window.firebaseAuth && window.firebaseAuth.currentUser)) return null;
   const data = await _freePickApi('/free-pick/status');
   _cacheFreePickServerState(data);
-  if(data.freePickUsed && !data.isPro && !opts.silent) showUpgradeWall();
   return data;
 }
 async function consumeFreePickOnServer(){
@@ -8167,13 +8122,7 @@ function continueAsFreeMemberFromRestore(){
   }catch(_){}
   closeStripeModal();
   obDismiss();
-  if(_freePickUsed){
-    const badge = document.getElementById('freeBadge');
-    if(badge) badge.style.display = 'none';
-    renderSport();
-  }else{
-    showFreeBadge();
-  }
+  showFreeBadge();
   syncLogoutButton();
   focusSportsBoard();
   showToast('Signed in. Continuing with free access.', 'success', 'center');
@@ -8781,7 +8730,7 @@ function getRhythmSuspense(i){
     <div class="stripe-modal-price-wrap">
       <span class="stripe-modal-price">$4.99</span><span class="stripe-modal-price-sub"> / month</span>
     </div>
-    <div class="stripe-modal-note">Pro unlocks unlimited picks, multi-pick slips, locks, and swipe-to-replace. Cancel anytime through Stripe.</div>
+    <div class="stripe-modal-note">Pro unlocks 4–6 pick slips, locks, and swipe-to-replace. Free includes picks 1–3. Cancel anytime through Stripe.</div>
 
     <div class="stripe-section" id="stripeSignedOutPanel">
       <div class="stripe-section-title">Step 1: Create Account or Sign In</div>
@@ -8832,8 +8781,8 @@ function getRhythmSuspense(i){
     <div class="stripe-modal-list" style="margin-top:14px">
       <div class="stripe-modal-list-head">What Pro unlocks</div>
       <div class="stripe-modal-list-items">
-        <div class="stripe-modal-list-item"><span class="stripe-modal-check">✓</span> Unlimited picks across supported sports and markets</div>
-        <div class="stripe-modal-list-item"><span class="stripe-modal-check">✓</span> Multi-pick slips with 2, 3, 4, 5, or 6 selections</div>
+        <div class="stripe-modal-list-item"><span class="stripe-modal-check">✓</span> Pick slips with 4, 5, or 6 selections (free tier: 1–3)</div>
+        <div class="stripe-modal-list-item"><span class="stripe-modal-check">✓</span> Unlimited spins across supported sports and markets</div>
         <div class="stripe-modal-list-item"><span class="stripe-modal-check">✓</span> Player micro-locks to keep favorite picks fixed</div>
         <div class="stripe-modal-list-item"><span class="stripe-modal-check">✓</span> Swipe-to-replace picks after the spin finishes</div>
       </div>
