@@ -57,7 +57,7 @@
 <title>Pro Sports Win | Quick Pix picks</title>
 <script>
   // Public version: use letter suffixes for QA (see release.py --part letter).
-  const APP_VERSION = 'v1.24.1';
+  const APP_VERSION = 'v1.24.2';
   const APP_BUILD_TAG = (function(){
     const d = new Date(document.lastModified || Date.now());
     if(Number.isNaN(d.getTime())) return '';
@@ -2009,7 +2009,7 @@ window.safeHeadshot = function(obj){
       <div class="ob-sub" id="ob-verify-intro">We sent a 6-digit code to<br><strong id="ob-email-display" style="color:#6ee7ff"></strong></div>
       <input class="ob-input" type="text" id="ob-code" placeholder="Enter 6-digit code" maxlength="6" inputmode="numeric" enterkeyhint="done" oninput="obCodeValidate()" autocomplete="one-time-code" style="scroll-margin-bottom:120px">
       <div id="ob-code-error" style="color:#f87171;font-size:.82rem;min-height:18px;margin-bottom:4px"></div>
-      <button class="ob-btn" id="verifyBtn" disabled onclick="obVerifyCode()">Verify & Unlock Pick 🔓</button>
+      <button class="ob-btn" id="verifyBtn" disabled onclick="obVerifyCode()">Verify &amp; unlock picks 🔓</button>
       <div class="inline-note">
         Didn't get it? <button id="resendBtn" class="link-btn" onclick="obResendCode()">Resend code</button>
         <span id="resendTimer" class="inline-note-muted"></span>
