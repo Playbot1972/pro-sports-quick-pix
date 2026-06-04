@@ -15,7 +15,15 @@ This repo now includes a starter backend in `functions/` for secure Pro entitlem
 
 The frontend `index.html` now uses those endpoints for checkout and restore, and no longer treats `?pro=success` as a direct unlock.
 
-## Deploy backend
+## Auto deploy (GitHub Actions)
+
+Merging to **`main`** triggers [`.github/workflows/deploy-production.yml`](.github/workflows/deploy-production.yml) to deploy **Firebase Hosting** (and **Functions** when `functions/**` changes).
+
+**One-time:** add GitHub secret `FIREBASE_SERVICE_ACCOUNT` (Firebase service-account JSON). Full steps: [docs/github-actions-deploy.md](docs/github-actions-deploy.md).
+
+After deploy, confirm https://prosports.win/version.json matches the repo (e.g. `v1.24.2`).
+
+## Deploy backend (manual)
 
 1. Install dependencies:
    - `cd functions && npm install`
