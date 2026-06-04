@@ -57,7 +57,7 @@
 <title>Pro Sports Win | Quick Pix picks</title>
 <script>
   // Public version: use letter suffixes for QA (see release.py --part letter).
-  const APP_VERSION = 'v1.24.0';
+  const APP_VERSION = 'v1.24.1';
   const APP_BUILD_TAG = (function(){
     const d = new Date(document.lastModified || Date.now());
     if(Number.isNaN(d.getTime())) return '';
@@ -1970,7 +1970,7 @@ window.safeHeadshot = function(obj){
 
     <!-- STEP 1: Age Gate (same Yes / No as trust-banner Age Check) -->
     <div class="ob-step active" id="ob-step1">
-      <div class="ob-sub">Quick Pix — free daily HR picks powered by live MLB lineups.<br>You must be 21+ to continue.</div>
+      <div class="ob-sub">Quick Pix — free 1–3 pick slips powered by live lineups.<br>You must be 21+ to continue.</div>
       <div class="age-modal-icon age-modal-strike-badge" aria-hidden="true"><span class="age-struck-num">20</span></div>
       <p class="ob-age-q ob-age-q--withpill">
         <span class="ob-age-q-line">Are you</span>
@@ -7292,7 +7292,7 @@ function syncAccountBillingPanel(){
   const email = (fbUser && fbUser.email) || _userEmail || '';
   if(_isPro){
     title.textContent = 'Pro Account Active';
-    sub.textContent = `${email ? email + ' · ' : ''}Unlimited picks, multi-pick slips, locks, and swipe-to-replace are unlocked.`;
+    sub.textContent = `${email ? email + ' · ' : ''}4–6 pick slips, unlimited spins, locks, and swipe-to-replace are unlocked.`;
     pill.textContent = 'Pro Active';
     pill.classList.add('account-pill-pro');
     pill.classList.remove('account-pill-free-used');
