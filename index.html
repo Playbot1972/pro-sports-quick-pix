@@ -3976,7 +3976,7 @@ async function getTodaysNFLPlayers(option){
       return Array.isArray(arr) ? arr : [];
     }catch(_){ return []; }
   }
-  const events=await getScoreboardEventsNearby('https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard',1,1);
+  const events=await getScoreboardEventsNearby('https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard',1,7);
   const teamGameMap=_teamGameMapFromEvents(events);
   const teamOppMap=_teamOpponentMapFromEvents(events);
   function coerceCachedNFLOption(list, selectedOption){
