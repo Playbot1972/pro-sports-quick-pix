@@ -57,7 +57,7 @@
 <title>Pro Sports Win | Quick Pix picks</title>
 <script>
   // Public version: use letter suffixes for QA (see release.py --part letter).
-  const APP_VERSION = 'v1.26.1';
+  const APP_VERSION = 'v1.26.2';
   const APP_BUILD_TAG = (function(){
     const d = new Date(document.lastModified || Date.now());
     if(Number.isNaN(d.getTime())) return '';
@@ -3976,7 +3976,7 @@ async function getTodaysNFLPlayers(option){
       return Array.isArray(arr) ? arr : [];
     }catch(_){ return []; }
   }
-  const events=await getScoreboardEventsNearby('https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard',1,7);
+  const events=await getScoreboardEventsNearby('https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard',7,7);
   const teamGameMap=_teamGameMapFromEvents(events);
   const teamOppMap=_teamOpponentMapFromEvents(events);
   function coerceCachedNFLOption(list, selectedOption){
@@ -6302,7 +6302,22 @@ async function getScoreboardEventsNearby(baseUrl, backDays, aheadDays){
     const sb=await fetchJson(baseUrl);
     pushEvents(sb&&sb.events);
   }catch(_){}
-  if(events.length) return events;
+  if(events.length){
+    // Default scoreboard has today's events; also merge the most-recent past day
+    // that has games (e.g. Thursday TNF when today is Sunday pre-kickoff).
+    // This ensures completed-game boxscore stats are available for stat options.
+    for(let off=-1;off>=-Math.max(0,backDays||0);off--){
+      const u=baseUrl+(baseUrl.indexOf('?')>=0?'&':'?')+'dates='+_espnDatesParamOffset(off);
+      try{
+        const before=events.length;
+        const sb=await fetchJson(u);
+        pushEvents(sb&&sb.events);
+        if(events.length>before) break; // Stop after first past day with games
+      }catch(_){}
+    }
+    return events;
+  }
+  // Default scoreboard was empty – search nearby dates (original fall-back behaviour).
   for(let off=-Math.max(0,backDays||0);off<=Math.max(0,aheadDays||0);off++){
     if(off===0) continue;
     const u=baseUrl+(baseUrl.indexOf('?')>=0?'&':'?')+'dates='+_espnDatesParamOffset(off);
@@ -6650,7 +6665,7 @@ async function _buildRosterFallbackPlayers(sportPath, events, option, defaults){
       const key=(a.id||'')+'::'+(t.abbr||'');
       if(!a.name || seen.has(key)) continue;
       seen.add(key);
-      out.push({
+      const entry={
         player:a.name,
         espnId:a.id||'',
         headshotUrl:a.headshotUrl||'',
@@ -6661,7 +6676,10 @@ async function _buildRosterFallbackPlayers(sportPath, events, option, defaults){
         line:defaults && defaults[option] != null ? defaults[option] : 0.5,
         seasonAvg:'—',
         game:t.game||null
-      });
+      };
+      // TDs players need a numeric td field so the card template renders correctly.
+      if(option==='TDs') entry.td=0;
+      out.push(entry);
     }
   }
   return out;
