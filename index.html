@@ -57,7 +57,7 @@
 <title>Pro Sports Win | Quick Pix picks</title>
 <script>
   // Public version: use letter suffixes for QA (see release.py --part letter).
-  const APP_VERSION = 'v1.27.0';
+  const APP_VERSION = 'v1.27.1';
   const APP_BUILD_TAG = (function(){
     const d = new Date(document.lastModified || Date.now());
     if(Number.isNaN(d.getTime())) return '';
@@ -4890,7 +4890,7 @@ async function getTodaysWNBAPlayers(option){
       return Array.isArray(arr) ? arr : [];
     }catch(_){ return []; }
   }
-  const events=await getScoreboardEventsNearby('https://site.api.espn.com/apis/site/v2/sports/basketball/wnba/scoreboard',1,1);
+  const events=await getScoreboardEventsNearby('https://site.api.espn.com/apis/site/v2/sports/basketball/wnba/scoreboard',5,5);
   const teamGameMap=_teamGameMapFromEvents(events);
   const teamOppMap=_teamOpponentMapFromEvents(events);
   function coerceCachedWNBAOption(list, selectedOption){
@@ -7208,26 +7208,36 @@ async function enrichMlbHrSetupForPool(list){
   return arr;
 }
 async function fetchJson(url){
+  // Prefer sports-cache only for hosts that work from Cloud Functions (MLB Stats, Open-Meteo).
+  // ESPN (site.api.espn.com) is fetched DIRECTLY in the browser: Akamai blocks many GCP
+  // egress IPs via /sports-cache (HTTP 403 Access Denied), while ESPN returns CORS *.
+  const direct = String(url || '');
+  const proxied = sportsCacheUrlFor(direct);
+  const candidates = proxied === direct ? [direct] : [proxied, direct];
   let lastErr;
-  for(let i=0;i<2;i++){
-    try{
-      const requestUrl = sportsCacheUrlFor(url);
-      const r=await fetch(requestUrl,{cache:'no-store'});
-      if(!r.ok) throw new Error('Fetch failed');
-      return await r.json();
-    }catch(e){
-      lastErr=e;
-      if(i===0) await sleep(180);
+  for(let c = 0; c < candidates.length; c++){
+    const requestUrl = candidates[c];
+    for(let i = 0; i < 2; i++){
+      try{
+        const r = await fetch(requestUrl, { cache: 'no-store' });
+        if(!r.ok) throw new Error('Fetch failed ' + r.status);
+        return await r.json();
+      }catch(e){
+        lastErr = e;
+        if(i === 0) await sleep(180);
+      }
     }
   }
-  throw lastErr||new Error('Fetch failed');
+  throw lastErr || new Error('Fetch failed');
 }
 function sportsCacheUrlFor(url){
   try{
     const u = new URL(String(url));
-    const allowed = ['site.api.espn.com','statsapi.mlb.com','api.open-meteo.com'];
-    if(u.protocol === 'https:' && allowed.includes(u.hostname)){
-          return PUBLIC_API_BASE + '/sports-cache?url=' + encodeURIComponent(u.toString());
+    // Do NOT proxy site.api.espn.com — Cloud Functions egress is blocked by ESPN/Akamai.
+    // Browser CORS allows direct ESPN GETs (Access-Control-Allow-Origin: *).
+    const proxyHosts = ['statsapi.mlb.com', 'api.open-meteo.com'];
+    if(u.protocol === 'https:' && proxyHosts.includes(u.hostname)){
+      return PUBLIC_API_BASE + '/sports-cache?url=' + encodeURIComponent(u.toString());
     }
   }catch(_){}
   return url;
@@ -7250,24 +7260,37 @@ async function getScoreboardEventsNearby(baseUrl, backDays, aheadDays){
       events.push(ev);
     }
   };
+  const hasFinalOrInProgress=()=>events.some(function(ev){
+    const n=((ev&&ev.status&&ev.status.type&&ev.status.type.name)||'').toUpperCase();
+    return n.indexOf('FINAL')>=0 || n.indexOf('PROGRESS')>=0 || n.indexOf('HALFTIME')>=0 || n.indexOf('END')>=0;
+  });
   try{
     const sb=await fetchJson(baseUrl);
     pushEvents(sb&&sb.events);
   }catch(_){}
   if(events.length){
-    // Default scoreboard has today's events; also merge the most-recent past day
-    // that has games (e.g. Thursday TNF when today is Sunday pre-kickoff).
-    // This ensures completed-game boxscore stats are available for stat options.
+    // Default scoreboard often includes upcoming games. Merge recent past days so
+    // completed-game boxscores are available for player props (esp. NCAAF weekends).
     for(let off=-1;off>=-Math.max(0,backDays||0);off--){
       const u=baseUrl+(baseUrl.indexOf('?')>=0?'&':'?')+'dates='+_espnDatesParamOffset(off);
       try{
         const before=events.length;
         const sb=await fetchJson(u);
         pushEvents(sb&&sb.events);
-        if(events.length>before) break; // Stop after first past day with games
+        if(events.length>before && hasFinalOrInProgress()) break;
       }catch(_){}
     }
-    return events;
+    // Also peek a few days ahead when the board is sparse / between slate days (WNBA playoffs).
+    if(!hasFinalOrInProgress() || events.length < 4){
+      for(let off=1;off<=Math.max(0,aheadDays||0);off++){
+        const u=baseUrl+(baseUrl.indexOf('?')>=0?'&':'?')+'dates='+_espnDatesParamOffset(off);
+        try{
+          const sb=await fetchJson(u);
+          pushEvents(sb&&sb.events);
+        }catch(_){}
+      }
+    }
+    return _prioritizeLiveScoreboardEvents(events);
   }
   // Default scoreboard was empty – search nearby dates (original fall-back behaviour).
   for(let off=-Math.max(0,backDays||0);off<=Math.max(0,aheadDays||0);off++){
@@ -7279,7 +7302,22 @@ async function getScoreboardEventsNearby(baseUrl, backDays, aheadDays){
       if(events.length) break;
     }catch(_){}
   }
-  return events;
+  return _prioritizeLiveScoreboardEvents(events);
+}
+function _prioritizeLiveScoreboardEvents(events){
+  // Prefer completed / in-progress games first so boxscore parsing finds athletes
+  // before we burn requests on upcoming scheduled slates (esp. NCAAF).
+  const arr=Array.isArray(events)?events.slice():[];
+  arr.sort(function(a, b){
+    function rank(ev){
+      const n=String(((ev&&ev.status&&ev.status.type&&ev.status.type.name)||'')).toUpperCase();
+      if(n.indexOf('PROGRESS')>=0 || n.indexOf('HALFTIME')>=0) return 0;
+      if(n.indexOf('FINAL')>=0 || n.indexOf('END')>=0) return 1;
+      return 2;
+    }
+    return rank(a)-rank(b);
+  });
+  return arr;
 }
 /** MLB hitter pool: free public MLB Stats API vs ESPN — persisted locally (no keys). */
 function getMlbDataSourcePref(){
