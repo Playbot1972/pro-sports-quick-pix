@@ -572,6 +572,7 @@ app.get("/sports-cache", async (req, res) => {
         Accept: "application/json,text/plain,*/*",
         "Accept-Language": "en-US,en;q=0.9",
         // Browser-like UA: ESPN/Akamai often blocks datacenter defaults with 403 Access Denied.
+        // Client now fetches ESPN directly; this header still helps any remaining proxied ESPN probes.
         "User-Agent":
           "Mozilla/5.0 (compatible; ProSportsQuickPix/1.1; +https://prosports.win) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         Referer: "https://www.espn.com/",
