@@ -57,7 +57,7 @@
 <title>Pro Sports Win | Quick Pix picks</title>
 <script>
   // Public version: use letter suffixes for QA (see release.py --part letter).
-  const APP_VERSION = 'v1.26.2';
+  const APP_VERSION = 'v1.26.3';
   const APP_BUILD_TAG = (function(){
     const d = new Date(document.lastModified || Date.now());
     if(Number.isNaN(d.getTime())) return '';
@@ -2647,8 +2647,62 @@ let soccerLoaded=false, soccerPicks=[], soccerToken=0, soccerLoading=false, socc
 let ksPickSlotCount=0,hitsPickSlotCount=0,basesPickSlotCount=0,rbiPickSlotCount=0,nflPickSlotCount=0,nbaPickSlotCount=0,nhlPickSlotCount=0,soccerPickSlotCount=0;
 const todayStr = (()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;})();
 
-/** Approximate US pro calendar windows (local date). Tune yearly if needed. */
+// ── ASYNC LEAGUE STATUS PROBE ─────────────────────────────────────────────
+// Authoritative in-season check via ESPN scoreboard season metadata.
+// Overrides the static date gate when the two disagree.
+// Results are cached for 60 minutes so frequent renders don't re-fetch.
+const _leagueStatusCache={};
+const _leagueProbeUrls={
+  NFL:'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard',
+  MLB:'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard',
+  NBA:'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard',
+  NHL:'https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard',
+  Soccer:'https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/scoreboard',
+};
+async function _probeLeagueInSeason(sport){
+  const now=Date.now();
+  const hit=_leagueStatusCache[sport];
+  if(hit && hit.expiresAt>now) return hit.inSeason;
+  const url=_leagueProbeUrls[sport];
+  if(!url) return null;
+  try{
+    const sb=await fetchJson(url);
+    // ESPN season.type: 1=preseason, 2=regular season, 3=postseason — all indicate active competition.
+    const seasonType=sb&&sb.season&&sb.season.type;
+    let inSeason;
+    if(seasonType!=null){
+      inSeason=Number(seasonType)>=1;
+    }else{
+      // Fall back: any event scheduled within the next 14 days means in-season.
+      const evts=(sb&&sb.events)||[];
+      const cutoff=now+14*24*60*60*1000;
+      inSeason=evts.some(function(ev){
+        const t=ev&&ev.date?Date.parse(ev.date):NaN;
+        return Number.isFinite(t)&&t<=cutoff;
+      });
+    }
+    _leagueStatusCache[sport]={inSeason,expiresAt:now+60*60*1000};
+    return inSeason;
+  }catch(_){
+    return null; // Fetch failed — don't cache, fall back to static gate.
+  }
+}
+// Fire probe for a sport and re-render the current tab if the result
+// disagrees with what was already on screen (handles season rollover).
+function _probeAndCorrectSeason(sport){
+  const before=sportInSeason(sport);
+  _probeLeagueInSeason(sport).then(function(r){
+    if(r===null) return; // Probe failed — leave static gate result in place.
+    if(r!==before && current===sport){ renderTabs(); renderSport(); }
+  }).catch(function(){});
+}
+
+/** Approximate US pro calendar windows (local date). The async probe above
+ *  is authoritative; this static gate is only a fast synchronous default. */
 function sportInSeason(sport){
+  // API probe cache overrides the static gate when populated.
+  const hit=_leagueStatusCache[sport];
+  if(hit && hit.expiresAt>Date.now()) return hit.inSeason;
   const t = new Date();
   const m = t.getMonth() + 1;
   const d = t.getDate();
@@ -2668,9 +2722,11 @@ function sportInSeason(sport){
       if(m <= 5) return true;
       return m === 6 && d <= 25;
     case 'NHL':
-      if(m >= 11 || (m === 10 && d >= 7)) return true;
-      if(m <= 5) return true;
-      return m === 6 && d <= 28;
+      // July and August are the only months that are definitively outside any
+      // NHL season. All other months may overlap with pre/regular/post-season
+      // depending on the year — the async probe resolves ambiguous dates.
+      if(m === 7 || m === 8) return false;
+      return true;
     case 'Soccer':
       if(m >= 3 && m <= 11) return true;
       if(m === 2) return d >= 22;
@@ -3005,7 +3061,7 @@ function _flashPickSpinButton(){
     if(b) uiDoubleFlash(b);
   });
 }
-function setSport(s){_trackSectionSwitch(s);current=s;currentOption=sports[s].options[0];renderTabs();renderSport();_flashAllMarketTabs();}
+function setSport(s){_trackSectionSwitch(s);current=s;currentOption=sports[s].options[0];renderTabs();renderSport();_flashAllMarketTabs();_probeAndCorrectSeason(s);}
 const PRO_MAX_PICK_COUNT = 6;
 /** Free tier: pick counts 1–3 are unlimited; 4–6 require Pro (subscription or access-code trial). */
 const FREE_MAX_PICK_COUNT = 3;
@@ -9597,6 +9653,9 @@ initLegalModalStyling();
 scheduleSyncAppVersionBadge();
 _syncDevClearBtnStyle();
 syncPicksBoardWrapOrbit();
+// Probe all sports' season status on load so the nav and current tab reflect
+// live ESPN schedule data rather than the static date gate alone.
+Object.keys(sports).forEach(function(s){ _probeAndCorrectSeason(s); });
 if(window.PSWHandoff){
   PSWHandoff.registerPickResolver(function(idx){
     const raw=_getRawPickByIndex(idx);
