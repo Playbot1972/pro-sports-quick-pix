@@ -57,7 +57,7 @@
 <title>Pro Sports Win | Quick Pix picks</title>
 <script>
   // Public version: use letter suffixes for QA (see release.py --part letter).
-  const APP_VERSION = 'v1.26.3';
+  const APP_VERSION = 'v1.26.4';
   const APP_BUILD_TAG = (function(){
     const d = new Date(document.lastModified || Date.now());
     if(Number.isNaN(d.getTime())) return '';
@@ -4533,7 +4533,7 @@ async function getTodaysNHLPlayers(option){
       return Array.isArray(arr) ? arr : [];
     }catch(_){ return []; }
   }
-  const events=await getScoreboardEventsNearby('https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard',1,1);
+  const events=await getScoreboardEventsNearby('https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard',3,1);
   const teamGameMap=_teamGameMapFromEvents(events);
   const teamOppMap=_teamOpponentMapFromEvents(events);
   function coerceCachedNHLOption(list, selectedOption){
@@ -4778,7 +4778,7 @@ async function getTodaysSoccerPlayers(option){
       return Array.isArray(arr) ? arr : [];
     }catch(_){ return []; }
   }
-  const events=await getScoreboardEventsNearby('https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/scoreboard',1,1);
+  const events=await getScoreboardEventsNearby('https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/scoreboard',5,1);
   const teamGameMap=_teamGameMapFromEvents(events);
   const teamOppMap=_teamOpponentMapFromEvents(events);
   function coerceCachedSoccerOption(list, selectedOption){
