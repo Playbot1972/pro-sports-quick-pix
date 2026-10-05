@@ -57,7 +57,7 @@
 <title>Pro Sports Win | Quick Pix picks</title>
 <script>
   // Public version: use letter suffixes for QA (see release.py --part letter).
-  const APP_VERSION = 'v1.26.4';
+  const APP_VERSION = 'v1.27.0';
   const APP_BUILD_TAG = (function(){
     const d = new Date(document.lastModified || Date.now());
     if(Number.isNaN(d.getTime())) return '';
@@ -2272,7 +2272,10 @@ function _resetProOnlyCountsForFreeMode(){
   if(basesPickCount > cap) basesPickCount = cap;
   if(rbiPickCount > cap) rbiPickCount = cap;
   if(nflPickCount > cap) nflPickCount = cap;
+  if(ncaafPickCount > cap) ncaafPickCount = cap;
   if(nbaPickCount > cap) nbaPickCount = cap;
+  if(wnbaPickCount > cap) wnbaPickCount = cap;
+  if(ncaabPickCount > cap) ncaabPickCount = cap;
   if(nhlPickCount > cap) nhlPickCount = cap;
   if(soccerPickCount > cap) soccerPickCount = cap;
 }
@@ -2628,7 +2631,7 @@ function stopPickSfxNow(){
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
-const sports={MLB:{icon:'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Major_League_Baseball_logo.svg/1280px-Major_League_Baseball_logo.svg.png',desc:'Load live lineup hitters for today, then picks appear one at a time.',options:['HR','Hits','Total Bases','RBI','Ks'],color:'#6ee7ff'},NFL:{icon:'https://upload.wikimedia.org/wikipedia/en/a/a2/National_Football_League_logo.svg',desc:'Starter options: passing yards, rushing yards, receiving yards, receptions, TDs.',options:['TDs','Rush Yds','Rec Yds','Receptions','Pass Yds'],color:'#34d399'},NBA:{icon:'https://upload.wikimedia.org/wikipedia/en/0/03/National_Basketball_Association_logo.svg',desc:'Starter options: points, rebounds, assists, threes, PRA.',options:['Points','Assists','Rebounds','3PM','PRA'],color:'#f59e0b'},NHL:{icon:'https://media.nhl.com/site/asset/public/images/2022/01/NewShield-02023704-10094134.jpg',desc:'Starter options: shots on goal, goals, assists, goalie saves, points.',options:['Goals','Shots','Assists','Points','Goalie Saves'],color:'#60a5fa'},Soccer:{icon:'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Soccerball.svg/3840px-Soccerball.svg.png',desc:'Starter options: shots, shots on target, goals, assists, goalkeeper saves.',options:['Goals','Assists','Shots','SOT','GK Saves'],color:'#f472b6'}};
+const sports={MLB:{icon:'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Major_League_Baseball_logo.svg/1280px-Major_League_Baseball_logo.svg.png',desc:'Load live lineup hitters for today, then picks appear one at a time.',options:['HR','Hits','Total Bases','RBI','Ks'],color:'#6ee7ff'},NFL:{icon:'https://upload.wikimedia.org/wikipedia/en/a/a2/National_Football_League_logo.svg',desc:'Starter options: passing yards, rushing yards, receiving yards, receptions, TDs.',options:['TDs','Rush Yds','Rec Yds','Receptions','Pass Yds'],color:'#34d399'},NCAAF:{icon:'https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/NCAA_logo.svg/200px-NCAA_logo.svg.png',desc:'NCAA Football (NCAAF): passing yards, rushing yards, receiving yards, receptions, TDs.',options:['TDs','Rush Yds','Rec Yds','Receptions','Pass Yds'],color:'#a3e635'},NBA:{icon:'https://upload.wikimedia.org/wikipedia/en/0/03/National_Basketball_Association_logo.svg',desc:'Starter options: points, rebounds, assists, threes, PRA.',options:['Points','Assists','Rebounds','3PM','PRA'],color:'#f59e0b'},WNBA:{icon:'https://upload.wikimedia.org/wikipedia/en/thumb/8/8b/Women%27s_National_Basketball_Association_logo.svg/200px-Women%27s_National_Basketball_Association_logo.svg.png',desc:'WNBA starter options: points, rebounds, assists, threes, PRA.',options:['Points','Assists','Rebounds','3PM','PRA'],color:'#fb7185'},NCAAB:{icon:'https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/NCAA_logo.svg/200px-NCAA_logo.svg.png',desc:'NCAA Basketball (mens): points, rebounds, assists, threes, PRA.',options:['Points','Assists','Rebounds','3PM','PRA'],color:'#38bdf8'},NHL:{icon:'https://media.nhl.com/site/asset/public/images/2022/01/NewShield-02023704-10094134.jpg',desc:'Starter options: shots on goal, goals, assists, goalie saves, points.',options:['Goals','Shots','Assists','Points','Goalie Saves'],color:'#60a5fa'},Soccer:{icon:'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Soccerball.svg/3840px-Soccerball.svg.png',desc:'Starter options: shots, shots on target, goals, assists, goalkeeper saves.',options:['Goals','Assists','Shots','SOT','GK Saves'],color:'#f472b6'}};
 let current='MLB', currentOption='HR', pickCount=0, pickLocked=false, mlbLoaded=false, mlbPicks=[], mlbToken=0, mlbLoading=false, mlbTeamsUsed=[], mlbHitterUsed=new Set(), mlbLivePool=[], mlbHrPickSlotCount=0;
 let slipManualLocked=false;
 /** Pro: per-pick swipe locks by context key `Sport|Option` → Set of row indices. */
@@ -2644,7 +2647,10 @@ let nflLoaded=false, nflPicks=[], nflToken=0, nflLoading=false, nflPickCount=1, 
 let nbaLoaded=false, nbaPicks=[], nbaToken=0, nbaLoading=false, nbaPickCount=0, nbaUsed=new Set(), nbaLivePool=[];
 let nhlLoaded=false, nhlPicks=[], nhlToken=0, nhlLoading=false, nhlPickCount=0, nhlUsed=new Set(), nhlLivePool=[];
 let soccerLoaded=false, soccerPicks=[], soccerToken=0, soccerLoading=false, soccerPickCount=0, soccerUsed=new Set(), soccerLivePool=[];
-let ksPickSlotCount=0,hitsPickSlotCount=0,basesPickSlotCount=0,rbiPickSlotCount=0,nflPickSlotCount=0,nbaPickSlotCount=0,nhlPickSlotCount=0,soccerPickSlotCount=0;
+let ncaafLoaded=false, ncaafPicks=[], ncaafToken=0, ncaafLoading=false, ncaafPickCount=1, ncaafUsed=new Set(), ncaafLivePool=[];
+let wnbaLoaded=false, wnbaPicks=[], wnbaToken=0, wnbaLoading=false, wnbaPickCount=0, wnbaUsed=new Set(), wnbaLivePool=[];
+let ncaabLoaded=false, ncaabPicks=[], ncaabToken=0, ncaabLoading=false, ncaabPickCount=0, ncaabUsed=new Set(), ncaabLivePool=[];
+let ksPickSlotCount=0,hitsPickSlotCount=0,basesPickSlotCount=0,rbiPickSlotCount=0,nflPickSlotCount=0,ncaafPickSlotCount=0,nbaPickSlotCount=0,wnbaPickSlotCount=0,ncaabPickSlotCount=0,nhlPickSlotCount=0,soccerPickSlotCount=0;
 const todayStr = (()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;})();
 
 // ── ASYNC LEAGUE STATUS PROBE ─────────────────────────────────────────────
@@ -2654,8 +2660,11 @@ const todayStr = (()=>{const d=new Date();return `${d.getFullYear()}-${String(d.
 const _leagueStatusCache={};
 const _leagueProbeUrls={
   NFL:'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard',
+  NCAAF:'https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard',
   MLB:'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard',
   NBA:'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard',
+  WNBA:'https://site.api.espn.com/apis/site/v2/sports/basketball/wnba/scoreboard',
+  NCAAB:'https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard',
   NHL:'https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard',
   Soccer:'https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/scoreboard',
 };
@@ -2712,6 +2721,11 @@ function sportInSeason(sport){
       if(m === 9 && d >= 4) return true;
       if(m <= 2) return m === 1 || (m === 2 && d <= 15);
       return false;
+    case 'NCAAF':
+      if(m === 8 && d >= 24) return true;
+      if(m >= 9 && m <= 12) return true;
+      if(m === 1) return d <= 20;
+      return false;
     case 'MLB':
       if(m === 3) return d >= 20;
       if(m >= 4 && m <= 10) return true;
@@ -2721,6 +2735,15 @@ function sportInSeason(sport){
       if(m >= 11 || (m === 10 && d >= 15)) return true;
       if(m <= 5) return true;
       return m === 6 && d <= 25;
+    case 'WNBA':
+      if(m >= 5 && m <= 9) return true;
+      if(m === 10) return d <= 20;
+      return false;
+    case 'NCAAB':
+      if(m === 11 && d >= 4) return true;
+      if(m === 12 || m <= 3) return true;
+      if(m === 4) return d <= 10;
+      return false;
     case 'NHL':
       // July and August are the only months that are definitively outside any
       // NHL season. All other months may overlap with pre/regular/post-season
@@ -2740,8 +2763,11 @@ function getOutOfSeasonSports(){
 }
 const _seasonReturnHint = {
   NFL: 'Regular-season picks return in early September.',
+  NCAAF: 'College football returns in late August.',
   MLB: 'Spring Training and the regular season return in March.',
   NBA: 'The league returns in mid-October.',
+  WNBA: 'The WNBA returns in May.',
+  NCAAB: 'College basketball returns in early November.',
   NHL: 'The league returns in early October.',
   Soccer: 'MLS returns in late February.'
 };
@@ -3021,7 +3047,7 @@ function randomSport(){
   renderTabs();
   renderSport();
   _flashAllMarketTabs();
-  if(current==='MLB' || current==='NFL' || current==='NBA'){
+  if(current==='MLB' || current==='NFL' || current==='NCAAF' || current==='NBA' || current==='WNBA' || current==='NCAAB'){
     _snapActiveSportNavLeft();
     _snapActiveMarketTabLeft();
   }
@@ -3033,7 +3059,7 @@ function randomSubOption(){
   let n = 0;
   while(opts.length>1 && o===currentOption && n++<20) o = opts[Math.floor(Math.random()*opts.length)];
   setOption(o);
-  if(current==='MLB' || current==='NFL' || current==='NBA') _snapActiveMarketTabLeft();
+  if(current==='MLB' || current==='NFL' || current==='NCAAF' || current==='NBA' || current==='WNBA' || current==='NCAAB') _snapActiveMarketTabLeft();
 }
 function uiDoubleFlash(el){
   if(!el) return;
@@ -3098,9 +3124,12 @@ function _showPickCountProUpgrade(n){
     else if(currentOption === 'RBI') payload.attemptedRBI = n;
     else payload.attemptedHR = n;
   }else if(current === 'NBA') payload.attemptedNBA = n;
+  else if(current === 'WNBA') payload.attemptedWNBA = n;
+  else if(current === 'NCAAB') payload.attemptedNCAAB = n;
   else if(current === 'NHL') payload.attemptedNHL = n;
   else if(current === 'Soccer') payload.attemptedSoccer = n;
   else if(current === 'NFL') payload.attemptedNFL = n;
+  else if(current === 'NCAAF') payload.attemptedNCAAF = n;
   showUpgradeWall(payload);
 }
 function _canSpinPickCount(n, paywalled){
@@ -3175,6 +3204,17 @@ function renderSport(){
       document.getElementById('mlbControls').innerHTML=`<div class='pick-actions-stacked'><div id='pickCountRow' class='pick-count-tight pick-count-tight--stacked'>${_nflCnt}</div><div class='pick-load-row btnrow'><button type='button' class='btn pick-load-btn' id='nflLoadBtn' onclick='moneyTransformButton(this);startNFLLoad()' ${_canSpinPickCount(nflPickCount,_paywalled)?'':'disabled'}>Spin</button>${nflLoaded||nflPicks.length?"<button type='button' class='btn btn2' onclick='clearNFL()'>Clear</button>":''}</div></div><div class='muted'>Loads today's NFL game players from ESPN.</div><div class='muted' style='margin-top:6px'>Date: ${todayStr}</div>`;
       renderNFLPicks();
     }
+  } else if(current==='NCAAF'){
+    document.getElementById('options').innerHTML='';
+    if(!sportInSeason('NCAAF')){
+      document.getElementById('mlbControls').innerHTML=_oosPanelHtml('NCAAF');
+      document.getElementById('picksTitle').textContent='🏈 NCAAF Picks';
+      document.getElementById('picks').innerHTML=_oosPicksLine('NCAAF');
+    }else{
+      const _ncaafCnt=_pickCountButtonsHtml(ncaafPickCount,'setNCAAFCount','Player');
+      document.getElementById('mlbControls').innerHTML=`<div class='pick-actions-stacked'><div id='pickCountRow' class='pick-count-tight pick-count-tight--stacked'>${_ncaafCnt}</div><div class='pick-load-row btnrow'><button type='button' class='btn pick-load-btn' id='ncaafLoadBtn' onclick='moneyTransformButton(this);startNCAAFLoad()' ${_canSpinPickCount(ncaafPickCount,_paywalled)?'':'disabled'}>Spin</button>${ncaafLoaded||ncaafPicks.length?"<button type='button' class='btn btn2' onclick='clearNCAAF()'>Clear</button>":''}</div></div><div class='muted'>Loads today's NCAA Football game players from ESPN.</div><div class='muted' style='margin-top:6px'>Date: ${todayStr}</div>`;
+      renderNCAAFPicks();
+    }
   } else if(current==='NBA'){
     document.getElementById('options').innerHTML='';
     if(!sportInSeason('NBA')){
@@ -3185,6 +3225,28 @@ function renderSport(){
     const _nbaCnt=_pickCountButtonsHtml(nbaPickCount,'setNBACount','Player');
     document.getElementById('mlbControls').innerHTML=`<div class='pick-actions-stacked'><div id='pickCountRow' class='pick-count-tight pick-count-tight--stacked'>${_nbaCnt}</div><div class='pick-load-row btnrow'><button type='button' class='btn pick-load-btn' id='nbaLoadBtn' onclick='moneyTransformButton(this);startNBALoad()' ${_canSpinPickCount(nbaPickCount,_paywalled)?'':'disabled'}>Spin</button>${nbaLoaded||nbaPicks.length?"<button type='button' class='btn btn2' onclick='clearNBA()'>Clear</button>":''}</div></div><div class='muted'>Loads today's NBA game players from ESPN.</div><div class='muted' style='margin-top:6px'>Date: ${todayStr}</div>`;
     renderNBAPicks();
+    }
+  } else if(current==='WNBA'){
+    document.getElementById('options').innerHTML='';
+    if(!sportInSeason('WNBA')){
+      document.getElementById('mlbControls').innerHTML=_oosPanelHtml('WNBA');
+      document.getElementById('picksTitle').textContent='🏀 WNBA Picks';
+      document.getElementById('picks').innerHTML=_oosPicksLine('WNBA');
+    }else{
+    const _wnbaCnt=_pickCountButtonsHtml(wnbaPickCount,'setWNBACount','Player');
+    document.getElementById('mlbControls').innerHTML=`<div class='pick-actions-stacked'><div id='pickCountRow' class='pick-count-tight pick-count-tight--stacked'>${_wnbaCnt}</div><div class='pick-load-row btnrow'><button type='button' class='btn pick-load-btn' id='wnbaLoadBtn' onclick='moneyTransformButton(this);startWNBALoad()' ${_canSpinPickCount(wnbaPickCount,_paywalled)?'':'disabled'}>Spin</button>${wnbaLoaded||wnbaPicks.length?"<button type='button' class='btn btn2' onclick='clearWNBA()'>Clear</button>":''}</div></div><div class='muted'>Loads today's WNBA game players from ESPN.</div><div class='muted' style='margin-top:6px'>Date: ${todayStr}</div>`;
+    renderWNBAPicks();
+    }
+  } else if(current==='NCAAB'){
+    document.getElementById('options').innerHTML='';
+    if(!sportInSeason('NCAAB')){
+      document.getElementById('mlbControls').innerHTML=_oosPanelHtml('NCAAB');
+      document.getElementById('picksTitle').textContent='🏀 NCAAB Picks';
+      document.getElementById('picks').innerHTML=_oosPicksLine('NCAAB');
+    }else{
+    const _ncaabCnt=_pickCountButtonsHtml(ncaabPickCount,'setNCAABCount','Player');
+    document.getElementById('mlbControls').innerHTML=`<div class='pick-actions-stacked'><div id='pickCountRow' class='pick-count-tight pick-count-tight--stacked'>${_ncaabCnt}</div><div class='pick-load-row btnrow'><button type='button' class='btn pick-load-btn' id='ncaabLoadBtn' onclick='moneyTransformButton(this);startNCAABLoad()' ${_canSpinPickCount(ncaabPickCount,_paywalled)?'':'disabled'}>Spin</button>${ncaabLoaded||ncaabPicks.length?"<button type='button' class='btn btn2' onclick='clearNCAAB()'>Clear</button>":''}</div></div><div class='muted'>Loads today's NCAA Basketball game players from ESPN.</div><div class='muted' style='margin-top:6px'>Date: ${todayStr}</div>`;
+    renderNCAABPicks();
     }
   } else if(current==='NHL'){
     document.getElementById('options').innerHTML='';
@@ -3226,7 +3288,10 @@ function _currentPicksCount(){
     return mlbPicks.length;
   }
   if(current==='NFL') return nflPicks.length;
+  if(current==='NCAAF') return ncaafPicks.length;
   if(current==='NBA') return nbaPicks.length;
+  if(current==='WNBA') return wnbaPicks.length;
+  if(current==='NCAAB') return ncaabPicks.length;
   if(current==='NHL') return nhlPicks.length;
   if(current==='Soccer') return soccerPicks.length;
   return 0;
@@ -3350,7 +3415,10 @@ function _refreshProMicroLockAfterReveal(){
       else if(currentOption==='RBI') renderRBIPicks();
       else renderMLB();
     }else if(current==='NFL') renderNFLPicks();
+    else if(current==='NCAAF') renderNCAAFPicks();
     else if(current==='NBA') renderNBAPicks();
+    else if(current==='WNBA') renderWNBAPicks();
+    else if(current==='NCAAB') renderNCAABPicks();
     else if(current==='NHL') renderNHLPicks();
     else if(current==='Soccer') renderSoccerPicks();
     syncPoOverlayProMicroLocks();
@@ -3396,8 +3464,21 @@ function copyCurrentSportPicks(){
         lines.push(`${i+1}. ${p.player||'Player'} (${p.teamAbbr||p.team||''}) \u2014 ${(p.dir||'Over')} ${p.line||''} ${currentOption}`);
       }
     });
+  } else if(current==='NCAAF'){
+    ncaafPicks.forEach(function(p,i){
+      if(currentOption==='TDs'){
+        const t = p.td != null && p.td !== '' ? p.td : 0;
+        lines.push(`${i+1}. ${p.player||'Player'} (${p.teamAbbr||p.team||''}) \u2014 ${t} TDs`);
+      }else{
+        lines.push(`${i+1}. ${p.player||'Player'} (${p.teamAbbr||p.team||''}) \u2014 ${(p.dir||'Over')} ${p.line||''} ${currentOption}`);
+      }
+    });
   } else if(current==='NBA'){
     nbaPicks.forEach((p,i)=>lines.push(`${i+1}. ${p.player||'Player'} (${p.teamAbbr||p.team||''}) \u2014 ${(p.dir||'Over')} ${p.line||''} ${currentOption}`));
+  } else if(current==='WNBA'){
+    wnbaPicks.forEach((p,i)=>lines.push(`${i+1}. ${p.player||'Player'} (${p.teamAbbr||p.team||''}) \u2014 ${(p.dir||'Over')} ${p.line||''} ${currentOption}`));
+  } else if(current==='NCAAB'){
+    ncaabPicks.forEach((p,i)=>lines.push(`${i+1}. ${p.player||'Player'} (${p.teamAbbr||p.team||''}) \u2014 ${(p.dir||'Over')} ${p.line||''} ${currentOption}`));
   } else if(current==='NHL'){
     nhlPicks.forEach((p,i)=>lines.push(`${i+1}. ${p.player||'Player'} (${p.teamAbbr||p.team||''}) \u2014 ${(p.dir||'Over')} ${p.line||''} ${currentOption}`));
   } else if(current==='Soccer'){
@@ -3431,7 +3512,10 @@ function clearCurrentSportPicks(){
     clearMLB(); return;
   }
   if(current==='NFL'){ clearNFL(); return; }
+  if(current==='NCAAF'){ clearNCAAF(); return; }
   if(current==='NBA'){ clearNBA(); return; }
+  if(current==='WNBA'){ clearWNBA(); return; }
+  if(current==='NCAAB'){ clearNCAAB(); return; }
   if(current==='NHL'){ clearNHL(); return; }
   if(current==='Soccer'){ clearSoccer(); return; }
 }
@@ -4249,6 +4333,279 @@ async function startNFLLoad(){
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// NCAAF (NCAA Football)
+// ─────────────────────────────────────────────────────────────────────────────
+function setNCAAFCount(n){if(_isUiPickLocked())return;if(_isProOnlyPickCount(n)){_showPickCountProUpgrade(n);return;}ncaafPickCount=n;renderSport();_flashPickSpinButton();}
+function renderNCAAFPicks(){
+  document.getElementById('picksTitle').textContent='🏈 NCAAF Picks';
+  if(ncaafLoading){
+    document.getElementById('picks').innerHTML=picksLoadingRowHtml('Loading NCAAF players...');
+  } else if(ncaafPicks.length>0){
+    document.getElementById('picks').innerHTML=_pickSwipeHintHtml()+ncaafPicks.map((p,i)=>{
+      const statLabel=p.statLabel||currentOption;
+      const rw="item expandable pick-swipe-row";
+      const di=`data-pick-swipe-mode='ncaaf' data-pick-swipe-idx='${i}' title='Swipe sideways to replace this pick'`;
+      if(statLabel==='TDs') return `<div class='${rw}' ${di}>${pickRowCornerActionsHtml(i)}<div class='rowtop'>${nflRowTopPlayerHtml(p)}<div class='rowtop-meta'><span class='muted'><span style='font-weight:700;color:#6ee7ff'>${p.td}</span> <span style='opacity:.6;font-size:11px'>TDs</span></span></div></div><div class='details'><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>Season TDs: ${p.td}</div><div class='muted'>Game status: ${gameStatusText(p.game)}</div><div class='muted'>Start time: ${gameStartText(p.game)||'—'}</div><div class='muted'>Venue: ${gameVenueText(p.game)||'—'}</div></div></div>`;
+      return `<div class='${rw}' ${di}>${pickRowCornerActionsHtml(i)}<div class='rowtop'>${nflRowTopPlayerHtml(p)}<div class='rowtop-meta'><span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>${statLabel}</span></span></div></div><div class='details'><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>${p.dir} ${p.line} ${statLabel}</div><div class='muted'>Season avg: ${p.seasonAvg||'—'}</div><div class='muted'>Game status: ${gameStatusText(p.game)}</div><div class='muted'>Start time: ${gameStartText(p.game)||'—'}</div><div class='muted'>Venue: ${gameVenueText(p.game)||'—'}</div></div></div>`;
+    }).join('');
+    _wirePickSwipeRows();
+    _syncOverlayMicroLocksAfterPickRender(ncaafPicks.length);
+  } else if(ncaafLoaded&&ncaafPicks.length===0){
+    document.getElementById('picks').innerHTML='<div class="muted">No NCAAF player data available today.</div>';
+  } else {
+    document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Choose a count and tap Spin.</div>';
+  }
+  const btn=document.getElementById('ncaafLoadBtn');
+  if(btn) btn.disabled=_isUiPickLocked();
+  syncPicksBoardWrapOrbit();
+  syncSlipActions();
+}
+function clearNCAAF(){ncaafToken++;_clearProPickLocksForSportPrefix('NCAAF');ncaafLoaded=false;ncaafLoading=false;ncaafPicks=[];ncaafUsed=new Set();ncaafLivePool=[];ncaafPickSlotCount=0;pickLocked=false;ncaafPickCount=1;renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Choose a count and tap Spin.</div>';syncPicksBoardWrapOrbit();}
+async function getTodaysNCAAFPlayers(option){
+  const cacheKey = 'ncaafLastGoodPool:'+String(option||'');
+  const cacheAnyKey = 'ncaafLastGoodPool:any';
+  function readNCAAFCache(){
+    try{
+      const raw = _lhMem.getItem(cacheKey);
+      if(!raw) return [];
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    }catch(_){ return []; }
+  }
+  function writeNCAAFCache(arr){
+    try{
+      if(Array.isArray(arr) && arr.length){
+        const slim = JSON.stringify(arr.slice(0,260));
+        _lhMem.setItem(cacheKey, slim);
+        _lhMem.setItem(cacheAnyKey, slim);
+      }
+    }catch(_){}
+  }
+  function readNCAAFCacheAny(){
+    try{
+      const raw = _lhMem.getItem(cacheAnyKey);
+      if(!raw) return [];
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    }catch(_){ return []; }
+  }
+  const events=await getScoreboardEventsNearby('https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard',7,7);
+  const teamGameMap=_teamGameMapFromEvents(events);
+  const teamOppMap=_teamOpponentMapFromEvents(events);
+  function coerceCachedNCAAFOption(list, selectedOption){
+    const defaults={TDs:0.5,'Rush Yds':55.5,'Rec Yds':45.5,'Receptions':4.5,'Pass Yds':225.5};
+    const fallbackLine = defaults[selectedOption] || 0.5;
+    const suffix = selectedOption === 'TDs'
+      ? 'TDs'
+      : (selectedOption === 'Receptions' ? 'rec' : 'yds');
+    return (Array.isArray(list) ? list : []).map((p)=>{
+      const avgText = String((p && p.seasonAvg) || '');
+      const parsed = parseFloat(avgText.replace(/[^0-9.\-]/g, ''));
+      const line = Number.isFinite(parsed) && parsed > 0 ? Math.round(parsed * 2) / 2 : fallbackLine;
+      if(selectedOption === 'TDs'){
+        const td = Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+        return Object.assign({}, p, {
+          statLabel: 'TDs',
+          td,
+          line: 0,
+          seasonAvg: `${td} TDs`,
+        });
+      }
+      return Object.assign({}, p, {
+        statLabel: selectedOption,
+        line,
+        seasonAvg: Number.isFinite(parsed) && parsed > 0 ? `${parsed} ${suffix}` : `${fallbackLine} ${suffix}`,
+      });
+    });
+  }
+  const players=[];
+  const seen=new Set();
+  for(const ev of events){
+    const teamGameMap=_eventGameByTeamAbbr(ev);
+    const eventGame=_espnEventGame(ev);
+    const sumUrl=`https://site.api.espn.com/apis/site/v2/sports/football/college-football/summary?event=${ev.id}`;
+    let sum;
+    try{sum=await fetchJson(sumUrl);}catch(e){continue;}
+    const boxPlayers=(sum&&sum.boxscore&&sum.boxscore.players)||[];
+    for(const teamBlock of boxPlayers){
+      const teamAbbr=teamBlock.team&&teamBlock.team.abbreviation||'';
+      const stats=teamBlock.statistics||[];
+      for(const group of stats){
+        const gname=(group.name||'').toLowerCase();
+        let relevantGroup=false;
+        if(option==='TDs') relevantGroup=(gname==='rushing'||gname==='receiving'||gname==='passing');
+        else if(option==='Rush Yds') relevantGroup=(gname==='rushing');
+        else if(option==='Rec Yds') relevantGroup=(gname==='receiving');
+        else if(option==='Receptions') relevantGroup=(gname==='receiving');
+        else if(option==='Pass Yds') relevantGroup=(gname==='passing');
+        if(!relevantGroup) continue;
+        for(const athlete of (group.athletes||[])){
+          const athleteObj = athlete && athlete.athlete || {};
+          const name=athleteObj.displayName||'';
+          if(!name) continue;
+          const espnId=athleteObj.id!=null?String(athleteObj.id):'';
+          const headshotUrl = athleteObj.headshot && athleteObj.headshot.href ? String(athleteObj.headshot.href) : '';
+          const pos=athleteObj.position&&athleteObj.position.abbreviation||'';
+          const vals=athlete.stats||[];
+          if(option==='TDs'){
+            // Accumulate TDs across rushing/receiving/passing per player
+            const tdVal=parseFloat(vals[3]||0);
+            const existing=players.find(x=>x.player===name&&x.teamAbbr===teamAbbr);
+            if(existing){
+              existing.td+=tdVal;
+              existing.seasonAvg=(existing.td)+' TDs';
+              if(!existing.espnId&&espnId) existing.espnId=espnId;
+              if(!existing.headshotUrl&&headshotUrl) existing.headshotUrl=headshotUrl;
+              if(!existing.game) existing.game = teamGameMap[teamAbbr]||eventGame;
+            } else {
+              players.push({player:name,espnId,headshotUrl,teamAbbr,oppTeamAbbr:teamOppMap[teamAbbr]||'',pos,statLabel:'TDs',td:tdVal,line:0,seasonAvg:tdVal+' TDs',game:teamGameMap[teamAbbr]||eventGame});
+            }
+          } else {
+            if(seen.has(name+gname)) continue;
+            seen.add(name+gname);
+            let statVal=0, seasonAvg='—';
+            if(option==='Rush Yds'){statVal=parseFloat(vals[1]||0);seasonAvg=statVal+' yds';}
+            else if(option==='Rec Yds'){statVal=parseFloat(vals[1]||0);seasonAvg=statVal+' yds';}
+            else if(option==='Receptions'){statVal=parseFloat(vals[0]||0);seasonAvg=statVal+' rec';}
+            else if(option==='Pass Yds'){statVal=parseFloat(vals[1]||0);seasonAvg=statVal+' yds';}
+            const line=Math.round(statVal*2)/2||(option==='Pass Yds'?225.5:option==='Rush Yds'?55.5:option==='Rec Yds'?45.5:option==='Receptions'?4.5:0.5);
+            players.push({player:name,espnId,headshotUrl,teamAbbr,oppTeamAbbr:teamOppMap[teamAbbr]||'',pos,statLabel:option,line,seasonAvg,game:teamGameMap[teamAbbr]||eventGame});
+          }
+        }
+      }
+    }
+  }
+  if(players.length){
+    writeNCAAFCache(players);
+    return players;
+  }
+  const cached = readNCAAFCache();
+  const cachedAny = readNCAAFCacheAny();
+  const seasonMap=_seasonAvgMapFromPools([cached,cachedAny]);
+  if(cached.length) return _fillSeasonAvgFromMap(_hydratePlayersGame(cached,teamGameMap,teamOppMap),seasonMap);
+  if(cachedAny.length){
+    const coerced = coerceCachedNCAAFOption(cachedAny, option);
+    return _fillSeasonAvgFromMap(_hydratePlayersGame(coerced,teamGameMap,teamOppMap),seasonMap);
+  }
+  const defaults={TDs:0.5,'Rush Yds':55.5,'Rec Yds':45.5,'Receptions':4.5,'Pass Yds':225.5};
+  const rosterPool=await _buildRosterFallbackPlayers('football/college-football', events, option, defaults);
+  if(rosterPool.length){
+    const hydrated=_fillSeasonAvgFromMap(_hydratePlayersGame(rosterPool,teamGameMap,teamOppMap),seasonMap);
+    return hydrated;
+  }
+  return [];
+}
+function poRevealNCAAFCard(p, idx){
+  const sk=document.getElementById('poSkel-'+idx);
+  const card=sk||document.createElement('div');
+  card.className='po-card jackpot';
+  card.removeAttribute('id');
+  card.setAttribute('data-po-pick-idx', String(idx));
+  card.style.animationDelay='0s';
+  const statLabel=p.statLabel||currentOption;
+  if(statLabel==='TDs'){
+    card.innerHTML=`
+    ${pickRowCornerActionsHtml(idx)}
+    <div class="rowtop" onclick="const d=this.nextElementSibling;d.style.display=d.style.display==='block'?'none':'block'">
+      ${nflRowTopPlayerHtml(p,'<span class="chev">&#9662;</span>')}
+      <div class="rowtop-meta"><span class="muted"><span style="font-weight:700;color:#6ee7ff">${p.td}</span> <span style="opacity:.6;font-size:11px">TDs</span></span></div>
+    </div>
+    <div class="details">
+      <div class="muted">Position: ${p.pos||'—'}</div>
+      <div class="muted">Season TDs: ${p.td}</div>
+      <div class="muted">Game status: ${gameStatusText(p.game)}</div>
+      <div class="muted">Start time: ${gameStartText(p.game)||'—'}</div>
+      <div class="muted">Venue: ${gameVenueText(p.game)||'—'}</div>
+    </div>`;
+  } else {
+    card.innerHTML=`
+    ${pickRowCornerActionsHtml(idx)}
+    <div class="rowtop" onclick="const d=this.nextElementSibling;d.style.display=d.style.display==='block'?'none':'block'">
+      ${nflRowTopPlayerHtml(p,'<span class="chev">&#9662;</span>')}
+      <div class="rowtop-meta"><span class="muted"><span style="font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}">${p.dir} ${p.line}</span> <span style="opacity:.6;font-size:11px">${statLabel}</span></span></div>
+    </div>
+    <div class="details">
+      <div class="muted">Position: ${p.pos||'—'}</div>
+      <div class="muted">${p.dir} ${p.line} ${statLabel}</div>
+      <div class="muted">Season avg: ${p.seasonAvg||'—'}</div>
+      <div class="muted">Game status: ${gameStatusText(p.game)}</div>
+      <div class="muted">Start time: ${gameStartText(p.game)||'—'}</div>
+      <div class="muted">Venue: ${gameVenueText(p.game)||'—'}</div>
+    </div>`;
+  }
+  if(!sk) document.getElementById('poCards').appendChild(card);
+  syncPoCardsOrbit();
+}
+async function startNCAAFLoad(){
+  pickRandomRhythm();
+  if(!_validatePlayerCountOrWarn(ncaafPickCount, 'players')) return;
+  if(await _shouldGateLoadWithUpgrade({sport:'NCAAF',option:currentOption,attemptedCount:ncaafPickCount,payload:{attemptedNCAAF:ncaafPickCount}})) return;
+  openPickOverlay();
+  const loadBtn=document.getElementById('ncaafLoadBtn');
+  if(loadBtn) loadBtn.disabled=true;
+  const token=++ncaafToken;
+  ncaafLoading=true;ncaafLoaded=false;ncaafPicks=[];ncaafUsed=new Set();ncaafLivePool=[];ncaafPickSlotCount=0;_resetPickLocksForNewSpin();pickLocked=true;
+  _firstSfxIdx=-1;_lastSfxIdx=-1;
+  renderNCAAFPicks();
+  let shuffler=null;
+  const stopShuffle=()=>{if(shuffler)shuffler._timers?.forEach(t=>{clearTimeout(t);clearInterval(t);});shuffler=null;};
+  try{
+    const pool=await getTodaysNCAAFPlayers(currentOption);
+    if(token!==ncaafToken)return;
+    _beltValidatePlayerPoolStatLabels('NCAAF', currentOption, pool);
+    ncaafLivePool=pool;
+    ncaafLoading=false;ncaafLoaded=true;
+    if(!pool.length){
+      document.getElementById('picks').innerHTML='<div class="muted">No NCAAF players found for today.</div>';
+      poSetError('No NCAAF players found for today.');
+      showToast('No live NCAAF players found for today.', 'error', 'center');
+      pickLocked=false;
+      if(loadBtn) loadBtn.disabled=false;
+      stopPickSfxNow();
+      closePickOverlay();
+      stopMoneyTransformButton();renderNCAAFPicks();return;
+    }
+    const max=Math.min(ncaafPickCount,PRO_MAX_PICK_COUNT);
+    const selectedTeams=new Set();
+    poSeedSkeletons(max);
+    shuffler=startNameShuffle(pool,token,()=>ncaafToken,Math.max(500,getRhythmSuspense(0)));
+    for(let i=0;i<max;i++){
+      if(token!==ncaafToken)return;
+      await sleep(Math.max(500,getRhythmSuspense(i)));
+      if(token!==ncaafToken)return;
+      const picked=await slotMachineResolvePick(pool,ncaafUsed,selectedTeams,i,token,()=>ncaafToken);
+      const choice=Object.assign({},picked||pickRandom(pool));
+      if(choice.statLabel!=='TDs') choice.dir=Math.random()<0.5?'Over':'Under';
+      ncaafPicks.push(choice);
+      ncaafUsed.add(choice.player);
+      if(choice.teamAbbr) selectedTeams.add(choice.teamAbbr);
+      renderNCAAFPicks();
+      poRevealNCAAFCard(choice,i);
+      if(i===max-1)stopMoneyTransformButton();
+      await sleepPickRevealChimeSync();
+      playChingSfx(i===0,i===max-1);
+      await _finalizeProSlotSpinReveal(i);
+      if(i<max-1)await sleep(300);
+    }
+    stopShuffle();
+    if(token===ncaafToken){
+      pickLocked=false;ncaafPickSlotCount=ncaafPicks.length;renderNCAAFPicks();
+      poFinish();
+      syncPoOverlayProMicroLocks();
+      document.getElementById('poTitle').textContent='🏈 Lucky Players';
+      if(ncaafPicks.length>0)document.getElementById('poShareBtn').style.display='block';
+    }
+  }catch(e){
+    if(token!==ncaafToken)return;
+    stopShuffle();ncaafLoading=false;ncaafLoaded=false;pickLocked=false;
+    if(loadBtn)loadBtn.disabled=false;
+    document.getElementById('picks').innerHTML='<div class="muted">Could not load NCAAF data right now.</div>';
+    poSetError('Could not load NCAAF data right now.');
+    stopMoneyTransformButton();renderNCAAFPicks();
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // NBA
 // ─────────────────────────────────────────────────────────────────────────────
 function setNBACount(n){if(_isUiPickLocked())return;if(_isProOnlyPickCount(n)){_showPickCountProUpgrade(n);return;}nbaPickCount=n;renderSport();_flashPickSpinButton();}
@@ -4476,6 +4833,468 @@ async function startNBALoad(){
     document.getElementById('picks').innerHTML='<div class="muted">Could not load NBA data right now.</div>';
     poSetError('Could not load NBA data right now.');
     stopMoneyTransformButton();renderNBAPicks();
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WNBA (Women's NBA)
+// ─────────────────────────────────────────────────────────────────────────────
+function setWNBACount(n){if(_isUiPickLocked())return;if(_isProOnlyPickCount(n)){_showPickCountProUpgrade(n);return;}wnbaPickCount=n;renderSport();_flashPickSpinButton();}
+function renderWNBAPicks(){
+  document.getElementById('picksTitle').textContent='🏀 WNBA Picks';
+  if(wnbaLoading){
+    document.getElementById('picks').innerHTML=picksLoadingRowHtml('Loading WWNBA players...');
+  } else if(wnbaPicks.length>0){
+    document.getElementById('picks').innerHTML=_pickSwipeHintHtml()+wnbaPicks.map((p,i)=>{
+      const statLabel=p.statLabel||currentOption;
+      return `<div class='item expandable pick-swipe-row' data-pick-swipe-mode='wnba' data-pick-swipe-idx='${i}' title='Swipe sideways to replace this pick'>${pickRowCornerActionsHtml(i)}<div class='rowtop'>${nbaRowTopPlayerHtml(p)}<div class='rowtop-meta'><span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>${statLabel}</span></span></div></div><div class='details'><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>${p.dir} ${p.line} ${statLabel}</div><div class='muted'>Season avg: ${p.seasonAvg||'—'}</div><div class='muted'>Game status: ${gameStatusText(p.game)}</div><div class='muted'>Start time: ${gameStartText(p.game)||'—'}</div><div class='muted'>Venue: ${gameVenueText(p.game)||'—'}</div></div></div>`;
+    }).join('');
+    _wirePickSwipeRows();
+    _syncOverlayMicroLocksAfterPickRender(wnbaPicks.length);
+  } else if(wnbaLoaded&&wnbaPicks.length===0){
+    document.getElementById('picks').innerHTML='<div class="muted">No WNBA player data available today.</div>';
+  } else {
+    document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Choose a count and tap Spin.</div>';
+  }
+  const btn=document.getElementById('wnbaLoadBtn');
+  if(btn) btn.disabled=_isUiPickLocked();
+  syncPicksBoardWrapOrbit();
+  syncSlipActions();
+}
+function clearWNBA(){wnbaToken++;_clearProPickLocksForSportPrefix('WNBA');wnbaLoaded=false;wnbaLoading=false;wnbaPicks=[];wnbaUsed=new Set();wnbaLivePool=[];wnbaPickSlotCount=0;pickLocked=false;wnbaPickCount=0;renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Choose a count and tap Spin.</div>';syncPicksBoardWrapOrbit();}
+async function getTodaysWNBAPlayers(option){
+  const cacheKey = 'wnbaLastGoodPool:'+String(option||'');
+  const cacheAnyKey = 'wnbaLastGoodPool:any';
+  function readWNBACache(){
+    try{
+      const raw = _lhMem.getItem(cacheKey);
+      if(!raw) return [];
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    }catch(_){ return []; }
+  }
+  function writeWNBACache(arr){
+    try{
+      if(Array.isArray(arr) && arr.length){
+        const slim = JSON.stringify(arr.slice(0,260));
+        _lhMem.setItem(cacheKey, slim);
+        _lhMem.setItem(cacheAnyKey, slim);
+      }
+    }catch(_){}
+  }
+  function readWNBACacheAny(){
+    try{
+      const raw = _lhMem.getItem(cacheAnyKey);
+      if(!raw) return [];
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    }catch(_){ return []; }
+  }
+  const events=await getScoreboardEventsNearby('https://site.api.espn.com/apis/site/v2/sports/basketball/wnba/scoreboard',1,1);
+  const teamGameMap=_teamGameMapFromEvents(events);
+  const teamOppMap=_teamOpponentMapFromEvents(events);
+  function coerceCachedWNBAOption(list, selectedOption){
+    const defaults={Points:19.5,Rebounds:5.5,Assists:4.5,'3PM':1.5,PRA:24.5};
+    const fallbackLine = defaults[selectedOption] || 19.5;
+    return (Array.isArray(list) ? list : []).map((p)=>{
+      const avgText = String((p && p.seasonAvg) || '');
+      const parsed = parseFloat(avgText.replace(/[^0-9.\-]/g, ''));
+      const line = Number.isFinite(parsed) && parsed > 0 ? Math.round(parsed * 2) / 2 : fallbackLine;
+      const suffix = selectedOption === '3PM'
+        ? '3PM'
+        : (selectedOption === 'PRA' ? 'PRA' : selectedOption.toLowerCase());
+      return Object.assign({}, p, {
+        statLabel: selectedOption,
+        line,
+        seasonAvg: Number.isFinite(parsed) && parsed > 0 ? `${parsed} ${suffix}` : `${fallbackLine} ${suffix}`,
+      });
+    });
+  }
+  const players=[];
+  const seen=new Set();
+  for(const ev of events){
+    const teamGameMap=_eventGameByTeamAbbr(ev);
+    const eventGame=_espnEventGame(ev);
+    const sumUrl=`https://site.api.espn.com/apis/site/v2/sports/basketball/wnba/summary?event=${ev.id}`;
+    let sum;
+    try{sum=await fetchJson(sumUrl);}catch(e){continue;}
+    const boxPlayers=(sum&&sum.boxscore&&sum.boxscore.players)||[];
+    for(const teamBlock of boxPlayers){
+      const teamAbbr=teamBlock.team&&teamBlock.team.abbreviation||'';
+      const stats=teamBlock.statistics||[];
+      // NBA has one group per team, stat labels: MIN,PTS,FG,3PT,FT,REB,AST,TO,STL,BLK,OREB,DREB,PF,+/-
+      for(const group of stats){
+        for(const athlete of (group.athletes||[])){
+          const athleteObj = athlete && athlete.athlete || {};
+          const name=athleteObj.displayName||'';
+          const nbaPos=athleteObj.position&&athleteObj.position.abbreviation||'';
+          if(!name||seen.has(name)) continue;
+          seen.add(name);
+          const vals=athlete.stats||[];
+          // idx: 0=MIN,1=PTS,2=FG,3=3PT,4=FT,5=REB,6=AST
+          const pts=parseFloat(vals[1])||0;
+          const reb=parseFloat(vals[5])||0;
+          const ast=parseFloat(vals[6])||0;
+          // 3PT made: vals[3] format "made-att"
+          const threeStr=String(vals[3]||'0-0');
+          const threeMade=parseFloat(threeStr.split('-')[0])||0;
+          const pra=pts+reb+ast;
+          let statVal,line,seasonAvg;
+          if(option==='Points'){statVal=pts;line=Math.round(statVal*2)/2||14.5;seasonAvg=statVal+' pts';}
+          else if(option==='Rebounds'){statVal=reb;line=Math.round(statVal*2)/2||5.5;seasonAvg=statVal+' reb';}
+          else if(option==='Assists'){statVal=ast;line=Math.round(statVal*2)/2||4.5;seasonAvg=statVal+' ast';}
+          else if(option==='3PM'){statVal=threeMade;line=Math.round(statVal*2)/2||1.5;seasonAvg=statVal+' 3PM';}
+          else if(option==='PRA'){statVal=pra;line=Math.round(pra*2)/2||24.5;seasonAvg=statVal+' PRA';}
+          else{statVal=pts;line=14.5;seasonAvg=statVal+' pts';}
+          const espnId=athleteObj.id!=null?String(athleteObj.id):'';
+          const headshotUrl = athleteObj.headshot && athleteObj.headshot.href ? String(athleteObj.headshot.href) : '';
+          players.push({player:name,espnId,headshotUrl,teamAbbr,oppTeamAbbr:teamOppMap[teamAbbr]||'',pos:nbaPos,statLabel:option,line,seasonAvg,game:teamGameMap[teamAbbr]||eventGame});
+        }
+      }
+    }
+  }
+  if(players.length){
+    writeWNBACache(players);
+    return players;
+  }
+  const cached = readWNBACache();
+  const cachedAny = readWNBACacheAny();
+  const seasonMap=_seasonAvgMapFromPools([cached,cachedAny]);
+  if(cached.length) return _fillSeasonAvgFromMap(_hydratePlayersGame(cached,teamGameMap,teamOppMap),seasonMap);
+  if(cachedAny.length){
+    const coerced = coerceCachedWNBAOption(cachedAny, option);
+    return _fillSeasonAvgFromMap(_hydratePlayersGame(coerced,teamGameMap,teamOppMap),seasonMap);
+  }
+  const defaults={Points:19.5,Rebounds:5.5,Assists:4.5,'3PM':1.5,PRA:24.5};
+  const rosterPool=await _buildRosterFallbackPlayers('basketball/wnba', events, option, defaults);
+  if(rosterPool.length){
+    const hydrated=_fillSeasonAvgFromMap(_hydratePlayersGame(rosterPool,teamGameMap,teamOppMap),seasonMap);
+    return hydrated;
+  }
+  return [];
+}
+function poRevealWNBACard(p, idx){
+  const sk=document.getElementById('poSkel-'+idx);
+  const card=sk||document.createElement('div');
+  card.className='po-card jackpot';
+  card.removeAttribute('id');
+  card.setAttribute('data-po-pick-idx', String(idx));
+  card.style.animationDelay='0s';
+  const statLabel=p.statLabel||currentOption;
+  card.innerHTML=`
+    ${pickRowCornerActionsHtml(idx)}
+    <div class="rowtop" onclick="const d=this.nextElementSibling;d.style.display=d.style.display==='block'?'none':'block'">
+      ${nbaRowTopPlayerHtml(p,'<span class="chev">&#9662;</span>')}
+      <div class="rowtop-meta"><span class="muted"><span style="font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}">${p.dir} ${p.line}</span> <span style="opacity:.6;font-size:11px">${statLabel}</span></span></div>
+    </div>
+    <div class="details">
+      <div class="muted">Position: ${p.pos||'—'}</div>
+      <div class="muted">${p.dir} ${p.line} ${statLabel}</div>
+      <div class="muted">Season avg: ${p.seasonAvg||'—'}</div>
+      <div class="muted">Game status: ${gameStatusText(p.game)}</div>
+      <div class="muted">Start time: ${gameStartText(p.game)||'—'}</div>
+      <div class="muted">Venue: ${gameVenueText(p.game)||'—'}</div>
+    </div>`;
+  if(!sk) document.getElementById('poCards').appendChild(card);
+  syncPoCardsOrbit();
+}
+async function startWNBALoad(){
+  pickRandomRhythm();
+  if(!_validatePlayerCountOrWarn(wnbaPickCount, 'players')) return;
+  if(await _shouldGateLoadWithUpgrade({sport:'WNBA',option:currentOption,attemptedCount:wnbaPickCount,payload:{attemptedWNBA:wnbaPickCount}})) return;
+  openPickOverlay();
+  const loadBtn=document.getElementById('wnbaLoadBtn');
+  if(loadBtn)loadBtn.disabled=true;
+  const token=++wnbaToken;
+  wnbaLoading=true;wnbaLoaded=false;wnbaPicks=[];wnbaUsed=new Set();wnbaLivePool=[];wnbaPickSlotCount=0;_resetPickLocksForNewSpin();pickLocked=true;
+  _firstSfxIdx=-1;_lastSfxIdx=-1;
+  renderWNBAPicks();
+  let shuffler=null;
+  const stopShuffle=()=>{if(shuffler)shuffler._timers?.forEach(t=>{clearTimeout(t);clearInterval(t);});shuffler=null;};
+  try{
+    const pool=await getTodaysWNBAPlayers(currentOption);
+    if(token!==wnbaToken)return;
+    _beltValidatePlayerPoolStatLabels('WNBA', currentOption, pool);
+    wnbaLivePool=pool;
+    wnbaLoading=false;wnbaLoaded=true;
+    if(!pool.length){
+      document.getElementById('picks').innerHTML='<div class="muted">No WWNBA players found for today.</div>';
+      poSetError('No WWNBA players found for today.');
+      showToast('No live WWNBA players found for today.', 'error', 'center');
+      pickLocked=false;
+      if(loadBtn)loadBtn.disabled=false;
+      stopPickSfxNow();
+      closePickOverlay();
+      stopMoneyTransformButton();renderWNBAPicks();return;
+    }
+    const max=Math.min(wnbaPickCount,PRO_MAX_PICK_COUNT);
+    const selectedTeams=new Set();
+    poSeedSkeletons(max);
+    shuffler=startNameShuffle(pool,token,()=>wnbaToken,Math.max(500,getRhythmSuspense(0)));
+    for(let i=0;i<max;i++){
+      if(token!==wnbaToken)return;
+      await sleep(Math.max(500,getRhythmSuspense(i)));
+      if(token!==wnbaToken)return;
+      const picked=await slotMachineResolvePick(pool,wnbaUsed,selectedTeams,i,token,()=>wnbaToken);
+      const choice=Object.assign({},picked||pickRandom(pool));
+      choice.dir=Math.random()<0.5?'Over':'Under';
+      wnbaPicks.push(choice);
+      wnbaUsed.add(choice.player);
+      if(choice.teamAbbr) selectedTeams.add(choice.teamAbbr);
+      renderWNBAPicks();
+      poRevealWNBACard(choice,i);
+      if(i===max-1)stopMoneyTransformButton();
+      await sleepPickRevealChimeSync();
+      playChingSfx(i===0,i===max-1);
+      await _finalizeProSlotSpinReveal(i);
+      if(i<max-1)await sleep(300);
+    }
+    stopShuffle();
+    if(token===wnbaToken){
+      pickLocked=false;wnbaPickSlotCount=wnbaPicks.length;renderWNBAPicks();
+      poFinish();
+      syncPoOverlayProMicroLocks();
+      document.getElementById('poTitle').textContent='🏀 Lucky Players';
+      if(wnbaPicks.length>0)document.getElementById('poShareBtn').style.display='block';
+    }
+  }catch(e){
+    if(token!==wnbaToken)return;
+    stopShuffle();wnbaLoading=false;wnbaLoaded=false;pickLocked=false;
+    if(loadBtn)loadBtn.disabled=false;
+    document.getElementById('picks').innerHTML='<div class="muted">Could not load WNBA data right now.</div>';
+    poSetError('Could not load WNBA data right now.');
+    stopMoneyTransformButton();renderWNBAPicks();
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NCAAB (NCAA Basketball)
+// ─────────────────────────────────────────────────────────────────────────────
+function setNCAABCount(n){if(_isUiPickLocked())return;if(_isProOnlyPickCount(n)){_showPickCountProUpgrade(n);return;}ncaabPickCount=n;renderSport();_flashPickSpinButton();}
+function renderNCAABPicks(){
+  document.getElementById('picksTitle').textContent='🏀 NCAAB Picks';
+  if(ncaabLoading){
+    document.getElementById('picks').innerHTML=picksLoadingRowHtml('Loading NCAAB players...');
+  } else if(ncaabPicks.length>0){
+    document.getElementById('picks').innerHTML=_pickSwipeHintHtml()+ncaabPicks.map((p,i)=>{
+      const statLabel=p.statLabel||currentOption;
+      return `<div class='item expandable pick-swipe-row' data-pick-swipe-mode='ncaab' data-pick-swipe-idx='${i}' title='Swipe sideways to replace this pick'>${pickRowCornerActionsHtml(i)}<div class='rowtop'>${nbaRowTopPlayerHtml(p)}<div class='rowtop-meta'><span class='muted'><span style='font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}'>${p.dir} ${p.line}</span> <span style='opacity:.6;font-size:11px'>${statLabel}</span></span></div></div><div class='details'><div class='muted'>Position: ${p.pos||'—'}</div><div class='muted'>${p.dir} ${p.line} ${statLabel}</div><div class='muted'>Season avg: ${p.seasonAvg||'—'}</div><div class='muted'>Game status: ${gameStatusText(p.game)}</div><div class='muted'>Start time: ${gameStartText(p.game)||'—'}</div><div class='muted'>Venue: ${gameVenueText(p.game)||'—'}</div></div></div>`;
+    }).join('');
+    _wirePickSwipeRows();
+    _syncOverlayMicroLocksAfterPickRender(ncaabPicks.length);
+  } else if(ncaabLoaded&&ncaabPicks.length===0){
+    document.getElementById('picks').innerHTML='<div class="muted">No NCAAB player data available today.</div>';
+  } else {
+    document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Choose a count and tap Spin.</div>';
+  }
+  const btn=document.getElementById('ncaabLoadBtn');
+  if(btn) btn.disabled=_isUiPickLocked();
+  syncPicksBoardWrapOrbit();
+  syncSlipActions();
+}
+function clearNCAAB(){ncaabToken++;_clearProPickLocksForSportPrefix('NCAAB');ncaabLoaded=false;ncaabLoading=false;ncaabPicks=[];ncaabUsed=new Set();ncaabLivePool=[];ncaabPickSlotCount=0;pickLocked=false;ncaabPickCount=0;renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Choose a count and tap Spin.</div>';syncPicksBoardWrapOrbit();}
+async function getTodaysNCAABPlayers(option){
+  const cacheKey = 'ncaabLastGoodPool:'+String(option||'');
+  const cacheAnyKey = 'ncaabLastGoodPool:any';
+  function readNCAABCache(){
+    try{
+      const raw = _lhMem.getItem(cacheKey);
+      if(!raw) return [];
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    }catch(_){ return []; }
+  }
+  function writeNCAABCache(arr){
+    try{
+      if(Array.isArray(arr) && arr.length){
+        const slim = JSON.stringify(arr.slice(0,260));
+        _lhMem.setItem(cacheKey, slim);
+        _lhMem.setItem(cacheAnyKey, slim);
+      }
+    }catch(_){}
+  }
+  function readNCAABCacheAny(){
+    try{
+      const raw = _lhMem.getItem(cacheAnyKey);
+      if(!raw) return [];
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    }catch(_){ return []; }
+  }
+  const events=await getScoreboardEventsNearby('https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard',1,1);
+  const teamGameMap=_teamGameMapFromEvents(events);
+  const teamOppMap=_teamOpponentMapFromEvents(events);
+  function coerceCachedNCAABOption(list, selectedOption){
+    const defaults={Points:19.5,Rebounds:5.5,Assists:4.5,'3PM':1.5,PRA:24.5};
+    const fallbackLine = defaults[selectedOption] || 19.5;
+    return (Array.isArray(list) ? list : []).map((p)=>{
+      const avgText = String((p && p.seasonAvg) || '');
+      const parsed = parseFloat(avgText.replace(/[^0-9.\-]/g, ''));
+      const line = Number.isFinite(parsed) && parsed > 0 ? Math.round(parsed * 2) / 2 : fallbackLine;
+      const suffix = selectedOption === '3PM'
+        ? '3PM'
+        : (selectedOption === 'PRA' ? 'PRA' : selectedOption.toLowerCase());
+      return Object.assign({}, p, {
+        statLabel: selectedOption,
+        line,
+        seasonAvg: Number.isFinite(parsed) && parsed > 0 ? `${parsed} ${suffix}` : `${fallbackLine} ${suffix}`,
+      });
+    });
+  }
+  const players=[];
+  const seen=new Set();
+  for(const ev of events){
+    const teamGameMap=_eventGameByTeamAbbr(ev);
+    const eventGame=_espnEventGame(ev);
+    const sumUrl=`https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/summary?event=${ev.id}`;
+    let sum;
+    try{sum=await fetchJson(sumUrl);}catch(e){continue;}
+    const boxPlayers=(sum&&sum.boxscore&&sum.boxscore.players)||[];
+    for(const teamBlock of boxPlayers){
+      const teamAbbr=teamBlock.team&&teamBlock.team.abbreviation||'';
+      const stats=teamBlock.statistics||[];
+      // NBA has one group per team, stat labels: MIN,PTS,FG,3PT,FT,REB,AST,TO,STL,BLK,OREB,DREB,PF,+/-
+      for(const group of stats){
+        for(const athlete of (group.athletes||[])){
+          const athleteObj = athlete && athlete.athlete || {};
+          const name=athleteObj.displayName||'';
+          const nbaPos=athleteObj.position&&athleteObj.position.abbreviation||'';
+          if(!name||seen.has(name)) continue;
+          seen.add(name);
+          const vals=athlete.stats||[];
+          // idx: 0=MIN,1=PTS,2=FG,3=3PT,4=FT,5=REB,6=AST
+          const pts=parseFloat(vals[1])||0;
+          const reb=parseFloat(vals[5])||0;
+          const ast=parseFloat(vals[6])||0;
+          // 3PT made: vals[3] format "made-att"
+          const threeStr=String(vals[3]||'0-0');
+          const threeMade=parseFloat(threeStr.split('-')[0])||0;
+          const pra=pts+reb+ast;
+          let statVal,line,seasonAvg;
+          if(option==='Points'){statVal=pts;line=Math.round(statVal*2)/2||14.5;seasonAvg=statVal+' pts';}
+          else if(option==='Rebounds'){statVal=reb;line=Math.round(statVal*2)/2||5.5;seasonAvg=statVal+' reb';}
+          else if(option==='Assists'){statVal=ast;line=Math.round(statVal*2)/2||4.5;seasonAvg=statVal+' ast';}
+          else if(option==='3PM'){statVal=threeMade;line=Math.round(statVal*2)/2||1.5;seasonAvg=statVal+' 3PM';}
+          else if(option==='PRA'){statVal=pra;line=Math.round(pra*2)/2||24.5;seasonAvg=statVal+' PRA';}
+          else{statVal=pts;line=14.5;seasonAvg=statVal+' pts';}
+          const espnId=athleteObj.id!=null?String(athleteObj.id):'';
+          const headshotUrl = athleteObj.headshot && athleteObj.headshot.href ? String(athleteObj.headshot.href) : '';
+          players.push({player:name,espnId,headshotUrl,teamAbbr,oppTeamAbbr:teamOppMap[teamAbbr]||'',pos:nbaPos,statLabel:option,line,seasonAvg,game:teamGameMap[teamAbbr]||eventGame});
+        }
+      }
+    }
+  }
+  if(players.length){
+    writeNCAABCache(players);
+    return players;
+  }
+  const cached = readNCAABCache();
+  const cachedAny = readNCAABCacheAny();
+  const seasonMap=_seasonAvgMapFromPools([cached,cachedAny]);
+  if(cached.length) return _fillSeasonAvgFromMap(_hydratePlayersGame(cached,teamGameMap,teamOppMap),seasonMap);
+  if(cachedAny.length){
+    const coerced = coerceCachedNCAABOption(cachedAny, option);
+    return _fillSeasonAvgFromMap(_hydratePlayersGame(coerced,teamGameMap,teamOppMap),seasonMap);
+  }
+  const defaults={Points:19.5,Rebounds:5.5,Assists:4.5,'3PM':1.5,PRA:24.5};
+  const rosterPool=await _buildRosterFallbackPlayers('basketball/mens-college-basketball', events, option, defaults);
+  if(rosterPool.length){
+    const hydrated=_fillSeasonAvgFromMap(_hydratePlayersGame(rosterPool,teamGameMap,teamOppMap),seasonMap);
+    return hydrated;
+  }
+  return [];
+}
+function poRevealNCAABCard(p, idx){
+  const sk=document.getElementById('poSkel-'+idx);
+  const card=sk||document.createElement('div');
+  card.className='po-card jackpot';
+  card.removeAttribute('id');
+  card.setAttribute('data-po-pick-idx', String(idx));
+  card.style.animationDelay='0s';
+  const statLabel=p.statLabel||currentOption;
+  card.innerHTML=`
+    ${pickRowCornerActionsHtml(idx)}
+    <div class="rowtop" onclick="const d=this.nextElementSibling;d.style.display=d.style.display==='block'?'none':'block'">
+      ${nbaRowTopPlayerHtml(p,'<span class="chev">&#9662;</span>')}
+      <div class="rowtop-meta"><span class="muted"><span style="font-weight:700;color:${p.dir==='Over'?'#34d399':'#f87171'}">${p.dir} ${p.line}</span> <span style="opacity:.6;font-size:11px">${statLabel}</span></span></div>
+    </div>
+    <div class="details">
+      <div class="muted">Position: ${p.pos||'—'}</div>
+      <div class="muted">${p.dir} ${p.line} ${statLabel}</div>
+      <div class="muted">Season avg: ${p.seasonAvg||'—'}</div>
+      <div class="muted">Game status: ${gameStatusText(p.game)}</div>
+      <div class="muted">Start time: ${gameStartText(p.game)||'—'}</div>
+      <div class="muted">Venue: ${gameVenueText(p.game)||'—'}</div>
+    </div>`;
+  if(!sk) document.getElementById('poCards').appendChild(card);
+  syncPoCardsOrbit();
+}
+async function startNCAABLoad(){
+  pickRandomRhythm();
+  if(!_validatePlayerCountOrWarn(ncaabPickCount, 'players')) return;
+  if(await _shouldGateLoadWithUpgrade({sport:'NCAAB',option:currentOption,attemptedCount:ncaabPickCount,payload:{attemptedNCAAB:ncaabPickCount}})) return;
+  openPickOverlay();
+  const loadBtn=document.getElementById('ncaabLoadBtn');
+  if(loadBtn)loadBtn.disabled=true;
+  const token=++ncaabToken;
+  ncaabLoading=true;ncaabLoaded=false;ncaabPicks=[];ncaabUsed=new Set();ncaabLivePool=[];ncaabPickSlotCount=0;_resetPickLocksForNewSpin();pickLocked=true;
+  _firstSfxIdx=-1;_lastSfxIdx=-1;
+  renderNCAABPicks();
+  let shuffler=null;
+  const stopShuffle=()=>{if(shuffler)shuffler._timers?.forEach(t=>{clearTimeout(t);clearInterval(t);});shuffler=null;};
+  try{
+    const pool=await getTodaysNCAABPlayers(currentOption);
+    if(token!==ncaabToken)return;
+    _beltValidatePlayerPoolStatLabels('NCAAB', currentOption, pool);
+    ncaabLivePool=pool;
+    ncaabLoading=false;ncaabLoaded=true;
+    if(!pool.length){
+      document.getElementById('picks').innerHTML='<div class="muted">No NCAAB players found for today.</div>';
+      poSetError('No NCAAB players found for today.');
+      showToast('No live NCAAB players found for today.', 'error', 'center');
+      pickLocked=false;
+      if(loadBtn)loadBtn.disabled=false;
+      stopPickSfxNow();
+      closePickOverlay();
+      stopMoneyTransformButton();renderNCAABPicks();return;
+    }
+    const max=Math.min(ncaabPickCount,PRO_MAX_PICK_COUNT);
+    const selectedTeams=new Set();
+    poSeedSkeletons(max);
+    shuffler=startNameShuffle(pool,token,()=>ncaabToken,Math.max(500,getRhythmSuspense(0)));
+    for(let i=0;i<max;i++){
+      if(token!==ncaabToken)return;
+      await sleep(Math.max(500,getRhythmSuspense(i)));
+      if(token!==ncaabToken)return;
+      const picked=await slotMachineResolvePick(pool,ncaabUsed,selectedTeams,i,token,()=>ncaabToken);
+      const choice=Object.assign({},picked||pickRandom(pool));
+      choice.dir=Math.random()<0.5?'Over':'Under';
+      ncaabPicks.push(choice);
+      ncaabUsed.add(choice.player);
+      if(choice.teamAbbr) selectedTeams.add(choice.teamAbbr);
+      renderNCAABPicks();
+      poRevealNCAABCard(choice,i);
+      if(i===max-1)stopMoneyTransformButton();
+      await sleepPickRevealChimeSync();
+      playChingSfx(i===0,i===max-1);
+      await _finalizeProSlotSpinReveal(i);
+      if(i<max-1)await sleep(300);
+    }
+    stopShuffle();
+    if(token===ncaabToken){
+      pickLocked=false;ncaabPickSlotCount=ncaabPicks.length;renderNCAABPicks();
+      poFinish();
+      syncPoOverlayProMicroLocks();
+      document.getElementById('poTitle').textContent='🏀 Lucky Players';
+      if(ncaabPicks.length>0)document.getElementById('poShareBtn').style.display='block';
+    }
+  }catch(e){
+    if(token!==ncaabToken)return;
+    stopShuffle();ncaabLoading=false;ncaabLoaded=false;pickLocked=false;
+    if(loadBtn)loadBtn.disabled=false;
+    document.getElementById('picks').innerHTML='<div class="muted">Could not load NCAAB data right now.</div>';
+    poSetError('Could not load NCAAB data right now.');
+    stopMoneyTransformButton();renderNCAABPicks();
   }
 }
 
@@ -5197,7 +6016,10 @@ function removePickSwipeByIndex(ix,mode){
   else if(m==='mlb-bases') removeBasesPickBySwipe(ix);
   else if(m==='mlb-rbi') removeRbiPickBySwipe(ix);
   else if(m==='nfl') removeNflPickBySwipe(ix);
+  else if(m==='ncaaf') removeNcaafPickBySwipe(ix);
   else if(m==='nba') removeNbaPickBySwipe(ix);
+  else if(m==='wnba') removeWnbaPickBySwipe(ix);
+  else if(m==='ncaab') removeNcaabPickBySwipe(ix);
   else if(m==='nhl') removeNhlPickBySwipe(ix);
   else if(m==='soccer') removeSoccerPickBySwipe(ix);
   syncOpenPickOverlayFromCurrentPicks();
@@ -5211,7 +6033,10 @@ function pickSwipeModeForCurrent(){
     return 'mlb-hr';
   }
   if(current === 'NFL') return 'nfl';
+  if(current === 'NCAAF') return 'ncaaf';
   if(current === 'NBA') return 'nba';
+  if(current === 'WNBA') return 'wnba';
+  if(current === 'NCAAB') return 'ncaab';
   if(current === 'NHL') return 'nhl';
   if(current === 'Soccer') return 'soccer';
   return '';
@@ -5339,6 +6164,71 @@ function removeNbaPickBySwipe(index){
   for(const p of nbaPicks){ if(p&&p.player) nbaUsed.add(p.player); }
   _markProPickSlotsSpinRevealDoneThrough(nbaPicks.length);
   renderNBAPicks();
+  syncPicksBoardWrapOrbit();
+  syncPoOverlayProMicroLocks();
+  if(ok) showToast('Pick replaced.','','center');
+  else showToast('Pick removed — no alternate in pool.','error','center');
+}
+function removeNcaafPickBySwipe(index){
+  if(_isUiPickLocked()) return;
+  if(_isProPickSlotLocked(index)){
+    showToast('That pick is locked. Tap the lock to unlock, then swipe.','error','center');
+    return;
+  }
+  if(current!=='NCAAF') return;
+  if(index<0||index>=ncaafPicks.length) return;
+  const target=ncaafPickSlotCount>0?ncaafPickSlotCount:ncaafPicks.length;
+  ncaafPicks.splice(index,1);
+  _remapProPickLocksAfterSwipeRemove(index);
+  const ok=_refillDiversifiedSlots(ncaafPicks,target,ncaafLivePool,ncaafUsed,function(c){
+    if(c.statLabel!=='TDs') c.dir=Math.random()<0.5?'Over':'Under';
+  });
+  ncaafUsed.clear();
+  for(const p of ncaafPicks){ if(p&&p.player) ncaafUsed.add(p.player); }
+  _markProPickSlotsSpinRevealDoneThrough(ncaafPicks.length);
+  renderNCAAFPicks();
+  syncPicksBoardWrapOrbit();
+  syncPoOverlayProMicroLocks();
+  if(ok) showToast('Pick replaced.','','center');
+  else showToast('Pick removed — no alternate in pool.','error','center');
+}
+function removeWnbaPickBySwipe(index){
+  if(_isUiPickLocked()) return;
+  if(_isProPickSlotLocked(index)){
+    showToast('That pick is locked. Tap the lock to unlock, then swipe.','error','center');
+    return;
+  }
+  if(current!=='WNBA') return;
+  if(index<0||index>=wnbaPicks.length) return;
+  const target=wnbaPickSlotCount>0?wnbaPickSlotCount:wnbaPicks.length;
+  wnbaPicks.splice(index,1);
+  _remapProPickLocksAfterSwipeRemove(index);
+  const ok=_refillDiversifiedSlots(wnbaPicks,target,wnbaLivePool,wnbaUsed,function(c){c.dir=Math.random()<0.5?'Over':'Under';});
+  wnbaUsed.clear();
+  for(const p of wnbaPicks){ if(p&&p.player) wnbaUsed.add(p.player); }
+  _markProPickSlotsSpinRevealDoneThrough(wnbaPicks.length);
+  renderWNBAPicks();
+  syncPicksBoardWrapOrbit();
+  syncPoOverlayProMicroLocks();
+  if(ok) showToast('Pick replaced.','','center');
+  else showToast('Pick removed — no alternate in pool.','error','center');
+}
+function removeNcaabPickBySwipe(index){
+  if(_isUiPickLocked()) return;
+  if(_isProPickSlotLocked(index)){
+    showToast('That pick is locked. Tap the lock to unlock, then swipe.','error','center');
+    return;
+  }
+  if(current!=='NCAAB') return;
+  if(index<0||index>=ncaabPicks.length) return;
+  const target=ncaabPickSlotCount>0?ncaabPickSlotCount:ncaabPicks.length;
+  ncaabPicks.splice(index,1);
+  _remapProPickLocksAfterSwipeRemove(index);
+  const ok=_refillDiversifiedSlots(ncaabPicks,target,ncaabLivePool,ncaabUsed,function(c){c.dir=Math.random()<0.5?'Over':'Under';});
+  ncaabUsed.clear();
+  for(const p of ncaabPicks){ if(p&&p.player) ncaabUsed.add(p.player); }
+  _markProPickSlotsSpinRevealDoneThrough(ncaabPicks.length);
+  renderNCAABPicks();
   syncPicksBoardWrapOrbit();
   syncPoOverlayProMicroLocks();
   if(ok) showToast('Pick replaced.','','center');
@@ -5698,7 +6588,10 @@ function _getRawPickByIndex(idx){
     return mlbPicks[i];
   }
   if(current==='NFL') return nflPicks[i];
+  if(current==='NCAAF') return ncaafPicks[i];
   if(current==='NBA') return nbaPicks[i];
+  if(current==='WNBA') return wnbaPicks[i];
+  if(current==='NCAAB') return ncaabPicks[i];
   if(current==='NHL') return nhlPicks[i];
   if(current==='Soccer') return soccerPicks[i];
   return null;
@@ -5828,7 +6721,10 @@ function currentDisplayedPickPoolOpen(){
       return _poolHasLiveGame(mlbPicks);
     }
     if(current==='NFL') return _poolHasLiveGame(nflPicks);
+    if(current==='NCAAF') return _poolHasLiveGame(ncaafPicks);
     if(current==='NBA') return _poolHasLiveGame(nbaPicks);
+    if(current==='WNBA') return _poolHasLiveGame(wnbaPicks);
+    if(current==='NCAAB') return _poolHasLiveGame(ncaabPicks);
     if(current==='NHL') return _poolHasLiveGame(nhlPicks);
     if(current==='Soccer') return _poolHasLiveGame(soccerPicks);
   }catch(_){}
@@ -7342,7 +8238,10 @@ const _sportLoadBtnMap={
   'Total Bases':{id:'basesLoadBtn',label:'Spin'},
   RBI:{id:'rbiLoadBtn',label:'Spin'},
   NFL:{id:'nflLoadBtn',label:'Spin'},
+  NCAAF:{id:'ncaafLoadBtn',label:'Spin'},
   NBA:{id:'nbaLoadBtn',label:'Spin'},
+  WNBA:{id:'wnbaLoadBtn',label:'Spin'},
+  NCAAB:{id:'ncaabLoadBtn',label:'Spin'},
   NHL:{id:'nhlLoadBtn',label:'Spin'},
   Soccer:{id:'soccerLoadBtn',label:'Spin'},
 };
@@ -7355,6 +8254,7 @@ function _getLoadBtnInfo(){
     return _sportLoadBtnMap.MLB;
   }
   if(current==='NFL') return _sportLoadBtnMap.NFL;
+  if(current==='NCAAF') return _sportLoadBtnMap.NCAAF;
   return _sportLoadBtnMap[current]||_sportLoadBtnMap.MLB;
 }
 let _moneyFlipTimer = null;
@@ -7944,9 +8844,12 @@ function _attemptedCountFromUpgradeOpts(opts){
   if(opts.attemptedBases != null) return Number(opts.attemptedBases);
   if(opts.attemptedRBI != null) return Number(opts.attemptedRBI);
   if(opts.attemptedNBA != null) return Number(opts.attemptedNBA);
+  if(opts.attemptedWNBA != null) return Number(opts.attemptedWNBA);
+  if(opts.attemptedNCAAB != null) return Number(opts.attemptedNCAAB);
   if(opts.attemptedNHL != null) return Number(opts.attemptedNHL);
   if(opts.attemptedSoccer != null) return Number(opts.attemptedSoccer);
   if(opts.attemptedNFL != null) return Number(opts.attemptedNFL);
+  if(opts.attemptedNCAAF != null) return Number(opts.attemptedNCAAF);
   return 0;
 }
 function isPaywallOverlayOpen(){
@@ -7987,9 +8890,12 @@ function showUpgradeWall(opts){
   else if(opts.attemptedBases != null) basesPickCount = opts.attemptedBases;
   else if(opts.attemptedRBI != null) rbiPickCount = opts.attemptedRBI;
   else if(opts.attemptedNBA != null) nbaPickCount = opts.attemptedNBA;
+  else if(opts.attemptedWNBA != null) wnbaPickCount = opts.attemptedWNBA;
+  else if(opts.attemptedNCAAB != null) ncaabPickCount = opts.attemptedNCAAB;
   else if(opts.attemptedNHL != null) nhlPickCount = opts.attemptedNHL;
   else if(opts.attemptedSoccer != null) soccerPickCount = opts.attemptedSoccer;
   else if(opts.attemptedNFL != null) nflPickCount = opts.attemptedNFL;
+  else if(opts.attemptedNCAAF != null) ncaafPickCount = opts.attemptedNCAAF;
   else {
     pickCount = 0;
     ksPickCount = 0;
@@ -7997,9 +8903,12 @@ function showUpgradeWall(opts){
     basesPickCount = 0;
     rbiPickCount = 0;
     nbaPickCount = 0;
+    wnbaPickCount = 0;
+    ncaabPickCount = 0;
     nhlPickCount = 0;
     soccerPickCount = 0;
     nflPickCount = 1;
+    ncaafPickCount = 1;
   }
   renderSport();
   const row = document.getElementById('pickCountRow');
@@ -8012,9 +8921,12 @@ function showUpgradeWall(opts){
       else if(currentOption === 'Total Bases') sel = basesPickCount;
       else if(currentOption === 'RBI') sel = rbiPickCount;
     } else if(current === 'NBA') sel = nbaPickCount;
+    else if(current === 'WNBA') sel = wnbaPickCount;
+    else if(current === 'NCAAB') sel = ncaabPickCount;
     else if(current === 'NHL') sel = nhlPickCount;
     else if(current === 'Soccer') sel = soccerPickCount;
     else if(current === 'NFL') sel = nflPickCount;
+    else if(current === 'NCAAF') sel = ncaafPickCount;
     row.querySelectorAll('button').forEach(b=>{
       b.disabled = false;
       const num = parseInt(b.textContent.trim(), 10) || 0;
@@ -9186,7 +10098,10 @@ function syncOpenPickOverlayFromCurrentPicks(){
     else if(currentOption === 'RBI') rbiPicks.forEach((p,i)=>poRevealRBICard(p,i));
     else mlbPicks.forEach((p,i)=>poRevealCard(p,i));
   }else if(current === 'NFL') nflPicks.forEach((p,i)=>poRevealNFLCard(p,i));
+  else if(current === 'NCAAF') ncaafPicks.forEach((p,i)=>poRevealNCAAFCard(p,i));
   else if(current === 'NBA') nbaPicks.forEach((p,i)=>poRevealNBACard(p,i));
+  else if(current === 'WNBA') wnbaPicks.forEach((p,i)=>poRevealWNBACard(p,i));
+  else if(current === 'NCAAB') ncaabPicks.forEach((p,i)=>poRevealNCAABCard(p,i));
   else if(current === 'NHL') nhlPicks.forEach((p,i)=>poRevealNHLCard(p,i));
   else if(current === 'Soccer') soccerPicks.forEach((p,i)=>poRevealSoccerCard(p,i));
   syncPoOverlayProMicroLocks();
@@ -9236,10 +10151,26 @@ function buildPicksShareTextForOverlay(){
       if(sl === 'TDs') lines.push(`${i + 1}. ${p.player} (${p.teamAbbr || p.team}) — ${p.td} TDs`);
       else lines.push(ou(i, p, sl));
     });
+  } else if(current === 'NCAAF' && ncaafPicks.length){
+    const lab = ncaafPicks[0].statLabel || currentOption || 'props';
+    headline = `${who} using Quick Pix on Pro Sports Win for today's NCAAF ${lab} picks!`;
+    ncaafPicks.forEach((p, i) => {
+      const sl = p.statLabel || currentOption;
+      if(sl === 'TDs') lines.push(`${i + 1}. ${p.player} (${p.teamAbbr || p.team}) — ${p.td} TDs`);
+      else lines.push(ou(i, p, sl));
+    });
   } else if(current === 'NBA' && nbaPicks.length){
     const lab = nbaPicks[0].statLabel || currentOption;
     headline = `${who} using Quick Pix on Pro Sports Win for today's NBA ${lab} picks!`;
     nbaPicks.forEach((p, i) => { lines.push(ou(i, p, p.statLabel || currentOption)); });
+  } else if(current === 'WNBA' && wnbaPicks.length){
+    const lab = wnbaPicks[0].statLabel || currentOption;
+    headline = `${who} using Quick Pix on Pro Sports Win for today's WNBA ${lab} picks!`;
+    wnbaPicks.forEach((p, i) => { lines.push(ou(i, p, p.statLabel || currentOption)); });
+  } else if(current === 'NCAAB' && ncaabPicks.length){
+    const lab = ncaabPicks[0].statLabel || currentOption;
+    headline = `${who} using Quick Pix on Pro Sports Win for today's NCAAB ${lab} picks!`;
+    ncaabPicks.forEach((p, i) => { lines.push(ou(i, p, p.statLabel || currentOption)); });
   } else if(current === 'NHL' && nhlPicks.length){
     const lab = nhlPicks[0].statLabel || currentOption;
     headline = `${who} using Quick Pix on Pro Sports Win for today's NHL ${lab} picks!`;
