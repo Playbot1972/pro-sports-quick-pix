@@ -57,7 +57,7 @@
 <title>Pro Sports Win | Quick Pix picks</title>
 <script>
   // Public version: use letter suffixes for QA (see release.py --part letter).
-  const APP_VERSION = 'v1.27.3';
+  const APP_VERSION = 'v1.27.4';
   const APP_BUILD_TAG = (function(){
     const d = new Date(document.lastModified || Date.now());
     if(Number.isNaN(d.getTime())) return '';
@@ -2203,6 +2203,7 @@ window.safeHeadshot = function(obj){
   </footer>
 </div>
 <script src="/js/sportsbook-handoff.js"></script>
+<script src="/js/football-season-td.js"></script>
 <script>
 // App script owns behavior inside .wrap > .card (picks, overlays). .site-footer is static HTML above.
 var _lhMem=(function(){
@@ -4120,18 +4121,25 @@ function _eventsNotFinal(events){
   });
 }
 /**
- * TDs Spin must show Over/Under prop lines (anytime TD), not completed-game TD totals.
- * Boxscore `td` counts are results — keep only as optional context, never as the pick face.
+ * Keep dir/line for sportsbook anytime-TD handoff, but season-stat UI uses seasonTd only.
+ * Boxscore game TD totals are not season stats.
  */
 function _asFootballAnytimeTdProp(p, gameTd){
   const g = Number(gameTd);
   const out = Object.assign({}, p || {}, {
     statLabel: 'TDs',
     td: null,
-    line: 0.5,
-    seasonAvg: (Number.isFinite(g) && g > 0) ? (g + ' game TDs (context)') : 'Anytime TD'
+    line: (p && p.line != null && p.line !== '') ? p.line : 0.5
   });
-  // Spin assigns Over/Under randomly like other markets.
+  if(out.seasonTd == null && Number.isFinite(g) && g >= 0){
+    // Do not treat game TDs as season TDs.
+  }
+  if(out.seasonTd != null && Number.isFinite(Number(out.seasonTd))){
+    out.seasonAvg = Number(out.seasonTd) + ' season TDs';
+  } else if(!out.seasonAvg || out.seasonAvg === '—' || String(out.seasonAvg).indexOf('game TDs') >= 0 || out.seasonAvg === 'Anytime TD'){
+    out.seasonAvg = '—';
+  }
+  // Spin assigns Over/Under for betting handoff only.
   delete out.dir;
   return out;
 }
@@ -4151,17 +4159,59 @@ function _normalizeFootballTdPool(players){
   return out;
 }
 function _footballTdDisplayHtml(p){
-  const dir = (p && p.dir) || 'Over';
-  const line = (p && p.line != null && p.line !== '') ? p.line : 0.5;
-  return `<span class='muted'><span style='font-weight:700;color:${dir==='Over'?'#34d399':'#f87171'}'>${dir} ${line}</span> <span style='opacity:.6;font-size:11px'>TDs</span></span>`;
+  const api = (typeof FootballSeasonTd !== 'undefined') ? FootballSeasonTd : null;
+  if(api && api.seasonTdDisplayHtml) return api.seasonTdDisplayHtml(p);
+  const n = p && p.seasonTd != null && p.seasonTd !== '' && Number.isFinite(Number(p.seasonTd)) ? Number(p.seasonTd) : null;
+  const shown = n == null ? '—' : String(n);
+  return `<span class='muted'><span style='font-weight:700;color:#6ee7ff'>${shown}</span> <span style='opacity:.6;font-size:11px'>TDs</span></span>`;
 }
 function _footballTdDetailsHtml(p){
-  const dir = (p && p.dir) || 'Over';
-  const line = (p && p.line != null && p.line !== '') ? p.line : 0.5;
-  let html = `<div class='muted'>${dir} ${line} TDs (anytime)</div>`;
-  const ctx = p && p.seasonAvg && String(p.seasonAvg).indexOf('game TDs') >= 0 ? p.seasonAvg : '';
-  if(ctx) html += `<div class='muted'>Context: ${ctx}</div>`;
-  return html;
+  const api = (typeof FootballSeasonTd !== 'undefined') ? FootballSeasonTd : null;
+  if(api && api.seasonTdDetailsHtml) return api.seasonTdDetailsHtml(p);
+  const n = p && p.seasonTd != null && p.seasonTd !== '' && Number.isFinite(Number(p.seasonTd)) ? Number(p.seasonTd) : null;
+  const shown = n == null ? '—' : String(n);
+  return `<div class='muted'>Season TDs: ${shown}</div>`;
+}
+const _footballSeasonTdMem = new Map();
+async function _espnFootballSeasonYear(sportPath){
+  try{
+    const sb = await fetchJson('https://site.api.espn.com/apis/site/v2/sports/'+sportPath+'/scoreboard');
+    const y = sb && sb.season && sb.season.year;
+    if(y) return Number(y);
+  }catch(_){}
+  return new Date().getFullYear();
+}
+async function _ensureFootballSeasonTd(player, sportPath){
+  if(!player) return player;
+  if(player.seasonTd != null && player.seasonTd !== '' && Number.isFinite(Number(player.seasonTd))) return player;
+  const id = player.espnId != null ? String(player.espnId) : '';
+  if(!id) return player;
+  const api = (typeof FootballSeasonTd !== 'undefined') ? FootballSeasonTd : null;
+  const league = api && api.leagueFromSportPath ? api.leagueFromSportPath(sportPath) : (String(sportPath||'').indexOf('college-football')>=0 ? 'college-football' : 'nfl');
+  const year = await _espnFootballSeasonYear(sportPath);
+  const cacheKey = league+':'+year+':'+id;
+  if(_footballSeasonTdMem.has(cacheKey)){
+    return Object.assign(player, _footballSeasonTdMem.get(cacheKey));
+  }
+  try{
+    const url = api && api.coreStatsUrl ? api.coreStatsUrl(league, year, id)
+      : ('https://sports.core.api.espn.com/v2/sports/football/leagues/'+encodeURIComponent(league)+'/seasons/'+year+'/types/2/athletes/'+encodeURIComponent(id)+'/statistics');
+    const json = await fetchJson(url);
+    const parsed = api && api.parseEspnFootballSeasonTds ? api.parseEspnFootballSeasonTds(json) : {seasonTd:null};
+    const patch = {
+      seasonTd: parsed.seasonTd,
+      seasonTdPass: parsed.seasonTdPass,
+      seasonTdRush: parsed.seasonTdRush,
+      seasonTdRec: parsed.seasonTdRec,
+      seasonTdReturn: parsed.seasonTdReturn,
+      seasonAvg: parsed.seasonTd != null ? (parsed.seasonTd + ' season TDs') : '—'
+    };
+    _footballSeasonTdMem.set(cacheKey, patch);
+    return Object.assign(player, patch);
+  }catch(_){
+    // Missing season stats → leave seasonTd unset so UI shows —.
+    return player;
+  }
 }
 
 function clearNFL(){nflToken++;_clearProPickLocksForSportPrefix('NFL');nflLoaded=false;nflLoading=false;nflPicks=[];nflUsed=new Set();nflLivePool=[];nflPickSlotCount=0;pickLocked=false;nflPickCount=1;renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Choose a count and tap Spin.</div>';syncPicksBoardWrapOrbit();}
@@ -4396,7 +4446,7 @@ async function startNFLLoad(){
       if(token!==nflToken)return;
       const picked=await slotMachineResolvePick(pool,nflUsed,selectedTeams,i,token,()=>nflToken);
       const choice=Object.assign({},picked||pickRandom(pool));
-      if(choice.statLabel==='TDs'){ choice.td=null; choice.line=(choice.line!=null&&choice.line!=='')?choice.line:0.5; choice.dir=Math.random()<0.5?'Over':'Under'; }
+      if(choice.statLabel==='TDs'){ choice.td=null; choice.line=(choice.line!=null&&choice.line!=='')?choice.line:0.5; choice.dir=Math.random()<0.5?'Over':'Under'; await _ensureFootballSeasonTd(choice,'football/nfl'); }
       else choice.dir=Math.random()<0.5?'Over':'Under';
       nflPicks.push(choice);
       nflUsed.add(choice.player);
@@ -4687,7 +4737,7 @@ async function startNCAAFLoad(){
       if(token!==ncaafToken)return;
       const picked=await slotMachineResolvePick(pool,ncaafUsed,selectedTeams,i,token,()=>ncaafToken);
       const choice=Object.assign({},picked||pickRandom(pool));
-      if(choice.statLabel==='TDs'){ choice.td=null; choice.line=(choice.line!=null&&choice.line!=='')?choice.line:0.5; choice.dir=Math.random()<0.5?'Over':'Under'; }
+      if(choice.statLabel==='TDs'){ choice.td=null; choice.line=(choice.line!=null&&choice.line!=='')?choice.line:0.5; choice.dir=Math.random()<0.5?'Over':'Under'; await _ensureFootballSeasonTd(choice,'football/college-football'); }
       else choice.dir=Math.random()<0.5?'Over':'Under';
       ncaafPicks.push(choice);
       ncaafUsed.add(choice.player);
@@ -6238,7 +6288,7 @@ function removeRbiPickBySwipe(index){
   if(ok) showToast('Pick replaced.','','center');
   else showToast('Pick removed — no alternate in pool.','error','center');
 }
-function removeNflPickBySwipe(index){
+async function removeNflPickBySwipe(index){
   if(_isUiPickLocked()) return;
   if(_isProPickSlotLocked(index)){
     showToast('That pick is locked. Tap the lock to unlock, then swipe.','error','center');
@@ -6255,6 +6305,9 @@ function removeNflPickBySwipe(index){
   });
   nflUsed.clear();
   for(const p of nflPicks){ if(p&&p.player) nflUsed.add(p.player); }
+  for(const p of nflPicks){
+    if(p && p.statLabel==='TDs') await _ensureFootballSeasonTd(p,'football/nfl');
+  }
   _markProPickSlotsSpinRevealDoneThrough(nflPicks.length);
   renderNFLPicks();
   syncPicksBoardWrapOrbit();
@@ -6283,7 +6336,7 @@ function removeNbaPickBySwipe(index){
   if(ok) showToast('Pick replaced.','','center');
   else showToast('Pick removed — no alternate in pool.','error','center');
 }
-function removeNcaafPickBySwipe(index){
+async function removeNcaafPickBySwipe(index){
   if(_isUiPickLocked()) return;
   if(_isProPickSlotLocked(index)){
     showToast('That pick is locked. Tap the lock to unlock, then swipe.','error','center');
@@ -6300,6 +6353,9 @@ function removeNcaafPickBySwipe(index){
   });
   ncaafUsed.clear();
   for(const p of ncaafPicks){ if(p&&p.player) ncaafUsed.add(p.player); }
+  for(const p of ncaafPicks){
+    if(p && p.statLabel==='TDs') await _ensureFootballSeasonTd(p,'football/college-football');
+  }
   _markProPickSlotsSpinRevealDoneThrough(ncaafPicks.length);
   renderNCAAFPicks();
   syncPicksBoardWrapOrbit();
