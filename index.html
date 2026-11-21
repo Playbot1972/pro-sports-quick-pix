@@ -57,7 +57,7 @@
 <title>Pro Sports Win | Quick Pix picks</title>
 <script>
   // Public version: use letter suffixes for QA (see release.py --part letter).
-  const APP_VERSION = 'v1.27.2';
+  const APP_VERSION = 'v1.27.3';
   const APP_BUILD_TAG = (function(){
     const d = new Date(document.lastModified || Date.now());
     if(Number.isNaN(d.getTime())) return '';
@@ -3458,11 +3458,7 @@ function copyCurrentSportPicks(){
   } else if(current==='NFL'){
     nflPicks.forEach(function(p,i){
       if(currentOption==='TDs'){
-        if(p.td != null && p.td !== ''){
-          lines.push(`${i+1}. ${p.player||'Player'} (${p.teamAbbr||p.team||''}) \u2014 ${p.td} TDs`);
-        }else{
-          lines.push(`${i+1}. ${p.player||'Player'} (${p.teamAbbr||p.team||''}) \u2014 ${(p.dir||'Over')} ${p.line!=null?p.line:0.5} TDs`);
-        }
+        lines.push(`${i+1}. ${p.player||'Player'} (${p.teamAbbr||p.team||''}) \u2014 ${(p.dir||'Over')} ${p.line!=null?p.line:0.5} TDs`);
       }else{
         lines.push(`${i+1}. ${p.player||'Player'} (${p.teamAbbr||p.team||''}) \u2014 ${(p.dir||'Over')} ${p.line||''} ${currentOption}`);
       }
@@ -3470,11 +3466,7 @@ function copyCurrentSportPicks(){
   } else if(current==='NCAAF'){
     ncaafPicks.forEach(function(p,i){
       if(currentOption==='TDs'){
-        if(p.td != null && p.td !== ''){
-          lines.push(`${i+1}. ${p.player||'Player'} (${p.teamAbbr||p.team||''}) \u2014 ${p.td} TDs`);
-        }else{
-          lines.push(`${i+1}. ${p.player||'Player'} (${p.teamAbbr||p.team||''}) \u2014 ${(p.dir||'Over')} ${p.line!=null?p.line:0.5} TDs`);
-        }
+        lines.push(`${i+1}. ${p.player||'Player'} (${p.teamAbbr||p.team||''}) \u2014 ${(p.dir||'Over')} ${p.line!=null?p.line:0.5} TDs`);
       }else{
         lines.push(`${i+1}. ${p.player||'Player'} (${p.teamAbbr||p.team||''}) \u2014 ${(p.dir||'Over')} ${p.line||''} ${currentOption}`);
       }
@@ -4116,28 +4108,60 @@ function _espnBoxStatNumber(group, athleteStats, labelNames, keySubstrings, fall
   const n = parseFloat(vals[idx]);
   return Number.isFinite(n) ? n : 0;
 }
-/** TDs market: ~80% of boxscore skill players have 0 TDs; prefer scorers so picks show real TDs. */
-function _preferFootballTdScorers(players){
+/** Skill positions eligible for anytime TD props. */
+function _footballTdSkillPos(pos){
+  return ['QB','RB','WR','TE','HB','FB','ATH','TB'].indexOf(String(pos || '').toUpperCase()) >= 0;
+}
+/** Scoreboard events that still need picks (not final). */
+function _eventsNotFinal(events){
+  return (Array.isArray(events) ? events : []).filter(function(ev){
+    const n = String(((ev && ev.status && ev.status.type && ev.status.type.name) || '')).toUpperCase();
+    return n.indexOf('FINAL') < 0 && n.indexOf('END') < 0;
+  });
+}
+/**
+ * TDs Spin must show Over/Under prop lines (anytime TD), not completed-game TD totals.
+ * Boxscore `td` counts are results — keep only as optional context, never as the pick face.
+ */
+function _asFootballAnytimeTdProp(p, gameTd){
+  const g = Number(gameTd);
+  const out = Object.assign({}, p || {}, {
+    statLabel: 'TDs',
+    td: null,
+    line: 0.5,
+    seasonAvg: (Number.isFinite(g) && g > 0) ? (g + ' game TDs (context)') : 'Anytime TD'
+  });
+  // Spin assigns Over/Under randomly like other markets.
+  delete out.dir;
+  return out;
+}
+function _normalizeFootballTdPool(players){
   const arr = Array.isArray(players) ? players : [];
-  const scorers = arr.filter(function(p){ return Number(p && p.td) > 0; });
-  return scorers.length ? scorers : arr;
+  const out = [];
+  const seen = new Set();
+  for(let i = 0; i < arr.length; i++){
+    const p = arr[i];
+    if(!p || !p.player) continue;
+    if(p.pos && !_footballTdSkillPos(p.pos)) continue;
+    const key = String(p.player) + '::' + String(p.teamAbbr || p.team || '');
+    if(seen.has(key)) continue;
+    seen.add(key);
+    out.push(_asFootballAnytimeTdProp(p, p.td != null ? p.td : p.gameTd));
+  }
+  return out;
 }
 function _footballTdDisplayHtml(p){
-  // Game boxscore scorers have a numeric td; roster fallback uses Over 0.5 anytime TD.
-  if(p && p.td != null && p.td !== ''){
-    return `<span class='muted'><span style='font-weight:700;color:#6ee7ff'>${p.td}</span> <span style='opacity:.6;font-size:11px'>TDs</span></span>`;
-  }
   const dir = (p && p.dir) || 'Over';
   const line = (p && p.line != null && p.line !== '') ? p.line : 0.5;
   return `<span class='muted'><span style='font-weight:700;color:${dir==='Over'?'#34d399':'#f87171'}'>${dir} ${line}</span> <span style='opacity:.6;font-size:11px'>TDs</span></span>`;
 }
 function _footballTdDetailsHtml(p){
-  if(p && p.td != null && p.td !== ''){
-    return `<div class='muted'>Game TDs: ${p.td}</div>`;
-  }
   const dir = (p && p.dir) || 'Over';
   const line = (p && p.line != null && p.line !== '') ? p.line : 0.5;
-  return `<div class='muted'>${dir} ${line} TDs (anytime)</div>`;
+  let html = `<div class='muted'>${dir} ${line} TDs (anytime)</div>`;
+  const ctx = p && p.seasonAvg && String(p.seasonAvg).indexOf('game TDs') >= 0 ? p.seasonAvg : '';
+  if(ctx) html += `<div class='muted'>Context: ${ctx}</div>`;
+  return html;
 }
 
 function clearNFL(){nflToken++;_clearProPickLocksForSportPrefix('NFL');nflLoaded=false;nflLoading=false;nflPicks=[];nflUsed=new Set();nflLivePool=[];nflPickSlotCount=0;pickLocked=false;nflPickCount=1;renderTabs();renderSport();document.getElementById('picks').innerHTML='<div class="muted">No picks loaded yet. Choose a count and tap Spin.</div>';syncPicksBoardWrapOrbit();}
@@ -4183,13 +4207,7 @@ async function getTodaysNFLPlayers(option){
       const parsed = parseFloat(avgText.replace(/[^0-9.\-]/g, ''));
       const line = Number.isFinite(parsed) && parsed > 0 ? Math.round(parsed * 2) / 2 : fallbackLine;
       if(selectedOption === 'TDs'){
-        const td = Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
-        return Object.assign({}, p, {
-          statLabel: 'TDs',
-          td,
-          line: 0,
-          seasonAvg: `${td} TDs`,
-        });
+        return _asFootballAnytimeTdProp(Object.assign({}, p, { pos: p.pos || 'WR' }));
       }
       return Object.assign({}, p, {
         statLabel: selectedOption,
@@ -4197,6 +4215,23 @@ async function getTodaysNFLPlayers(option){
         seasonAvg: Number.isFinite(parsed) && parsed > 0 ? `${parsed} ${suffix}` : `${fallbackLine} ${suffix}`,
       });
     });
+  }
+  // TDs = anytime TD props for today's slate — not finished-game TD totals.
+  if(option==='TDs'){
+    const defaults={TDs:0.5,'Rush Yds':55.5,'Rec Yds':45.5,'Receptions':4.5,'Pass Yds':225.5};
+    const slate=_eventsNotFinal(events);
+    const useEvents=slate.length?slate:events;
+    const teamGameMapEarly={};
+    const teamOppMapEarly=_teamOpponentMapFromEvents(useEvents);
+    for(const ev of useEvents){
+      Object.assign(teamGameMapEarly, _eventGameByTeamAbbr(ev)||{});
+    }
+    const rosterPool=await _buildRosterFallbackPlayers('football/nfl', useEvents, option, defaults);
+    if(rosterPool.length){
+      const out=_normalizeFootballTdPool(_hydratePlayersGame(rosterPool,teamGameMapEarly,teamOppMapEarly));
+      writeNFLCache(out);
+      return out;
+    }
   }
   const players=[];
   const seen=new Set();
@@ -4228,17 +4263,18 @@ async function getTodaysNFLPlayers(option){
           const pos=athleteObj.position&&athleteObj.position.abbreviation||'';
           const vals=athlete.stats||[];
           if(option==='TDs'){
-            // Accumulate TDs across rushing/receiving/passing per player (label/key aware)
+            // Boxscore TD totals are game results — accumulate for context only, emit anytime props.
+            if(pos && !_footballTdSkillPos(pos)) continue;
             const tdVal=_espnBoxStatNumber(group, vals, ['TD'], ['touchdown'], 3);
             const existing=players.find(x=>x.player===name&&x.teamAbbr===teamAbbr);
             if(existing){
-              existing.td+=tdVal;
-              existing.seasonAvg=(existing.td)+' TDs';
+              existing.gameTd=(Number(existing.gameTd)||0)+tdVal;
+              existing.seasonAvg=(existing.gameTd>0)?(existing.gameTd+' game TDs (context)'):'Anytime TD';
               if(!existing.espnId&&espnId) existing.espnId=espnId;
               if(!existing.headshotUrl&&headshotUrl) existing.headshotUrl=headshotUrl;
               if(!existing.game) existing.game = teamGameMap[teamAbbr]||eventGame;
             } else {
-              players.push({player:name,espnId,headshotUrl,teamAbbr,oppTeamAbbr:teamOppMap[teamAbbr]||'',pos,statLabel:'TDs',td:tdVal,line:0,seasonAvg:tdVal+' TDs',game:teamGameMap[teamAbbr]||eventGame});
+              players.push({player:name,espnId,headshotUrl,teamAbbr,oppTeamAbbr:teamOppMap[teamAbbr]||'',pos,statLabel:'TDs',td:null,gameTd:tdVal,line:0.5,seasonAvg:(tdVal>0)?(tdVal+' game TDs (context)'):'Anytime TD',game:teamGameMap[teamAbbr]||eventGame});
             }
           } else {
             if(seen.has(name+gname)) continue;
@@ -4256,7 +4292,7 @@ async function getTodaysNFLPlayers(option){
     }
   }
   if(players.length){
-    const out = option==='TDs' ? _preferFootballTdScorers(players) : players;
+    const out = option==='TDs' ? _normalizeFootballTdPool(players) : players;
     writeNFLCache(out);
     return out;
   }
@@ -4265,12 +4301,12 @@ async function getTodaysNFLPlayers(option){
   const seasonMap=_seasonAvgMapFromPools([cached,cachedAny]);
   if(cached.length){
     const hydrated=_fillSeasonAvgFromMap(_hydratePlayersGame(cached,teamGameMap,teamOppMap),seasonMap);
-    return option==='TDs' ? _preferFootballTdScorers(hydrated) : hydrated;
+    return option==='TDs' ? _normalizeFootballTdPool(hydrated) : hydrated;
   }
   if(cachedAny.length){
     const coerced = coerceCachedNFLOption(cachedAny, option);
     const hydrated=_fillSeasonAvgFromMap(_hydratePlayersGame(coerced,teamGameMap,teamOppMap),seasonMap);
-    return option==='TDs' ? _preferFootballTdScorers(hydrated) : hydrated;
+    return option==='TDs' ? _normalizeFootballTdPool(hydrated) : hydrated;
   }
   const defaults={TDs:0.5,'Rush Yds':55.5,'Rec Yds':45.5,'Receptions':4.5,'Pass Yds':225.5};
   const rosterPool=await _buildRosterFallbackPlayers('football/nfl', events, option, defaults);
@@ -4360,8 +4396,8 @@ async function startNFLLoad(){
       if(token!==nflToken)return;
       const picked=await slotMachineResolvePick(pool,nflUsed,selectedTeams,i,token,()=>nflToken);
       const choice=Object.assign({},picked||pickRandom(pool));
-      if(choice.statLabel==='TDs' && (choice.td==null || choice.td==='')){ choice.dir=choice.dir||'Over'; if(choice.line==null) choice.line=0.5; }
-      else if(choice.statLabel!=='TDs') choice.dir=Math.random()<0.5?'Over':'Under';
+      if(choice.statLabel==='TDs'){ choice.td=null; choice.line=(choice.line!=null&&choice.line!=='')?choice.line:0.5; choice.dir=Math.random()<0.5?'Over':'Under'; }
+      else choice.dir=Math.random()<0.5?'Over':'Under';
       nflPicks.push(choice);
       nflUsed.add(choice.player);
       if(choice.teamAbbr) selectedTeams.add(choice.teamAbbr);
@@ -4462,13 +4498,7 @@ async function getTodaysNCAAFPlayers(option){
       const parsed = parseFloat(avgText.replace(/[^0-9.\-]/g, ''));
       const line = Number.isFinite(parsed) && parsed > 0 ? Math.round(parsed * 2) / 2 : fallbackLine;
       if(selectedOption === 'TDs'){
-        const td = Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
-        return Object.assign({}, p, {
-          statLabel: 'TDs',
-          td,
-          line: 0,
-          seasonAvg: `${td} TDs`,
-        });
+        return _asFootballAnytimeTdProp(Object.assign({}, p, { pos: p.pos || 'WR' }));
       }
       return Object.assign({}, p, {
         statLabel: selectedOption,
@@ -4476,6 +4506,23 @@ async function getTodaysNCAAFPlayers(option){
         seasonAvg: Number.isFinite(parsed) && parsed > 0 ? `${parsed} ${suffix}` : `${fallbackLine} ${suffix}`,
       });
     });
+  }
+  // TDs = anytime TD props for today's slate — not finished-game TD totals.
+  if(option==='TDs'){
+    const defaults={TDs:0.5,'Rush Yds':55.5,'Rec Yds':45.5,'Receptions':4.5,'Pass Yds':225.5};
+    const slate=_eventsNotFinal(events);
+    const useEvents=slate.length?slate:events;
+    const teamGameMapEarly={};
+    const teamOppMapEarly=_teamOpponentMapFromEvents(useEvents);
+    for(const ev of useEvents){
+      Object.assign(teamGameMapEarly, _eventGameByTeamAbbr(ev)||{});
+    }
+    const rosterPool=await _buildRosterFallbackPlayers('football/college-football', useEvents, option, defaults);
+    if(rosterPool.length){
+      const out=_normalizeFootballTdPool(_hydratePlayersGame(rosterPool,teamGameMapEarly,teamOppMapEarly));
+      writeNCAAFCache(out);
+      return out;
+    }
   }
   const players=[];
   const seen=new Set();
@@ -4507,17 +4554,18 @@ async function getTodaysNCAAFPlayers(option){
           const pos=athleteObj.position&&athleteObj.position.abbreviation||'';
           const vals=athlete.stats||[];
           if(option==='TDs'){
-            // Accumulate TDs across rushing/receiving/passing per player (label/key aware)
+            // Boxscore TD totals are game results — accumulate for context only, emit anytime props.
+            if(pos && !_footballTdSkillPos(pos)) continue;
             const tdVal=_espnBoxStatNumber(group, vals, ['TD'], ['touchdown'], 3);
             const existing=players.find(x=>x.player===name&&x.teamAbbr===teamAbbr);
             if(existing){
-              existing.td+=tdVal;
-              existing.seasonAvg=(existing.td)+' TDs';
+              existing.gameTd=(Number(existing.gameTd)||0)+tdVal;
+              existing.seasonAvg=(existing.gameTd>0)?(existing.gameTd+' game TDs (context)'):'Anytime TD';
               if(!existing.espnId&&espnId) existing.espnId=espnId;
               if(!existing.headshotUrl&&headshotUrl) existing.headshotUrl=headshotUrl;
               if(!existing.game) existing.game = teamGameMap[teamAbbr]||eventGame;
             } else {
-              players.push({player:name,espnId,headshotUrl,teamAbbr,oppTeamAbbr:teamOppMap[teamAbbr]||'',pos,statLabel:'TDs',td:tdVal,line:0,seasonAvg:tdVal+' TDs',game:teamGameMap[teamAbbr]||eventGame});
+              players.push({player:name,espnId,headshotUrl,teamAbbr,oppTeamAbbr:teamOppMap[teamAbbr]||'',pos,statLabel:'TDs',td:null,gameTd:tdVal,line:0.5,seasonAvg:(tdVal>0)?(tdVal+' game TDs (context)'):'Anytime TD',game:teamGameMap[teamAbbr]||eventGame});
             }
           } else {
             if(seen.has(name+gname)) continue;
@@ -4535,7 +4583,7 @@ async function getTodaysNCAAFPlayers(option){
     }
   }
   if(players.length){
-    const out = option==='TDs' ? _preferFootballTdScorers(players) : players;
+    const out = option==='TDs' ? _normalizeFootballTdPool(players) : players;
     writeNCAAFCache(out);
     return out;
   }
@@ -4544,12 +4592,12 @@ async function getTodaysNCAAFPlayers(option){
   const seasonMap=_seasonAvgMapFromPools([cached,cachedAny]);
   if(cached.length){
     const hydrated=_fillSeasonAvgFromMap(_hydratePlayersGame(cached,teamGameMap,teamOppMap),seasonMap);
-    return option==='TDs' ? _preferFootballTdScorers(hydrated) : hydrated;
+    return option==='TDs' ? _normalizeFootballTdPool(hydrated) : hydrated;
   }
   if(cachedAny.length){
     const coerced = coerceCachedNCAAFOption(cachedAny, option);
     const hydrated=_fillSeasonAvgFromMap(_hydratePlayersGame(coerced,teamGameMap,teamOppMap),seasonMap);
-    return option==='TDs' ? _preferFootballTdScorers(hydrated) : hydrated;
+    return option==='TDs' ? _normalizeFootballTdPool(hydrated) : hydrated;
   }
   const defaults={TDs:0.5,'Rush Yds':55.5,'Rec Yds':45.5,'Receptions':4.5,'Pass Yds':225.5};
   const rosterPool=await _buildRosterFallbackPlayers('football/college-football', events, option, defaults);
@@ -4639,8 +4687,8 @@ async function startNCAAFLoad(){
       if(token!==ncaafToken)return;
       const picked=await slotMachineResolvePick(pool,ncaafUsed,selectedTeams,i,token,()=>ncaafToken);
       const choice=Object.assign({},picked||pickRandom(pool));
-      if(choice.statLabel==='TDs' && (choice.td==null || choice.td==='')){ choice.dir=choice.dir||'Over'; if(choice.line==null) choice.line=0.5; }
-      else if(choice.statLabel!=='TDs') choice.dir=Math.random()<0.5?'Over':'Under';
+      if(choice.statLabel==='TDs'){ choice.td=null; choice.line=(choice.line!=null&&choice.line!=='')?choice.line:0.5; choice.dir=Math.random()<0.5?'Over':'Under'; }
+      else choice.dir=Math.random()<0.5?'Over':'Under';
       ncaafPicks.push(choice);
       ncaafUsed.add(choice.player);
       if(choice.teamAbbr) selectedTeams.add(choice.teamAbbr);
@@ -6202,8 +6250,8 @@ function removeNflPickBySwipe(index){
   nflPicks.splice(index,1);
   _remapProPickLocksAfterSwipeRemove(index);
   const ok=_refillDiversifiedSlots(nflPicks,target,nflLivePool,nflUsed,function(c){
-    if(c.statLabel==='TDs' && (c.td==null || c.td==='')){ c.dir=c.dir||'Over'; if(c.line==null) c.line=0.5; }
-    else if(c.statLabel!=='TDs') c.dir=Math.random()<0.5?'Over':'Under';
+    if(c.statLabel==='TDs'){ c.td=null; c.line=(c.line!=null&&c.line!=='')?c.line:0.5; c.dir=Math.random()<0.5?'Over':'Under'; }
+    else c.dir=Math.random()<0.5?'Over':'Under';
   });
   nflUsed.clear();
   for(const p of nflPicks){ if(p&&p.player) nflUsed.add(p.player); }
@@ -6247,8 +6295,8 @@ function removeNcaafPickBySwipe(index){
   ncaafPicks.splice(index,1);
   _remapProPickLocksAfterSwipeRemove(index);
   const ok=_refillDiversifiedSlots(ncaafPicks,target,ncaafLivePool,ncaafUsed,function(c){
-    if(c.statLabel==='TDs' && (c.td==null || c.td==='')){ c.dir=c.dir||'Over'; if(c.line==null) c.line=0.5; }
-    else if(c.statLabel!=='TDs') c.dir=Math.random()<0.5?'Over':'Under';
+    if(c.statLabel==='TDs'){ c.td=null; c.line=(c.line!=null&&c.line!=='')?c.line:0.5; c.dir=Math.random()<0.5?'Over':'Under'; }
+    else c.dir=Math.random()<0.5?'Over':'Under';
   });
   ncaafUsed.clear();
   for(const p of ncaafPicks){ if(p&&p.player) ncaafUsed.add(p.player); }
@@ -7735,13 +7783,10 @@ async function _buildRosterFallbackPlayers(sportPath, events, option, defaults){
         game:t.game||null
       };
       if(option==='TDs'){
-        // Roster has no boxscore TDs. Keep skill-position anytime TD props (Over 0.5)
-        // instead of flooding the board with blank/zero game TD rows.
-        const pos = String(a.pos || '').toUpperCase();
-        if(['QB','RB','WR','TE','HB','FB','ATH','TB'].indexOf(pos) < 0) continue;
+        // Anytime TD props for skill positions (Spin assigns Over/Under).
+        if(!_footballTdSkillPos(a.pos)) continue;
         entry.td = null;
         entry.line = 0.5;
-        entry.dir = 'Over';
         entry.seasonAvg = 'Anytime TD';
       }
       out.push(entry);
@@ -10261,10 +10306,7 @@ function buildPicksShareTextForOverlay(){
     headline = `${who} using Quick Pix on Pro Sports Win for today's NFL ${lab} picks!`;
     nflPicks.forEach((p, i) => {
       const sl = p.statLabel || currentOption;
-      if(sl === 'TDs'){
-        if(p.td != null && p.td !== '') lines.push(`${i + 1}. ${p.player} (${p.teamAbbr || p.team}) — ${p.td} TDs`);
-        else lines.push(`${i + 1}. ${p.player} (${p.teamAbbr || p.team}) — ${(p.dir||'Over')} ${p.line!=null?p.line:0.5} TDs`);
-      }
+      if(sl === 'TDs') lines.push(`${i + 1}. ${p.player} (${p.teamAbbr || p.team}) — ${(p.dir||'Over')} ${p.line!=null?p.line:0.5} TDs`);
       else lines.push(ou(i, p, sl));
     });
   } else if(current === 'NCAAF' && ncaafPicks.length){
@@ -10272,10 +10314,7 @@ function buildPicksShareTextForOverlay(){
     headline = `${who} using Quick Pix on Pro Sports Win for today's NCAAF ${lab} picks!`;
     ncaafPicks.forEach((p, i) => {
       const sl = p.statLabel || currentOption;
-      if(sl === 'TDs'){
-        if(p.td != null && p.td !== '') lines.push(`${i + 1}. ${p.player} (${p.teamAbbr || p.team}) — ${p.td} TDs`);
-        else lines.push(`${i + 1}. ${p.player} (${p.teamAbbr || p.team}) — ${(p.dir||'Over')} ${p.line!=null?p.line:0.5} TDs`);
-      }
+      if(sl === 'TDs') lines.push(`${i + 1}. ${p.player} (${p.teamAbbr || p.team}) — ${(p.dir||'Over')} ${p.line!=null?p.line:0.5} TDs`);
       else lines.push(ou(i, p, sl));
     });
   } else if(current === 'NBA' && nbaPicks.length){
