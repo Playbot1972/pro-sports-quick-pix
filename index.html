@@ -57,7 +57,7 @@
 <title>Pro Sports Win | Quick Pix picks</title>
 <script>
   // Public version: use letter suffixes for QA (see release.py --part letter).
-  const APP_VERSION = 'v1.27.4';
+  const APP_VERSION = 'v1.27.5';
   const APP_BUILD_TAG = (function(){
     const d = new Date(document.lastModified || Date.now());
     if(Number.isNaN(d.getTime())) return '';
@@ -2204,6 +2204,7 @@ window.safeHeadshot = function(obj){
 </div>
 <script src="/js/sportsbook-handoff.js"></script>
 <script src="/js/football-season-td.js"></script>
+<script src="/js/league-season-status.js"></script>
 <script>
 // App script owns behavior inside .wrap > .card (picks, overlays). .site-footer is static HTML above.
 var _lhMem=(function(){
@@ -2655,8 +2656,8 @@ let ksPickSlotCount=0,hitsPickSlotCount=0,basesPickSlotCount=0,rbiPickSlotCount=
 const todayStr = (()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;})();
 
 // ── ASYNC LEAGUE STATUS PROBE ─────────────────────────────────────────────
-// Authoritative in-season check via ESPN scoreboard season metadata.
-// Overrides the static date gate when the two disagree.
+// Authoritative in/off check via ESPN league season windows / labeled calendars.
+// Overrides the static date gate when resolved. Never uses bare season.type alone.
 // Results are cached for 60 minutes so frequent renders don't re-fetch.
 const _leagueStatusCache={};
 const _leagueProbeUrls={
@@ -2672,47 +2673,46 @@ const _leagueProbeUrls={
 async function _probeLeagueInSeason(sport){
   const now=Date.now();
   const hit=_leagueStatusCache[sport];
-  if(hit && hit.expiresAt>now) return hit.inSeason;
+  if(hit && hit.expiresAt>now) return hit.status === 'in';
   const url=_leagueProbeUrls[sport];
   if(!url) return null;
   try{
     const sb=await fetchJson(url);
-    // ESPN season.type: 1=preseason, 2=regular season, 3=postseason — all indicate active competition.
-    const seasonType=sb&&sb.season&&sb.season.type;
-    let inSeason;
-    if(seasonType!=null){
-      inSeason=Number(seasonType)>=1;
-    }else{
-      // Fall back: any event scheduled within the next 14 days means in-season.
-      const evts=(sb&&sb.events)||[];
-      const cutoff=now+14*24*60*60*1000;
-      inSeason=evts.some(function(ev){
-        const t=ev&&ev.date?Date.parse(ev.date):NaN;
-        return Number.isFinite(t)&&t<=cutoff;
-      });
+    const api=(typeof LeagueSeasonStatus!=='undefined')?LeagueSeasonStatus:null;
+    const resolved=api&&api.resolveLeagueSeasonStatus
+      ? api.resolveLeagueSeasonStatus(sb, now)
+      : {status:'unknown', source:'missing-helper'};
+    // Cache only authoritative in/off. Unknown/probe ambiguity must not sticky-override the static gate.
+    if(resolved.status==='in' || resolved.status==='off'){
+      _leagueStatusCache[sport]={
+        status:resolved.status,
+        inSeason:resolved.status==='in',
+        phase:resolved.phase||null,
+        source:resolved.source||null,
+        expiresAt:now+60*60*1000
+      };
+      return resolved.status==='in';
     }
-    _leagueStatusCache[sport]={inSeason,expiresAt:now+60*60*1000};
-    return inSeason;
+    return null;
   }catch(_){
     return null; // Fetch failed — don't cache, fall back to static gate.
   }
 }
-// Fire probe for a sport and re-render the current tab if the result
-// disagrees with what was already on screen (handles season rollover).
+// Fire probe for a sport and re-render when live ESPN status disagrees with the screen.
 function _probeAndCorrectSeason(sport){
   const before=sportInSeason(sport);
   _probeLeagueInSeason(sport).then(function(r){
-    if(r===null) return; // Probe failed — leave static gate result in place.
-    if(r!==before && current===sport){ renderTabs(); renderSport(); }
+    if(r===null) return; // Probe failed/unknown — leave static gate result in place.
+    if(r!==before){ renderTabs(); if(current===sport) renderSport(); }
   }).catch(function(){});
 }
 
-/** Approximate US pro calendar windows (local date). The async probe above
- *  is authoritative; this static gate is only a fast synchronous default. */
+/** Approximate US pro calendar windows (local date). Async ESPN probe is authoritative
+ *  when it resolves in/off via season windows or labeled calendars — never bare season.type. */
 function sportInSeason(sport){
-  // API probe cache overrides the static gate when populated.
+  // API probe cache overrides the static gate when populated with in/off.
   const hit=_leagueStatusCache[sport];
-  if(hit && hit.expiresAt>Date.now()) return hit.inSeason;
+  if(hit && hit.expiresAt>Date.now() && (hit.status==='in' || hit.status==='off')) return hit.status==='in';
   const t = new Date();
   const m = t.getMonth() + 1;
   const d = t.getDate();
@@ -2779,7 +2779,7 @@ function _oosPanelHtml(sportKey){
   const esc = String(sportKey).replace(/'/g, '&#39;');
   return `<div class="oos-panel" style="text-align:center;padding:32px 20px">
     <img src="${meta.icon}" alt="${esc} logo" style="width:76px;height:76px;object-fit:contain;margin-bottom:14px;display:inline-block;filter:drop-shadow(0 6px 18px rgba(0,0,0,.35))">
-    <div style="font-size:1.12rem;font-weight:900;color:${meta.color};letter-spacing:.02em;margin-bottom:8px">Off Season</div>
+    <div style="font-size:1.12rem;font-weight:900;color:${meta.color};letter-spacing:.02em;margin-bottom:8px">Off-season</div>
     <div class="muted" style="font-size:13px;max-width:360px;margin:0 auto;line-height:1.5">${hint}</div>
   </div>`;
 }
