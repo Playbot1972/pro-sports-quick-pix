@@ -57,7 +57,7 @@
 <title>Pro Sports Win | Quick Pix picks</title>
 <script>
   // Public version: use letter suffixes for QA (see release.py --part letter).
-  const APP_VERSION = 'v1.27.5';
+  const APP_VERSION = 'v1.27.6';
   const APP_BUILD_TAG = (function(){
     const d = new Date(document.lastModified || Date.now());
     if(Number.isNaN(d.getTime())) return '';
@@ -245,6 +245,44 @@ body.light .ad-sense-wrap{border-color:#cfd8ea;background:rgba(246,248,255,.6)}
   vertical-align:middle;
   animation:livePulse 1.9s ease-out infinite;
 }
+.navitem.oos{
+  opacity:.72;
+  cursor:pointer;
+}
+.navitem.oos.live-dot::after,
+.tab.oos.live-dot::after{
+  display:none !important;
+  animation:none !important;
+}
+.oos-badge{
+  display:inline-flex;
+  align-items:center;
+  margin-left:6px;
+  padding:2px 7px;
+  border-radius:999px;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.02em;
+  line-height:1.2;
+  white-space:nowrap;
+  color:#fde68a;
+  background:rgba(245,158,11,.18);
+  border:1px solid rgba(245,158,11,.55);
+  flex-shrink:0;
+}
+.badge.oos-hint,
+#sportHintBadge.oos-hint{
+  color:#fde68a;
+  background:rgba(245,158,11,.16);
+  border-color:rgba(245,158,11,.5);
+}
+.tab.oos,
+.tab.market-locked{
+  opacity:.55;
+  cursor:not-allowed;
+}
+.tab.oos .oos-badge,
+.tab.market-locked .oos-badge{margin-left:5px}
 .market-rail{position:sticky;top:8px;z-index:24;backdrop-filter:blur(8px)}
 .market-rail{
   flex-wrap:nowrap;
@@ -2205,6 +2243,7 @@ window.safeHeadshot = function(obj){
 <script src="/js/sportsbook-handoff.js"></script>
 <script src="/js/football-season-td.js"></script>
 <script src="/js/league-season-status.js"></script>
+<script src="/js/league-market-eligibility.js"></script>
 <script>
 // App script owns behavior inside .wrap > .card (picks, overlays). .site-footer is static HTML above.
 var _lhMem=(function(){
@@ -2670,49 +2709,11 @@ const _leagueProbeUrls={
   NHL:'https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard',
   Soccer:'https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/scoreboard',
 };
-async function _probeLeagueInSeason(sport){
-  const now=Date.now();
-  const hit=_leagueStatusCache[sport];
-  if(hit && hit.expiresAt>now) return hit.status === 'in';
-  const url=_leagueProbeUrls[sport];
-  if(!url) return null;
-  try{
-    const sb=await fetchJson(url);
-    const api=(typeof LeagueSeasonStatus!=='undefined')?LeagueSeasonStatus:null;
-    const resolved=api&&api.resolveLeagueSeasonStatus
-      ? api.resolveLeagueSeasonStatus(sb, now)
-      : {status:'unknown', source:'missing-helper'};
-    // Cache only authoritative in/off. Unknown/probe ambiguity must not sticky-override the static gate.
-    if(resolved.status==='in' || resolved.status==='off'){
-      _leagueStatusCache[sport]={
-        status:resolved.status,
-        inSeason:resolved.status==='in',
-        phase:resolved.phase||null,
-        source:resolved.source||null,
-        expiresAt:now+60*60*1000
-      };
-      return resolved.status==='in';
-    }
-    return null;
-  }catch(_){
-    return null; // Fetch failed — don't cache, fall back to static gate.
-  }
-}
-// Fire probe for a sport and re-render when live ESPN status disagrees with the screen.
-function _probeAndCorrectSeason(sport){
-  const before=sportInSeason(sport);
-  _probeLeagueInSeason(sport).then(function(r){
-    if(r===null) return; // Probe failed/unknown — leave static gate result in place.
-    if(r!==before){ renderTabs(); if(current===sport) renderSport(); }
-  }).catch(function(){});
-}
+const _OFF_SEASON_LABEL=(typeof LeagueSeasonStatus!=='undefined'&&LeagueSeasonStatus.OFF_SEASON_LABEL)||'Off-season';
+const _UNAVAILABLE_OOS=(typeof LeagueMarketEligibility!=='undefined'&&LeagueMarketEligibility.UNAVAILABLE_OOS)||'Unavailable during the off-season';
 
-/** Approximate US pro calendar windows (local date). Async ESPN probe is authoritative
- *  when it resolves in/off via season windows or labeled calendars — never bare season.type. */
-function sportInSeason(sport){
-  // API probe cache overrides the static gate when populated with in/off.
-  const hit=_leagueStatusCache[sport];
-  if(hit && hit.expiresAt>Date.now() && (hit.status==='in' || hit.status==='off')) return hit.status==='in';
+/** Static US calendar windows only — used before/without an ESPN probe result. */
+function _sportInSeasonStatic(sport){
   const t = new Date();
   const m = t.getMonth() + 1;
   const d = t.getDate();
@@ -2759,8 +2760,131 @@ function sportInSeason(sport){
       return true;
   }
 }
+
+/**
+ * Shared league season status: 'in' | 'off' | 'unknown'.
+ * ESPN cache wins when present; static calendar is bootstrap only.
+ * Unknown is never treated as confirmed active for market eligibility.
+ */
+function getLeagueSeasonStatus(sport){
+  const hit=_leagueStatusCache[sport];
+  if(hit && hit.expiresAt>Date.now() && (hit.status==='in' || hit.status==='off' || hit.status==='unknown')){
+    return hit.status;
+  }
+  return _sportInSeasonStatic(sport) ? 'in' : 'off';
+}
+
+function sportInSeason(sport){
+  return getLeagueSeasonStatus(sport) === 'in';
+}
+
+function evaluateCurrentMarketEligibility(sport, option){
+  const status=getLeagueSeasonStatus(sport||current);
+  const opt=option!=null?option:currentOption;
+  if(typeof LeagueMarketEligibility!=='undefined' && LeagueMarketEligibility.evaluateMarketEligibility){
+    return LeagueMarketEligibility.evaluateMarketEligibility(status, sport||current, opt);
+  }
+  if(status==='off') return {ok:false, reason:_UNAVAILABLE_OOS, status:'off', label:_OFF_SEASON_LABEL};
+  if(status==='unknown') return {ok:false, reason:'Season status unavailable — markets locked until status is confirmed.', status:'unknown', label:null};
+  return {ok:true, reason:null, status:'in'};
+}
+
+function assertMarketSelectable(sport, option, opts){
+  const o=opts||{};
+  const elig=evaluateCurrentMarketEligibility(sport, option);
+  if(elig.ok) return true;
+  if(o.toast!==false){
+    try{ showToast(elig.reason || _UNAVAILABLE_OOS, 'error', 'center'); }catch(_){}
+  }
+  return false;
+}
+
+/** Clear in-memory picks when a league flips to non-active so slips cannot keep invalid markets. */
+function _invalidatePicksForOffSeasonSport(sport){
+  const msg=_UNAVAILABLE_OOS;
+  try{
+    if(sport==='MLB'){
+      mlbPicks=[]; mlbLoaded=false; mlbLivePool=[]; mlbHrPickSlotCount=0;
+      ksPicks=[]; ksLoaded=false; ksLivePool=[]; ksPickSlotCount=0;
+      hitsPicks=[]; hitsLoaded=false; hitsLivePool=[]; hitsPickSlotCount=0;
+      basesPicks=[]; basesLoaded=false; basesLivePool=[]; basesPickSlotCount=0;
+      rbiPicks=[]; rbiLoaded=false; rbiLivePool=[]; rbiPickSlotCount=0;
+      pickLocked=false;
+    }else if(sport==='NFL'){ nflPicks=[]; nflLoaded=false; nflLivePool=[]; nflPickSlotCount=0; pickLocked=false; }
+    else if(sport==='NCAAF'){ ncaafPicks=[]; ncaafLoaded=false; ncaafLivePool=[]; ncaafPickSlotCount=0; pickLocked=false; }
+    else if(sport==='NBA'){ nbaPicks=[]; nbaLoaded=false; nbaLivePool=[]; nbaPickSlotCount=0; pickLocked=false; }
+    else if(sport==='WNBA'){ wnbaPicks=[]; wnbaLoaded=false; wnbaLivePool=[]; wnbaPickSlotCount=0; pickLocked=false; }
+    else if(sport==='NCAAB'){ ncaabPicks=[]; ncaabLoaded=false; ncaabLivePool=[]; ncaabPickSlotCount=0; pickLocked=false; }
+    else if(sport==='NHL'){ nhlPicks=[]; nhlLoaded=false; nhlLivePool=[]; nhlPickSlotCount=0; pickLocked=false; }
+    else if(sport==='Soccer'){ soccerPicks=[]; soccerLoaded=false; soccerLivePool=[]; soccerPickSlotCount=0; pickLocked=false; }
+  }catch(_){}
+  return msg;
+}
+
+function _revalidateSelectionsAfterStatusChange(sport, status){
+  if(status==='in') return;
+  const hadPicks=(
+    (sport==='MLB' && (mlbPicks.length||ksPicks.length||hitsPicks.length||basesPicks.length||rbiPicks.length)) ||
+    (sport==='NFL' && nflPicks.length) ||
+    (sport==='NCAAF' && ncaafPicks.length) ||
+    (sport==='NBA' && nbaPicks.length) ||
+    (sport==='WNBA' && wnbaPicks.length) ||
+    (sport==='NCAAB' && ncaabPicks.length) ||
+    (sport==='NHL' && nhlPicks.length) ||
+    (sport==='Soccer' && soccerPicks.length)
+  );
+  const reason=_invalidatePicksForOffSeasonSport(sport);
+  if(hadPicks && current===sport){
+    try{ showToast(reason, 'error', 'center'); }catch(_){}
+  }
+}
+
+async function _probeLeagueInSeason(sport){
+  const now=Date.now();
+  const hit=_leagueStatusCache[sport];
+  if(hit && hit.expiresAt>now) return hit.status;
+  const url=_leagueProbeUrls[sport];
+  if(!url) return null;
+  try{
+    const sb=await fetchJson(url);
+    const api=(typeof LeagueSeasonStatus!=='undefined')?LeagueSeasonStatus:null;
+    const resolved=api&&api.resolveLeagueSeasonStatus
+      ? api.resolveLeagueSeasonStatus(sb, now)
+      : {status:'unknown', source:'missing-helper'};
+    // Cache in/off/unknown. Failed fetches are not cached (do not invent Off-season).
+    if(resolved.status==='in' || resolved.status==='off' || resolved.status==='unknown'){
+      const ttl=resolved.status==='unknown' ? 5*60*1000 : 60*60*1000;
+      _leagueStatusCache[sport]={
+        status:resolved.status,
+        inSeason:resolved.status==='in',
+        phase:resolved.phase||null,
+        source:resolved.source||null,
+        expiresAt:now+ttl
+      };
+      return resolved.status;
+    }
+    return null;
+  }catch(_){
+    return null; // Fetch failed — don't cache, fall back to static gate.
+  }
+}
+// Fire probe for a sport and re-render when live ESPN status disagrees with the screen.
+function _probeAndCorrectSeason(sport){
+  const before=getLeagueSeasonStatus(sport);
+  _probeLeagueInSeason(sport).then(function(r){
+    if(r===null) return; // Probe failed — leave static/bootstrap result in place.
+    if(r!==before){
+      _revalidateSelectionsAfterStatusChange(sport, r);
+      renderTabs();
+      if(current===sport) renderSport();
+    }else if(r==='off' || r==='unknown'){
+      _revalidateSelectionsAfterStatusChange(sport, r);
+    }
+  }).catch(function(){});
+}
+
 function getOutOfSeasonSports(){
-  return Object.keys(sports).filter(function(s){ return !sportInSeason(s); });
+  return Object.keys(sports).filter(function(s){ return getLeagueSeasonStatus(s)==='off'; });
 }
 const _seasonReturnHint = {
   NFL: 'Regular-season picks return in early September.',
@@ -2779,15 +2903,43 @@ function _oosPanelHtml(sportKey){
   const esc = String(sportKey).replace(/'/g, '&#39;');
   return `<div class="oos-panel" style="text-align:center;padding:32px 20px">
     <img src="${meta.icon}" alt="${esc} logo" style="width:76px;height:76px;object-fit:contain;margin-bottom:14px;display:inline-block;filter:drop-shadow(0 6px 18px rgba(0,0,0,.35))">
-    <div style="font-size:1.12rem;font-weight:900;color:${meta.color};letter-spacing:.02em;margin-bottom:8px">Off-season</div>
+    <div style="font-size:1.12rem;font-weight:900;color:${meta.color};letter-spacing:.02em;margin-bottom:8px">${_OFF_SEASON_LABEL}</div>
     <div class="muted" style="font-size:13px;max-width:360px;margin:0 auto;line-height:1.5">${hint}</div>
   </div>`;
 }
 function _oosPicksLine(sportKey){
   const meta = sports[sportKey];
   const label = meta ? sportKey : 'This sport';
-  return `<div class="muted" style="text-align:center;padding:14px 12px">${label} is off-season. Try another tab or come back when the schedule resumes.</div>`;
+  return `<div class="muted" style="text-align:center;padding:14px 12px">${label} is ${_OFF_SEASON_LABEL.toLowerCase()}. Try another tab or come back when the schedule resumes.</div>`;
 }
+function _sportHintBadgeText(sportKey){
+  const st=getLeagueSeasonStatus(sportKey);
+  if(st==='off') return sportKey+' '+_OFF_SEASON_LABEL;
+  if(st==='unknown') return sportKey+' status unavailable';
+  return sportKey+' Live Lineups';
+}
+function _leagueMarketsBlockedPanelHtml(sportKey){
+  const st=getLeagueSeasonStatus(sportKey);
+  if(st==='off') return _oosPanelHtml(sportKey);
+  const meta = sports[sportKey];
+  if(!meta) return '';
+  const esc = String(sportKey).replace(/'/g, '&#39;');
+  return `<div class="oos-panel" style="text-align:center;padding:32px 20px">
+    <img src="${meta.icon}" alt="${esc} logo" style="width:76px;height:76px;object-fit:contain;margin-bottom:14px;display:inline-block;filter:drop-shadow(0 6px 18px rgba(0,0,0,.35))">
+    <div style="font-size:1.12rem;font-weight:900;color:${meta.color};letter-spacing:.02em;margin-bottom:8px">Markets locked</div>
+    <div class="muted" style="font-size:13px;max-width:360px;margin:0 auto;line-height:1.5">Season status is unavailable right now. Markets stay locked until status is confirmed — this is not treated as ${_OFF_SEASON_LABEL}.</div>
+  </div>`;
+}
+function _leagueMarketsBlockedPicksLine(sportKey){
+  const st=getLeagueSeasonStatus(sportKey);
+  if(st==='off') return _oosPicksLine(sportKey);
+  const label = sports[sportKey] ? sportKey : 'This sport';
+  return `<div class="muted" style="text-align:center;padding:14px 12px">${label} markets are locked until season status is confirmed.</div>`;
+}
+function _leagueBlocksMarkets(sportKey){
+  return !evaluateCurrentMarketEligibility(sportKey, (sports[sportKey]&&sports[sportKey].options||[])[0]).ok;
+}
+
 
 // ── ANALYTICS HELPER ────────────────────────────────────────────────────
 function publicApiBase(){
@@ -3028,11 +3180,30 @@ function setUpdatedTimestamp(){
 }
 function renderTabs(){
   const outOfSeason = getOutOfSeasonSports();
-  const goldLockSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f59e0b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' style='width:13px;height:13px;margin-left:5px;vertical-align:middle;flex-shrink:0'><rect x='3' y='11' width='18' height='11' rx='2' ry='2'/><path d='M7 11V7a5 5 0 0 1 10 0v4'/></svg>`;
-  // Bottom nav: always the main sport selector
-  document.getElementById('bottomnav').innerHTML=Object.keys(sports).map(s=>`<div class='navitem live-dot ${s===current?'active orbit-ring':''}${outOfSeason.includes(s)?' oos':''}' onclick="setSport('${s}')" style='display:inline-flex;align-items:center;justify-content:center${outOfSeason.includes(s)?';opacity:0.6':''}'><img src='${sports[s].icon}' alt='${s} logo' style='width:18px;height:18px;object-fit:contain;margin-right:6px;flex-shrink:0'>${s}${outOfSeason.includes(s)?goldLockSvg:''}</div>`).join('')+`<div class='navitem' onclick="randomSport()" title="Jump to a random sport" style='display:inline-flex;align-items:center;justify-content:center;opacity:.92'>🎲 Random</div>`;
-  // Top tabs: always show active sport's sub-options
-  document.getElementById('tabs').innerHTML=sports[current].options.map(o=>`<button type="button" class='tab live-dot ${o===currentOption?'active orbit-ring':''}' style='border-color:${sports[current].color}55' onclick="setOption('${o}')">${o}</button>`).join('')+`<button type="button" class="tab" style="border-color:${sports[current].color}55" onclick="randomSubOption()" title="Random stat for this sport">🎲 Random</button>`;
+  const curStatus = getLeagueSeasonStatus(current);
+  const curElig = evaluateCurrentMarketEligibility(current, currentOption);
+  const marketsLocked = !curElig.ok;
+  const oosBadge = `<span class='oos-badge' title='${_OFF_SEASON_LABEL}'>${_OFF_SEASON_LABEL}</span>`;
+  // Bottom nav: always the main sport selector — show exact Off-season badge (not lock-only).
+  document.getElementById('bottomnav').innerHTML=Object.keys(sports).map(s=>{
+    const st=getLeagueSeasonStatus(s);
+    const isOos=st==='off';
+    const liveCls=isOos?'':' live-dot';
+    const oosCls=isOos?' oos':'';
+    const activeCls=s===current?'active orbit-ring':'';
+    return `<div class='navitem${liveCls} ${activeCls}${oosCls}' onclick="setSport('${s}')" style='display:inline-flex;align-items:center;justify-content:center' title='${isOos?_OFF_SEASON_LABEL:s}'><img src='${sports[s].icon}' alt='${s} logo' style='width:18px;height:18px;object-fit:contain;margin-right:6px;flex-shrink:0'><span>${s}</span>${isOos?oosBadge:''}</div>`;
+  }).join('')+`<div class='navitem' onclick="randomSport()" title="Jump to a random sport" style='display:inline-flex;align-items:center;justify-content:center;opacity:.92'>🎲 Random</div>`;
+  // Top tabs: markets stay visible but locked with Off-season badge when ineligible.
+  document.getElementById('tabs').innerHTML=sports[current].options.map(o=>{
+    const elig=evaluateCurrentMarketEligibility(current, o);
+    const locked=!elig.ok;
+    const liveCls=locked?'':' live-dot';
+    const lockCls=locked?(curStatus==='off'?' oos':' market-locked'):'';
+    const activeCls=o===currentOption?'active orbit-ring':'';
+    const title=locked?(elig.reason||_UNAVAILABLE_OOS):o;
+    const badge=locked&&curStatus==='off'?oosBadge:(locked?`<span class='oos-badge' title='${title}'>Locked</span>`:'');
+    return `<button type="button" class='tab${liveCls} ${activeCls}${lockCls}' style='border-color:${sports[current].color}55' title='${String(title).replace(/'/g,"&#39;")}' onclick="setOption('${o}')">${o}${badge}</button>`;
+  }).join('')+`<button type="button" class="tab${marketsLocked?' oos':''}" style="border-color:${sports[current].color}55" onclick="randomSubOption()" title="${marketsLocked?_UNAVAILABLE_OOS:'Random stat for this sport'}" ${marketsLocked?'aria-disabled="true"':''}>🎲 Random</button>`;
 }
 function randomSport(){
   const all = Object.keys(sports);
@@ -3054,6 +3225,7 @@ function randomSport(){
   }
 }
 function randomSubOption(){
+  if(!assertMarketSelectable(current, currentOption)) return;
   const opts = sports[current].options;
   if(!opts.length) return;
   let o = opts[Math.floor(Math.random()*opts.length)];
@@ -3134,7 +3306,11 @@ function _showPickCountProUpgrade(n){
   showUpgradeWall(payload);
 }
 function _canSpinPickCount(n, paywalled){
+  if(!evaluateCurrentMarketEligibility(current, currentOption).ok) return false;
   return _isValidPickCount(n) && !_pickCountRequiresUpgrade(n) && !_isUiPickLocked() && !paywalled;
+}
+function _guardSpinForSeason(){
+  return assertMarketSelectable(current, currentOption);
 }
 function _snapActiveMarketTabLeft(){
   const tabsEl=document.getElementById('tabs');
@@ -3166,13 +3342,20 @@ function _snapActiveSportNavLeft(){
 }
 function renderSport(){
   const _paywalled = false;
-  const data=sports[current];document.getElementById('sportTitle').textContent=current;document.getElementById('sportDesc').textContent=data.desc;document.getElementById('sportHintBadge').textContent=current+' Live Lineups';_syncDevClearBtnStyle();
+  const data=sports[current];document.getElementById('sportTitle').textContent=current;document.getElementById('sportDesc').textContent=data.desc;
+  const _hintEl=document.getElementById('sportHintBadge');
+  if(_hintEl){
+    _hintEl.textContent=_sportHintBadgeText(current);
+    const _st=getLeagueSeasonStatus(current);
+    _hintEl.classList.toggle('oos-hint', _st==='off' || _st==='unknown');
+  }
+  _syncDevClearBtnStyle();
   if(current==='MLB'){
     document.getElementById('options').innerHTML='';
-    if(!sportInSeason('MLB')){
-      document.getElementById('mlbControls').innerHTML=_oosPanelHtml('MLB');
+    if(_leagueBlocksMarkets('MLB')){
+      document.getElementById('mlbControls').innerHTML=_leagueMarketsBlockedPanelHtml('MLB');
       document.getElementById('picksTitle').textContent='⚾ MLB Picks';
-      document.getElementById('picks').innerHTML=_oosPicksLine('MLB');
+      document.getElementById('picks').innerHTML=_leagueMarketsBlockedPicksLine('MLB');
     }else if(currentOption==='Ks'){
       const _ksCnt=_pickCountButtonsHtml(ksPickCount,'setKsCount','Pitcher');
       document.getElementById('mlbControls').innerHTML=`<div class='pick-actions-stacked'><div id='pickCountRow' class='pick-count-tight pick-count-tight--stacked'>${_ksCnt}</div><div class='pick-load-row btnrow'><button type='button' class='btn pick-load-btn' id='ksLoadBtn' onclick='moneyTransformButton(this);startKsLoad()' ${_canSpinPickCount(ksPickCount,_paywalled)?'':'disabled'}>Spin</button>${ksLoaded||ksPicks.length?"<button type='button' class='btn btn2' onclick='clearKs()'>Clear</button>":''}</div></div><div class='muted'>Loads today's MLB probable starters with K/9 data (MLB Stats API).</div><div class='muted' style='margin-top:6px'>Date: ${todayStr}</div>${_mlbDataSourceSelectHtml()}<div class='muted' style='margin-top:4px;font-size:10px;opacity:.85'>Pitcher pool is always MLB Stats; the row above applies to HR / Hits / Bases / RBI.</div>`;
@@ -3196,10 +3379,10 @@ function renderSport(){
     }
   } else if(current==='NFL'){
     document.getElementById('options').innerHTML='';
-    if(!sportInSeason('NFL')){
-      document.getElementById('mlbControls').innerHTML=_oosPanelHtml('NFL');
+    if(_leagueBlocksMarkets('NFL')){
+      document.getElementById('mlbControls').innerHTML=_leagueMarketsBlockedPanelHtml('NFL');
       document.getElementById('picksTitle').textContent='🏈 NFL Picks';
-      document.getElementById('picks').innerHTML=_oosPicksLine('NFL');
+      document.getElementById('picks').innerHTML=_leagueMarketsBlockedPicksLine('NFL');
     }else{
       const _nflCnt=_pickCountButtonsHtml(nflPickCount,'setNFLCount','Player');
       document.getElementById('mlbControls').innerHTML=`<div class='pick-actions-stacked'><div id='pickCountRow' class='pick-count-tight pick-count-tight--stacked'>${_nflCnt}</div><div class='pick-load-row btnrow'><button type='button' class='btn pick-load-btn' id='nflLoadBtn' onclick='moneyTransformButton(this);startNFLLoad()' ${_canSpinPickCount(nflPickCount,_paywalled)?'':'disabled'}>Spin</button>${nflLoaded||nflPicks.length?"<button type='button' class='btn btn2' onclick='clearNFL()'>Clear</button>":''}</div></div><div class='muted'>Loads today's NFL game players from ESPN.</div><div class='muted' style='margin-top:6px'>Date: ${todayStr}</div>`;
@@ -3207,10 +3390,10 @@ function renderSport(){
     }
   } else if(current==='NCAAF'){
     document.getElementById('options').innerHTML='';
-    if(!sportInSeason('NCAAF')){
-      document.getElementById('mlbControls').innerHTML=_oosPanelHtml('NCAAF');
+    if(_leagueBlocksMarkets('NCAAF')){
+      document.getElementById('mlbControls').innerHTML=_leagueMarketsBlockedPanelHtml('NCAAF');
       document.getElementById('picksTitle').textContent='🏈 NCAAF Picks';
-      document.getElementById('picks').innerHTML=_oosPicksLine('NCAAF');
+      document.getElementById('picks').innerHTML=_leagueMarketsBlockedPicksLine('NCAAF');
     }else{
       const _ncaafCnt=_pickCountButtonsHtml(ncaafPickCount,'setNCAAFCount','Player');
       document.getElementById('mlbControls').innerHTML=`<div class='pick-actions-stacked'><div id='pickCountRow' class='pick-count-tight pick-count-tight--stacked'>${_ncaafCnt}</div><div class='pick-load-row btnrow'><button type='button' class='btn pick-load-btn' id='ncaafLoadBtn' onclick='moneyTransformButton(this);startNCAAFLoad()' ${_canSpinPickCount(ncaafPickCount,_paywalled)?'':'disabled'}>Spin</button>${ncaafLoaded||ncaafPicks.length?"<button type='button' class='btn btn2' onclick='clearNCAAF()'>Clear</button>":''}</div></div><div class='muted'>Loads today's NCAA Football game players from ESPN.</div><div class='muted' style='margin-top:6px'>Date: ${todayStr}</div>`;
@@ -3218,10 +3401,10 @@ function renderSport(){
     }
   } else if(current==='NBA'){
     document.getElementById('options').innerHTML='';
-    if(!sportInSeason('NBA')){
-      document.getElementById('mlbControls').innerHTML=_oosPanelHtml('NBA');
+    if(_leagueBlocksMarkets('NBA')){
+      document.getElementById('mlbControls').innerHTML=_leagueMarketsBlockedPanelHtml('NBA');
       document.getElementById('picksTitle').textContent='🏀 NBA Picks';
-      document.getElementById('picks').innerHTML=_oosPicksLine('NBA');
+      document.getElementById('picks').innerHTML=_leagueMarketsBlockedPicksLine('NBA');
     }else{
     const _nbaCnt=_pickCountButtonsHtml(nbaPickCount,'setNBACount','Player');
     document.getElementById('mlbControls').innerHTML=`<div class='pick-actions-stacked'><div id='pickCountRow' class='pick-count-tight pick-count-tight--stacked'>${_nbaCnt}</div><div class='pick-load-row btnrow'><button type='button' class='btn pick-load-btn' id='nbaLoadBtn' onclick='moneyTransformButton(this);startNBALoad()' ${_canSpinPickCount(nbaPickCount,_paywalled)?'':'disabled'}>Spin</button>${nbaLoaded||nbaPicks.length?"<button type='button' class='btn btn2' onclick='clearNBA()'>Clear</button>":''}</div></div><div class='muted'>Loads today's NBA game players from ESPN.</div><div class='muted' style='margin-top:6px'>Date: ${todayStr}</div>`;
@@ -3229,10 +3412,10 @@ function renderSport(){
     }
   } else if(current==='WNBA'){
     document.getElementById('options').innerHTML='';
-    if(!sportInSeason('WNBA')){
-      document.getElementById('mlbControls').innerHTML=_oosPanelHtml('WNBA');
+    if(_leagueBlocksMarkets('WNBA')){
+      document.getElementById('mlbControls').innerHTML=_leagueMarketsBlockedPanelHtml('WNBA');
       document.getElementById('picksTitle').textContent='🏀 WNBA Picks';
-      document.getElementById('picks').innerHTML=_oosPicksLine('WNBA');
+      document.getElementById('picks').innerHTML=_leagueMarketsBlockedPicksLine('WNBA');
     }else{
     const _wnbaCnt=_pickCountButtonsHtml(wnbaPickCount,'setWNBACount','Player');
     document.getElementById('mlbControls').innerHTML=`<div class='pick-actions-stacked'><div id='pickCountRow' class='pick-count-tight pick-count-tight--stacked'>${_wnbaCnt}</div><div class='pick-load-row btnrow'><button type='button' class='btn pick-load-btn' id='wnbaLoadBtn' onclick='moneyTransformButton(this);startWNBALoad()' ${_canSpinPickCount(wnbaPickCount,_paywalled)?'':'disabled'}>Spin</button>${wnbaLoaded||wnbaPicks.length?"<button type='button' class='btn btn2' onclick='clearWNBA()'>Clear</button>":''}</div></div><div class='muted'>Loads today's WNBA game players from ESPN.</div><div class='muted' style='margin-top:6px'>Date: ${todayStr}</div>`;
@@ -3240,10 +3423,10 @@ function renderSport(){
     }
   } else if(current==='NCAAB'){
     document.getElementById('options').innerHTML='';
-    if(!sportInSeason('NCAAB')){
-      document.getElementById('mlbControls').innerHTML=_oosPanelHtml('NCAAB');
+    if(_leagueBlocksMarkets('NCAAB')){
+      document.getElementById('mlbControls').innerHTML=_leagueMarketsBlockedPanelHtml('NCAAB');
       document.getElementById('picksTitle').textContent='🏀 NCAAB Picks';
-      document.getElementById('picks').innerHTML=_oosPicksLine('NCAAB');
+      document.getElementById('picks').innerHTML=_leagueMarketsBlockedPicksLine('NCAAB');
     }else{
     const _ncaabCnt=_pickCountButtonsHtml(ncaabPickCount,'setNCAABCount','Player');
     document.getElementById('mlbControls').innerHTML=`<div class='pick-actions-stacked'><div id='pickCountRow' class='pick-count-tight pick-count-tight--stacked'>${_ncaabCnt}</div><div class='pick-load-row btnrow'><button type='button' class='btn pick-load-btn' id='ncaabLoadBtn' onclick='moneyTransformButton(this);startNCAABLoad()' ${_canSpinPickCount(ncaabPickCount,_paywalled)?'':'disabled'}>Spin</button>${ncaabLoaded||ncaabPicks.length?"<button type='button' class='btn btn2' onclick='clearNCAAB()'>Clear</button>":''}</div></div><div class='muted'>Loads today's NCAA Basketball game players from ESPN.</div><div class='muted' style='margin-top:6px'>Date: ${todayStr}</div>`;
@@ -3251,10 +3434,10 @@ function renderSport(){
     }
   } else if(current==='NHL'){
     document.getElementById('options').innerHTML='';
-    if(!sportInSeason('NHL')){
-      document.getElementById('mlbControls').innerHTML=_oosPanelHtml('NHL');
+    if(_leagueBlocksMarkets('NHL')){
+      document.getElementById('mlbControls').innerHTML=_leagueMarketsBlockedPanelHtml('NHL');
       document.getElementById('picksTitle').textContent='🏒 NHL Picks';
-      document.getElementById('picks').innerHTML=_oosPicksLine('NHL');
+      document.getElementById('picks').innerHTML=_leagueMarketsBlockedPicksLine('NHL');
     }else{
     const _nhlCnt=_pickCountButtonsHtml(nhlPickCount,'setNHLCount','Player');
     document.getElementById('mlbControls').innerHTML=`<div class='pick-actions-stacked'><div id='pickCountRow' class='pick-count-tight pick-count-tight--stacked'>${_nhlCnt}</div><div class='pick-load-row btnrow'><button type='button' class='btn pick-load-btn' id='nhlLoadBtn' onclick='moneyTransformButton(this);startNHLLoad()' ${_canSpinPickCount(nhlPickCount,_paywalled)?'':'disabled'}>Spin</button>${nhlLoaded||nhlPicks.length?"<button type='button' class='btn btn2' onclick='clearNHL()'>Clear</button>":''}</div></div><div class='muted'>Loads today's NHL game players from ESPN.</div><div class='muted' style='margin-top:6px'>Date: ${todayStr}</div>`;
@@ -3262,10 +3445,10 @@ function renderSport(){
     }
   } else if(current==='Soccer'){
     document.getElementById('options').innerHTML='';
-    if(!sportInSeason('Soccer')){
-      document.getElementById('mlbControls').innerHTML=_oosPanelHtml('Soccer');
+    if(_leagueBlocksMarkets('Soccer')){
+      document.getElementById('mlbControls').innerHTML=_leagueMarketsBlockedPanelHtml('Soccer');
       document.getElementById('picksTitle').textContent='⚽ Soccer Picks';
-      document.getElementById('picks').innerHTML=_oosPicksLine('Soccer');
+      document.getElementById('picks').innerHTML=_leagueMarketsBlockedPicksLine('Soccer');
     }else{
     const _socCnt=_pickCountButtonsHtml(soccerPickCount,'setSoccerCount','Player');
     document.getElementById('mlbControls').innerHTML=`<div class='pick-actions-stacked'><div id='pickCountRow' class='pick-count-tight pick-count-tight--stacked'>${_socCnt}</div><div class='pick-load-row btnrow'><button type='button' class='btn pick-load-btn' id='soccerLoadBtn' onclick='moneyTransformButton(this);startSoccerLoad()' ${_canSpinPickCount(soccerPickCount,_paywalled)?'':'disabled'}>Spin</button>${soccerLoaded||soccerPicks.length?"<button type='button' class='btn btn2' onclick='clearSoccer()'>Clear</button>":''}</div></div><div class='muted'>Loads today's MLS game players from ESPN.</div><div class='muted' style='margin-top:6px'>Date: ${todayStr}</div>`;
@@ -3318,6 +3501,7 @@ function toggleSlipLock(){
     showToast('Wait for the spin to finish before locking the slip.', 'error', 'center');
     return;
   }
+  if(!slipManualLocked && !assertMarketSelectable(current, currentOption)) return;
   if(!slipManualLocked && _currentPicksCount() < 1){
     showToast('Load picks before locking the slip.', 'error', 'center');
     syncSlipLockButton();
@@ -3445,6 +3629,7 @@ function _remapProPickLocksAfterSwipeRemove(removedIdx){
   remap(_proPickSlotRevealComplete);
 }
 function copyCurrentSportPicks(){
+  if(!assertMarketSelectable(current, currentOption)) return;
   if(!_currentPicksCount()){
     showToast('No picks to copy yet.', 'error', 'center');
     return;
@@ -3561,7 +3746,17 @@ function showToast(message, kind, placement){
     setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, 180);
   }, 2200);
 }
-function setOption(o){currentOption=o;renderTabs();renderSport();_flashPickCountButtons();}
+function setOption(o){
+  if(!assertMarketSelectable(current, o)){
+    renderTabs();
+    return false;
+  }
+  currentOption=o;
+  renderTabs();
+  renderSport();
+  _flashPickCountButtons();
+  return true;
+}
 async function _shouldGateLoadWithUpgrade(meta){
   if(_devMode || _isPro) return false;
   const attempted = Number(meta && meta.attemptedCount) || 1;
@@ -3652,6 +3847,7 @@ function _flashCopiedAffordance(buttonId){
   }, 2000);
 }
 function copyPicks(flashButtonId){
+  if(!assertMarketSelectable(current, currentOption)) return;
   if(!mlbPicks.length) return;
   const lines=mlbPicks.map((p,i)=>`${i+1}. ${p.player} (${p.teamAbbr||p.team}) \u2014 ${p.hr} HR`);
   const sharer = _userName ? `${_userName} is` : 'Someone is';
@@ -3742,6 +3938,7 @@ function poRevealHitsCard(p,idx){
   syncPoCardsOrbit();
 }
 async function startHitsLoad(){
+  if(!_guardSpinForSeason()) return;
   pickRandomRhythm();
   if(!_validatePlayerCountOrWarn(hitsPickCount, 'players')) return;
   if(await _shouldGateLoadWithUpgrade({sport:'MLB',option:'Hits',attemptedCount:hitsPickCount,payload:{attemptedHits:hitsPickCount}})) return;
@@ -3866,6 +4063,7 @@ function poRevealBasesCard(p,idx){
   syncPoCardsOrbit();
 }
 async function startBasesLoad(){
+  if(!_guardSpinForSeason()) return;
   pickRandomRhythm();
   if(!_validatePlayerCountOrWarn(basesPickCount, 'players')) return;
   if(await _shouldGateLoadWithUpgrade({sport:'MLB',option:'Total Bases',attemptedCount:basesPickCount,payload:{attemptedBases:basesPickCount}})) return;
@@ -3985,6 +4183,7 @@ function poRevealRBICard(p,idx){
   syncPoCardsOrbit();
 }
 async function startRBILoad(){
+  if(!_guardSpinForSeason()) return;
   pickRandomRhythm();
   if(!_validatePlayerCountOrWarn(rbiPickCount, 'players')) return;
   if(await _shouldGateLoadWithUpgrade({sport:'MLB',option:'RBI',attemptedCount:rbiPickCount,payload:{attemptedRBI:rbiPickCount}})) return;
@@ -4408,6 +4607,7 @@ function poRevealNFLCard(p, idx){
   syncPoCardsOrbit();
 }
 async function startNFLLoad(){
+  if(!_guardSpinForSeason()) return;
   pickRandomRhythm();
   if(!_validatePlayerCountOrWarn(nflPickCount, 'players')) return;
   if(await _shouldGateLoadWithUpgrade({sport:'NFL',option:currentOption,attemptedCount:nflPickCount,payload:{attemptedNFL:nflPickCount}})) return;
@@ -4699,6 +4899,7 @@ function poRevealNCAAFCard(p, idx){
   syncPoCardsOrbit();
 }
 async function startNCAAFLoad(){
+  if(!_guardSpinForSeason()) return;
   pickRandomRhythm();
   if(!_validatePlayerCountOrWarn(ncaafPickCount, 'players')) return;
   if(await _shouldGateLoadWithUpgrade({sport:'NCAAF',option:currentOption,attemptedCount:ncaafPickCount,payload:{attemptedNCAAF:ncaafPickCount}})) return;
@@ -4931,6 +5132,7 @@ function poRevealNBACard(p, idx){
   syncPoCardsOrbit();
 }
 async function startNBALoad(){
+  if(!_guardSpinForSeason()) return;
   pickRandomRhythm();
   if(!_validatePlayerCountOrWarn(nbaPickCount, 'players')) return;
   if(await _shouldGateLoadWithUpgrade({sport:'NBA',option:currentOption,attemptedCount:nbaPickCount,payload:{attemptedNBA:nbaPickCount}})) return;
@@ -5162,6 +5364,7 @@ function poRevealWNBACard(p, idx){
   syncPoCardsOrbit();
 }
 async function startWNBALoad(){
+  if(!_guardSpinForSeason()) return;
   pickRandomRhythm();
   if(!_validatePlayerCountOrWarn(wnbaPickCount, 'players')) return;
   if(await _shouldGateLoadWithUpgrade({sport:'WNBA',option:currentOption,attemptedCount:wnbaPickCount,payload:{attemptedWNBA:wnbaPickCount}})) return;
@@ -5393,6 +5596,7 @@ function poRevealNCAABCard(p, idx){
   syncPoCardsOrbit();
 }
 async function startNCAABLoad(){
+  if(!_guardSpinForSeason()) return;
   pickRandomRhythm();
   if(!_validatePlayerCountOrWarn(ncaabPickCount, 'players')) return;
   if(await _shouldGateLoadWithUpgrade({sport:'NCAAB',option:currentOption,attemptedCount:ncaabPickCount,payload:{attemptedNCAAB:ncaabPickCount}})) return;
@@ -5638,6 +5842,7 @@ function poRevealNHLCard(p, idx){
   syncPoCardsOrbit();
 }
 async function startNHLLoad(){
+  if(!_guardSpinForSeason()) return;
   pickRandomRhythm();
   if(!_validatePlayerCountOrWarn(nhlPickCount, 'skaters')) return;
   if(await _shouldGateLoadWithUpgrade({sport:'NHL',option:currentOption,attemptedCount:nhlPickCount,payload:{attemptedNHL:nhlPickCount}})) return;
@@ -5901,6 +6106,7 @@ function poRevealSoccerCard(p, idx){
   syncPoCardsOrbit();
 }
 async function startSoccerLoad(){
+  if(!_guardSpinForSeason()) return;
   pickRandomRhythm();
   if(!_validatePlayerCountOrWarn(soccerPickCount, 'players')) return;
   if(await _shouldGateLoadWithUpgrade({sport:'Soccer',option:currentOption,attemptedCount:soccerPickCount,payload:{attemptedSoccer:soccerPickCount}})) return;
@@ -8070,6 +8276,7 @@ function renderMLB(){
 }
 
 async function startMLBLoad(){
+  if(!_guardSpinForSeason()) return;
   trackEvent('pick_load_start',{sport:'MLB',option:'HR',count:pickCount,favorableEnvOnly:!!mlbHrFavorableOnly});
   pickRandomRhythm();
   if(!_validatePlayerCountOrWarn(pickCount, 'batters')) return;
@@ -8178,6 +8385,7 @@ function poRevealKsCard(p, idx){
 }
 
 async function startKsLoad(){
+  if(!_guardSpinForSeason()) return;
   trackEvent('pick_load_start',{sport:'MLB',option:'Ks'});
   pickRandomRhythm();
   if(!_validatePlayerCountOrWarn(ksPickCount, 'pitchers')) return;
