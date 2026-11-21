@@ -140,8 +140,10 @@
     const opt = ctx.option;
     if (sport === 'MLB' && opt === 'HR') return '1+ HR';
     if (sport === 'MLB' && opt === 'Ks') return (raw.dir || 'Over') + ' ' + (raw.kLine || '') + ' K';
+    if ((sport === 'NFL' || sport === 'NCAAF') && opt === 'TDs') {
+      return (raw.dir || 'Over') + ' ' + (raw.line != null && raw.line !== '' ? raw.line : 0.5);
+    }
     if (raw.dir && raw.line != null && raw.line !== '') return raw.dir + ' ' + raw.line;
-    if (sport === 'NFL' && opt === 'TDs' && raw.td != null) return String(raw.td) + ' TD (season context)';
     return raw.statLabel || opt || '';
   }
 
