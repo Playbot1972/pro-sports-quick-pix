@@ -36,16 +36,29 @@
       return Number.isFinite(n) ? n : null;
     }
 
-    // Prefer totalScoringTouchdowns (rush+rec+return). Do not sum with passing.
-    var seasonTd = num(byName.totalScoringTouchdowns);
-    if (seasonTd == null) seasonTd = num(byName.totalTouchdowns);
+    // ESPN's totalScoringTouchdowns excludes passing TDs (it counts only rushing +
+    // receiving + return TDs scored by the player). For QBs this returns 0 even when
+    // they have 20+ passing TDs. Sum the four individual per-type fields instead;
+    // fall back to totalScoringTouchdowns / totalTouchdowns only when none are present.
+    var tdPass   = num(byName.passingTouchdowns);
+    var tdRush   = num(byName.rushingTouchdowns);
+    var tdRec    = num(byName.receivingTouchdowns);
+    var tdReturn = num(byName.returnTouchdowns);
+    var anyIndividual = tdPass != null || tdRush != null || tdRec != null || tdReturn != null;
+    var seasonTd;
+    if (anyIndividual) {
+      seasonTd = (tdPass || 0) + (tdRush || 0) + (tdRec || 0) + (tdReturn || 0);
+    } else {
+      seasonTd = num(byName.totalScoringTouchdowns);
+      if (seasonTd == null) seasonTd = num(byName.totalTouchdowns);
+    }
 
     return {
       seasonTd: seasonTd,
-      seasonTdPass: num(byName.passingTouchdowns),
-      seasonTdRush: num(byName.rushingTouchdowns),
-      seasonTdRec: num(byName.receivingTouchdowns),
-      seasonTdReturn: num(byName.returnTouchdowns)
+      seasonTdPass: tdPass,
+      seasonTdRush: tdRush,
+      seasonTdRec: tdRec,
+      seasonTdReturn: tdReturn
     };
   }
 
